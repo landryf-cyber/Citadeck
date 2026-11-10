@@ -199,6 +199,7 @@ export class Game {
     this.hud.set(state.gauges);
     this.hud.preview(null);
     this.app.classList.remove('hidden-ui');
+    this.cardView.setEmpty(true);
     this.showReply('');
     saveGame(state);
     if (fresh) {
@@ -350,7 +351,7 @@ export class Game {
           break;
         }
         case 'cardAdded':
-          if (ev.delay >= 0) {
+          if (ev.delay >= 0 && s.phase !== 'end') {
             this.screens.toast('Cela aura des <b>suites</b>.');
             this.flashDeck();
           }
@@ -397,6 +398,7 @@ export class Game {
     }
     if (crisisStart) {
       const def = this.engine.content.crises.find((c) => c.id === crisisStart)!;
+      this.cardView.setEmpty(true);
       await wait(260);
       if (token !== this.flowToken) return;
       this.scene.setMood({ crisis: true });

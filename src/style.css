@@ -168,7 +168,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 
 .msg { width: min(92vw, 520px); min-height: 44px; margin-top: clamp(8px, 1.6dvh, 16px); display: grid; place-items: start center; text-align: center; pointer-events: none; }
 .msg > * { grid-area: 1 / 1; margin: 0; }
-.reply { font-style: italic; font-size: 15px; line-height: 1.3; color: rgba(246, 238, 223, 0.86); text-shadow: 0 1px 10px #000, 0 0 22px rgba(0, 0, 0, 0.9); opacity: 0; transform: translateY(6px); transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out); text-wrap: balance; }
+.reply { font-style: italic; font-size: 15.5px; line-height: 1.3; color: #fff7e8; text-shadow: 0 1px 3px #000, 0 0 12px #000, 0 0 26px rgba(0, 0, 0, 0.95); opacity: 0; transform: translateY(6px); transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out); text-wrap: balance; }
 .reply.show { opacity: 1; transform: none; transition-duration: 0.3s; }
 .hint { font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--ui); text-shadow: 0 1px 10px #000, 0 0 20px rgba(0, 0, 0, 0.95); opacity: 0; transition: opacity 0.5s; text-wrap: balance; }
 .hint.show { opacity: 1; animation: hintPulse 2.4s ease-in-out infinite; }
@@ -223,7 +223,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .screen.show { opacity: 1; pointer-events: auto; }
 .screen.veil { background: radial-gradient(ellipse 120% 90% at 50% 40%, rgba(6, 5, 10, 0.86), rgba(4, 3, 7, 0.95)); }
 .screen.veil.modal { background: radial-gradient(ellipse 120% 90% at 50% 40%, rgba(8, 7, 13, 0.97), rgba(4, 3, 7, 0.985)); }
-.screen.soft { background: linear-gradient(180deg, rgba(5, 4, 9, 0.72) 0%, rgba(5, 4, 9, 0.5) 45%, rgba(5, 4, 9, 0.82) 100%); }
+.screen.soft { background: linear-gradient(180deg, rgba(5, 4, 9, 0.78) 0%, rgba(5, 4, 9, 0.62) 50%, rgba(5, 4, 9, 0.12) 78%, rgba(5, 4, 9, 0.3) 100%); }
 .screen > * { flex: none; }
 .spacer { flex: 1 1 0 !important; min-height: 8px; }
 

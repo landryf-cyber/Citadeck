@@ -373,8 +373,8 @@ export class Scene {
     this.dangerSmooth += (this.mood.danger - this.dangerSmooth) * k * 0.6;
     this.crisisSmooth += ((this.mood.crisis ? 1 : 0) - this.crisisSmooth) * k * 0.5;
     this.parallax += (this.parallaxTarget - this.parallax) * k;
-    const targetLight = this.mood.dead ? 0.06 : 1;
-    this.lightLevel += (targetLight - this.lightLevel) * (1 - Math.pow(0.25, dt));
+    const targetLight = this.mood.dead ? 0.14 : 1;
+    this.lightLevel += (targetLight - this.lightLevel) * (1 - Math.pow(this.mood.dead ? 0.55 : 0.25, dt));
     if (this.mood.dead && this.t - this.deadAt < 4.5) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
 
     this.updateParticles(dt);
@@ -499,7 +499,7 @@ export class Scene {
 
     // défaite : la nuit tombe
     if (this.mood.dead) {
-      const a = clamp01((this.t - this.deadAt) / 3.5) * 0.5;
+      const a = clamp01((this.t - this.deadAt - 1) / 3.5) * 0.3;
       ctx.fillStyle = `rgba(2,2,6,${a.toFixed(3)})`;
       ctx.fillRect(0, 0, W, H);
     }
@@ -725,7 +725,7 @@ export class Scene {
     if (!snap) return;
     this.lampAmount = l.smoke > 0.5 ? clamp01((l.smoke - 0.5) * 2) : 0;
     const k01 = snap.gauges.knowledge / 100;
-    const lit = (snap.gauges.knowledge <= TUNING.dangerLow ? 0.06 + k01 * 0.3 : 0.16 + 0.84 * k01) * (0.25 + 0.75 * Math.min(1, lv + 0.2));
+    const lit = (snap.gauges.knowledge <= TUNING.dangerLow ? 0.06 + k01 * 0.3 : 0.16 + 0.84 * k01) * (this.mood.dead ? 1 : 0.25 + 0.75 * Math.min(1, lv + 0.2));
     const out = this.mood.dead ? clamp01((this.t - this.deadAt) / 3.2) : 0;
     const env: DrawEnv = {
       ctx,

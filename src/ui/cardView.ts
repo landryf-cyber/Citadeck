@@ -124,6 +124,11 @@ export class CardView {
     this.setPreview(null);
   }
 
+  /** Masque la pile quand aucune carte n'arrive tout de suite (bannière, écran). */
+  setEmpty(on: boolean): void {
+    this.zone.classList.toggle('empty', on);
+  }
+
   hasCard(): boolean {
     return this.card !== null;
   }
@@ -139,7 +144,7 @@ export class CardView {
     if (!c) return;
     const w = this.zone.clientWidth || 300;
     const rot = clamp((dx / w) * 15, -22, 22);
-    const ry = this.reducedMotion ? 0 : clamp(dx * 0.02, -5, 5);
+    const ry = 0;
     c.style.transform = `translate3d(${dx.toFixed(1)}px, ${(Math.abs(dx) * 0.05 + dy * 0.18).toFixed(1)}px, 0) rotate(${rot.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
     c.style.setProperty('--sheen', `${clamp(50 - dx * 0.28, 0, 100).toFixed(1)}%`);
     const a = clamp((Math.abs(dx) - 10) / (this.threshold() * 0.7), 0, 1);

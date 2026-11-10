@@ -71,11 +71,11 @@ export const LOOKS: EraLook[] = [
   },
   // 3 — Ère industrielle : lueur de gaz et fumée
   {
-    skyTop: hex('#0b0d0c'), skyMid: hex('#2b2a20'), skyLow: hex('#7a6a2c'),
+    skyTop: hex('#0c0e0d'), skyMid: hex('#3a3320'), skyLow: hex('#b08a2e'),
     light: hex('#e6ee7a'), accent: hex('#ff9a40'),
     far: hex('#3a3828'), mid: hex('#161610'), near: hex('#0a0a08'), ground: hex('#0b0a08'),
     window: hex('#f0e078'), gold: hex('#e8c860'), crop: hex('#8a8448'), fog: hex('#b8b050'),
-    lightX: 0.68, lightY: 0.3, lightOnGround: 0, halo: 0.4, disc: 1.9, rays: 0.3, stars: 0, fogAmount: 1, smoke: 1,
+    lightX: 0.7, lightY: 0.24, lightOnGround: 0, halo: 0.55, disc: 2.3, rays: 0.5, stars: 0, fogAmount: 1, smoke: 1,
     ui: hex('#e6ee7a'),
   },
   // 4 — Ère spatiale : froid bleuté et néons
