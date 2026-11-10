@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 // GitHub Pages serves the site under /<repo>/ ; the workflow sets BASE_PATH.
 const base = process.env.BASE_PATH ?? '/';

@@ -2,6 +2,7 @@ import { Rng } from './rng';
 import type { Content } from './content';
 import {
   GAUGES,
+  KEYWORDS,
   DANGER_HIGH,
   DANGER_LOW,
   type CardDef,
@@ -321,7 +322,16 @@ export class Engine {
     state.eraTurn++;
     state.growth++;
     if (!state.seen.includes(card.id)) state.seen.push(card.id);
-    state.history.push({ turn: state.turn, era: state.era, card: card.id, side, gauges: { ...state.gauges } });
+    const kwc = this.keywordCounts(state);
+    state.history.push({
+      turn: state.turn,
+      era: state.era,
+      card: card.id,
+      side,
+      gauges: { ...state.gauges },
+      kw: KEYWORDS.map((k) => kwc[k]),
+      wonders: state.wonders.slice(),
+    });
     if (this.inDanger(state.gauges).length > 0) state.dangerTurns++;
     if (card.oneShot) this.removeFromDeck(state, card.id, events);
 

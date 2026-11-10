@@ -162,6 +162,9 @@ export interface HistoryEntry {
   card: string;
   side: Side;
   gauges: Gauges;
+  /** nombre de cartes du deck par mot-clé (ordre de KEYWORDS), pour rejouer la croissance */
+  kw: number[];
+  wonders: string[];
 }
 
 export interface Result {
