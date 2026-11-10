@@ -1,0 +1,82 @@
+import { card, opt, D } from './dsl';
+
+/** Âge de pierre : cartes d'ère (une seule ère, non persistantes). */
+export const era0 = [
+  card({
+    id: 'e0_mammouth', title: 'Le Mammouth', kind: 'era', era: 0, kw: ['Nature'],
+    text: 'Un mammouth. Un seul. Vingt chasseurs qui n’ont jamais vu de mammouth.',
+    left: opt('À l’assaut', D(13, -9), 'Trois blessés, une montagne de viande. Un bon jour.'),
+    right: opt('Trop gros', D(-6, 5, 3), 'Il est passé. Il avait l’air de s’en moquer.'),
+    art: { motif: 'mountain' },
+  }),
+  card({
+    id: 'e0_peintures', title: 'Les Peintures', kind: 'era', era: 0, kw: ['Culture'],
+    text: 'Quelqu’un dessine des bisons sur la paroi au lieu d’en chasser.',
+    left: opt('Qu’il continue', { delta: D(-7, 0, 9), flags: ['artistes'] }, 'Les bisons sont superbes. Ils ne se mangent pas.'),
+    right: opt('Au travail', D(7, 0, -7), 'La paroi reste nue. Le ventre, moins.'),
+    art: { motif: 'mask' },
+  }),
+  card({
+    id: 'e0_chaman', title: 'Le Chaman', kind: 'era', era: 0, kw: ['Foi'],
+    text: 'Le chaman dit que les esprits veulent une offrande. Il insiste beaucoup.',
+    left: opt('Offrir la moitié du gibier', { delta: D(-9, 7), scale: [{ keyword: 'Foi', delta: D(0, 2) }], add: [{ card: 'q_chaman', delay: 6 }] }, 'Les esprits sont contents. Le chaman aussi.'),
+    right: opt('Les esprits attendront', { delta: D(0, -7, 6), scale: [{ keyword: 'Foi', delta: D(0, -2) }] }, 'Le chaman a prédit un malheur. Il en prédit un par semaine.'),
+    art: { motif: 'eye' },
+  }),
+  card({
+    id: 'e0_fleuve', title: 'Le Fleuve', kind: 'era', era: 0, kw: ['Nature'],
+    text: 'Le fleuve déborde chaque printemps. Les terres sont fertiles, mais mouillées.',
+    left: opt('S’installer en bas', D(11, -7), 'Les récoltes sont belles. Les pieds, trempés.'),
+    right: opt('Rester sur la colline', D(-6, 8), 'Au sec, à l’abri, et un peu affamés.'),
+    art: { motif: 'wave' },
+  }),
+  card({
+    id: 'e0_troc', title: 'Le Troc', kind: 'era', era: 0, kw: ['Commerce'],
+    text: 'Une tribu propose ses peaux contre vos silex. Vos meilleurs silex.',
+    left: opt('Échanger', { delta: D(0, -7, 0, 10), rival: 5 }, 'Chauds l’hiver. Désarmés l’été.'),
+    right: opt('Garder les silex', { delta: D(0, 7, 0, -6), rival: -5 }, 'Ils sont repartis en regardant vos lances.'),
+    art: { motif: 'coin' },
+  }),
+  card({
+    id: 'e0_secret', title: 'Le Secret du feu', kind: 'era', era: 0, kw: ['Science'],
+    text: 'Vous savez faire du feu. Les autres, pas encore. Ils paieraient cher.',
+    left: opt('Vendre le secret', { delta: D(0, -5, -5, 12), rival: 4 }, 'Toute la vallée brille, la nuit. Y compris leurs camps.'),
+    right: opt('Le garder', { delta: D(0, 3, 6, -7), add: [{ card: 'q_secret_vole', delay: 8 }] }, 'Le secret est sûr. Enfin, à peu près.'),
+    art: { motif: 'flame' },
+  }),
+  card({
+    id: 'e0_hiver', title: 'Les Anciens', kind: 'era', era: 0,
+    text: 'Les anciens disent que l’hiver sera long. Ils le disent chaque année.',
+    left: opt('Stocker tout', D(10, 0, 0, -9), 'L’hiver fut doux. Les greniers, pleins. Les anciens, insupportables.'),
+    right: opt('Ils radotent', { delta: D(-8, 0, 2, 6), add: [{ card: 'q_hiver', delay: 5 }] }, 'Les anciens se taisent. Ils attendent.'),
+    art: { motif: 'moon' },
+  }),
+  card({
+    id: 'e0_loup', title: 'Le Louveteau', kind: 'era', era: 0, kw: ['Nature'],
+    text: 'Un louveteau orphelin près du camp. Il mord. Il est mignon.',
+    left: opt('L’adopter', { delta: D(-7, 4, 2), add: [{ card: 'q_chien', delay: 9 }] }, 'Il mange pour trois. Il dort au pied du chef.'),
+    right: opt('Le manger', D(4, -3, -3), 'Petit repas. Grande tristesse chez les enfants.'),
+    art: { motif: 'moon' },
+  }),
+  card({
+    id: 'e0_os', title: 'Les Os du géant', kind: 'era', era: 0, kw: ['Science'],
+    text: 'Des os immenses sortent de la falaise. Le chaman veut un autel. Le sage, des réponses.',
+    left: opt('Un autel', { delta: D(0, 7, -3, -6), scale: [{ keyword: 'Foi', delta: D(0, 2) }] }, 'On y prie. Personne ne sait quoi.'),
+    right: opt('Des réponses', { delta: D(0, -4, 10, -4), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }] }, 'C’était un très gros lézard. Le chaman boude.'),
+    art: { motif: 'spiral' },
+  }),
+  card({
+    id: 'e0_defi', title: 'Le Jeune Chasseur', kind: 'era', era: 0, kw: ['Guerre'],
+    text: 'Un jeune chasseur dit qu’il ferait mieux que vous. Il a des amis.',
+    left: opt('Le défier', { delta: D(-7, 9), add: [{ card: 'q_rancune', delay: 10 }] }, 'Vous avez gagné. Il s’en souviendra.'),
+    right: opt('Le nommer second', D(0, -6, 4, 5), 'Il commande les chasses. Il commande bien. Trop bien.'),
+    art: { motif: 'shield' },
+  }),
+  card({
+    id: 'e0_sel', title: 'La Source salée', kind: 'era', era: 0, kw: ['Commerce'],
+    text: 'Une source salée à deux jours de marche. Tout le monde veut du sel.',
+    left: opt('L’exploiter', D(5, -6, 0, 9), 'Vous avez du sel. Les voisins ont des envies.'),
+    right: opt('Trop loin', D(-4, 4, 4), 'On reste. On mange fade. On réfléchit.'),
+    art: { motif: 'star' },
+  }),
+];

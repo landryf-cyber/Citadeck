@@ -1,0 +1,82 @@
+import { card, opt, D } from './dsl';
+
+/** Moyen Âge. */
+export const era2 = [
+  card({
+    id: 'e2_cathedrale', title: 'Le Chantier', kind: 'era', era: 2, kw: ['Foi'],
+    text: 'L’évêque veut une flèche plus haute que celle des voisins. Il a déjà commandé les pierres.',
+    left: opt('Plus haute', { delta: D(-6, 5, 0, -11), scale: [{ keyword: 'Foi', delta: D(0, 3) }] }, 'On la voit de trois provinces. On la paiera sur trois générations.'),
+    right: opt('Un clocher suffit', { delta: D(0, -6, 4, 7), scale: [{ keyword: 'Foi', delta: D(0, -2) }] }, 'L’évêque prie pour vous. Fort. En public.'),
+    art: { motif: 'arch' },
+  }),
+  card({
+    id: 'e2_croisade', title: 'L’Appel', kind: 'era', era: 2, kw: ['Foi', 'Guerre'],
+    text: 'Un prêcheur appelle à une guerre sainte, très loin. Vos chevaliers s’ennuient.',
+    left: opt('Qu’ils partent', { delta: D(5, -10, 0, 6), add: [{ card: 'q_croisade', delay: 9 }], scale: [{ keyword: 'Foi', delta: D(0, 0, 0, 2) }] }, 'Le château est calme. Trop calme.'),
+    right: opt('Ils restent', { delta: D(-5, 7, 0, -5), scale: [{ keyword: 'Foi', delta: D(0, -2) }] }, 'Ils s’ennuient toujours. Ils ont trouvé une taverne.'),
+    art: { motif: 'shield' },
+  }),
+  card({
+    id: 'e2_seigneur', title: 'Le Vassal', kind: 'era', era: 2, kw: ['Guerre'],
+    text: 'Un vassal refuse l’impôt. Il a un château, des murs épais et un sens de l’humour.',
+    left: opt('L’assiéger', { delta: D(-8, 6, 0, 8), add: [{ card: 'q_siege', delay: 5 }] }, 'Le siège durera. Les vivres aussi, espérons.'),
+    right: opt('Négocier', D(3, -8, 0, -5), 'Il paiera la moitié. Il l’a dit en riant.'),
+    art: { motif: 'tower' },
+  }),
+  card({
+    id: 'e2_moines', title: 'Les Copistes', kind: 'era', era: 2, kw: ['Science', 'Foi'],
+    text: 'Les moines copient des livres anciens. Certains sont scandaleux. Tous sont chers.',
+    left: opt('Tout copier', { delta: D(0, -3, 10, -8), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }] }, 'Les bibliothèques se remplissent. Les sermons se tendent.'),
+    right: opt('Brûler les scandaleux', { delta: D(0, 6, -8, 3), scale: [{ keyword: 'Foi', delta: D(0, 2) }] }, 'Un beau feu. On ne saura jamais ce qu’on a perdu.'),
+    art: { motif: 'scroll' },
+  }),
+  card({
+    id: 'e2_foire', title: 'La Foire', kind: 'era', era: 2, kw: ['Commerce'],
+    text: 'Une grande foire dans la ville. Des marchands, des voleurs, des gens qui sont les deux.',
+    left: opt('Ouvrir les portes', { delta: D(5, -6, 0, 11), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }], rival: 4 }, 'La ville est riche. Et pleine d’inconnus.'),
+    right: opt('Taxer à l’entrée', D(-4, 4, 0, 5), 'Les marchands sont allés ailleurs. Les voleurs sont restés.'),
+    art: { motif: 'coin' },
+  }),
+  card({
+    id: 'e2_heresie', title: 'L’Hérétique', kind: 'era', era: 2, kw: ['Foi'],
+    text: 'Une femme prêche que Dieu n’a pas besoin d’évêques. La foule l’écoute.',
+    left: opt('La laisser prêcher', { delta: D(0, -8, 8, 4), scale: [{ keyword: 'Foi', delta: D(0, -3) }] }, 'L’évêque fulmine. La foule réfléchit. Dangereux, les deux.'),
+    right: opt('Le bûcher', { delta: D(0, 8, -7, -3), scale: [{ keyword: 'Foi', delta: D(0, 3) }], flags: ['bucher'] }, 'Ordre rétabli. La foule a retenu son visage.'),
+    art: { motif: 'flame' },
+  }),
+  card({
+    id: 'e2_chateau', title: 'La Muraille', kind: 'era', era: 2, kw: ['Guerre'],
+    text: 'Les ingénieurs proposent de doubler les murs. Les paysans proposent de manger.',
+    left: opt('Doubler les murs', { delta: D(-9, 11, 0, -5), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, 'Imprenable. On entend les ventres gargouiller derrière.'),
+    right: opt('Nourrir les paysans', D(10, -8, 0, -3), 'Rassasiés. Les murs ont des trous. Jolis, les trous.'),
+    art: { motif: 'tower' },
+  }),
+  card({
+    id: 'e2_tournoi', title: 'Le Tournoi', kind: 'era', era: 2, kw: ['Culture'],
+    text: 'Les chevaliers veulent un tournoi. Avec des morts, idéalement. Pour l’honneur.',
+    left: opt('Un tournoi', { delta: D(-6, 7, 0, -6), scale: [{ keyword: 'Culture', delta: D(0, 0, 0, 2) }], rival: 5 }, 'Deux morts. Grand succès. Les voisins sont venus.'),
+    right: opt('Pas de morts', D(0, -7, 5, 5), 'Un concours de poésie. Les chevaliers sont partis bouder.'),
+    art: { motif: 'crown' },
+  }),
+  card({
+    id: 'e2_vikings', title: 'Les Drakkars', kind: 'era', era: 2, kw: ['Guerre'],
+    text: 'Des hommes du Nord proposent de ne pas vous piller. Contre de l’or. C’est un métier.',
+    left: opt('Payer', { delta: D(0, -4, 0, -12), add: [{ card: 'q_danegeld', delay: 8 }] }, 'Ils sont partis. Ils ont dit « à l’année prochaine ».'),
+    right: opt('Se battre', { delta: D(-7, 9, 0, 2), when: { gauge: 'army', gte: 55 }, then: { delta: D(-4, 9, 0, 4), flags: ['vikings_vaincus'] }, else: { delta: D(-10, 4, 0, -4) } }, 'La plage est rouge. Le trésor est intact.'),
+    art: { motif: 'wave' },
+  }),
+  card({
+    id: 'e2_alchimiste', title: 'L’Alchimiste', kind: 'era', era: 2, kw: ['Science'],
+    text: 'Un alchimiste promet de l’or. Il lui faut du plomb, des mois, et vos économies.',
+    left: opt('Financer', { delta: D(0, 0, 9, -10), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }], add: [{ card: 'q_alchimiste', delay: 7 }] }, 'Pas d’or. Mais une poudre qui fait boum.'),
+    right: opt('Le chasser', D(0, 3, -6, 5), 'Il est allé chez les voisins. Ça a fait boum chez eux.'),
+    art: { motif: 'spiral' },
+  }),
+  card({
+    id: 'e2_famine', title: 'La Disette', kind: 'era', era: 2, kw: ['Nature'],
+    text: 'Les récoltes ont pourri. Les greniers de l’abbaye, eux, sont pleins.',
+    left: opt('Réquisitionner', { delta: D(11, 0, 0, 2), scale: [{ keyword: 'Foi', delta: D(0, -3) }], add: [{ card: 'q_abbaye', delay: 6 }] }, 'Le peuple mange. L’abbé écrit à Rome.'),
+    right: opt('Prier avec l’abbé', { delta: D(-9, 3, 0, 0), scale: [{ keyword: 'Foi', delta: D(2, 2) }] }, 'On a beaucoup prié. On a un peu mangé.'),
+    art: { motif: 'wheat' },
+  }),
+];
