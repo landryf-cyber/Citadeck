@@ -101,8 +101,8 @@ export class Game {
     this.scene.reducedMotion = reduced;
     this.cardView.reducedMotion = reduced;
     document.documentElement.classList.toggle('reduced', reduced);
+    this.scene.onTier = (tier) => document.documentElement.classList.toggle('fx-low', tier === 0);
     this.scene.setQuality(s.quality);
-    document.documentElement.classList.toggle('fx-low', s.quality === 'low');
     this.audio.setEnabled(s.sound);
     this.audio.setVolume(s.volume);
     saveSettings(s);
@@ -202,9 +202,9 @@ export class Game {
     this.showReply('');
     saveGame(state);
     if (fresh) {
-      this.screens.banner('era', `Ère ${ROMAN[state.era]}`, this.engine.content.eras[state.era].name, this.engine.content.eras[state.era].subtitle);
+      this.screens.banner('era', `Ère ${ROMAN[state.era]}`, this.engine.content.eras[state.era].name, this.engine.content.eras[state.era].subtitle, this.engine.content.eras[state.era].windText);
       const token = this.flowToken;
-      void wait(1500).then(() => {
+      void this.skippableWait(3000).then(() => {
         if (token === this.flowToken) this.deal();
       });
     } else if (state.phase === 'reward') {
@@ -304,6 +304,7 @@ export class Game {
       html += `<i class="cr ${inCrisis && i < ci ? 'done' : ''} ${inCrisis && i === ci ? 'now' : ''}"></i>`;
     }
     this.eraProgress.innerHTML = html;
+    this.hud.setWind(inCrisis ? {} : era.wind ?? {});
     this.deckCount.textContent = String(s.deck.length);
   }
 
@@ -447,22 +448,28 @@ export class Game {
     this.audio.setEra(s.era);
     this.audio.eraShift(s.era);
     this.scene.setSnapshot(this.snap(), { eraDuration: 3.4 });
-    this.screens.banner('era', `Ère ${ROMAN[s.era]}`, era.name, era.subtitle);
+    this.screens.banner('era', `Ère ${ROMAN[s.era]}`, era.name, era.subtitle, era.windText);
     this.app.classList.remove('hidden-ui');
     this.updateFoot();
     // la transition se regarde, mais un geste suffit pour l'écourter
-    let skip: () => void = () => undefined;
-    const skipped = new Promise<void>((r) => (skip = r));
-    const onSkip = () => skip();
-    window.addEventListener('pointerdown', onSkip, { once: true });
-    window.addEventListener('keydown', onSkip, { once: true });
-    await Promise.race([wait(2600), wait(700).then(() => skipped)]);
-    window.removeEventListener('pointerdown', onSkip);
-    window.removeEventListener('keydown', onSkip);
+    await this.skippableWait(3000);
     if (token !== this.flowToken) return;
     const danger = this.dangerLevel();
     this.scene.setMood({ danger });
     this.deal();
+  }
+
+  /** Attend `ms`, ou moins si le joueur fait un geste (après un court délai de grâce). */
+  private async skippableWait(ms: number): Promise<void> {
+    let skip: () => void = () => undefined;
+    const skipped = new Promise<void>((r) => (skip = r));
+    const onSkip = () => skip();
+    await wait(600);
+    window.addEventListener('pointerdown', onSkip, { once: true });
+    window.addEventListener('keydown', onSkip, { once: true });
+    await Promise.race([wait(ms - 600), skipped]);
+    window.removeEventListener('pointerdown', onSkip);
+    window.removeEventListener('keydown', onSkip);
   }
 
   // ------------------------------------------------------------------ fin

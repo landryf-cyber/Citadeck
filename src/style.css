@@ -44,7 +44,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
   0% { transform: translate(0, 0); } 20% { transform: translate(-31px, 17px); } 40% { transform: translate(23px, -41px); }
   60% { transform: translate(-47px, -13px); } 80% { transform: translate(37px, 29px); } 100% { transform: translate(0, 0); }
 }
-.fx-low #grain { animation: none; opacity: 0.05; }
+.fx-low #grain { animation: none; opacity: 0.045; mix-blend-mode: normal; }
 
 #app { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
 
@@ -198,13 +198,19 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 
 /* ------------------------------------------------------------------ bannières */
 .banner { position: fixed; left: 0; right: 0; top: 30dvh; z-index: 30; text-align: center; pointer-events: none; padding: 26px 20px 30px; opacity: 0; }
-.banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4, 3, 6, 0.55), rgba(4, 3, 6, 0.96) 18%, rgba(4, 3, 6, 0.96) 82%, rgba(4, 3, 6, 0.55)); z-index: -1; }
+.banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4, 3, 6, 0.55), rgba(4, 3, 6, 0.985) 16%, rgba(4, 3, 6, 0.985) 84%, rgba(4, 3, 6, 0.55)); z-index: -1; }
 .banner.show { animation: bannerIn 2.5s var(--ease-out) both; }
-.banner.era.show { animation-duration: 3.4s; }
+.banner.era.show { animation-duration: 3.1s; }
 @keyframes bannerIn { 0% { opacity: 0; transform: scale(1.06); } 12% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(0.99); } }
+.banner.out { transition: opacity 0.24s ease-out; opacity: 0 !important; animation: none !important; }
 .banner .over { font-size: 12px; font-weight: 700; letter-spacing: 0.42em; text-transform: uppercase; color: var(--ui); margin-bottom: 8px; padding-left: 0.42em; }
 .banner .big { font-family: var(--title); font-weight: 700; font-size: clamp(30px, 9vw, 64px); letter-spacing: 0.09em; line-height: 1.05; color: #fff6e4; text-shadow: 0 0 40px color-mix(in srgb, var(--ui) 70%, transparent); }
 .banner .sub { margin-top: 10px; font-size: 16px; font-style: italic; color: var(--dim); text-wrap: balance; }
+.banner .note { margin-top: 12px; font-size: 14.5px; font-weight: 600; color: var(--ui); text-wrap: balance; }
+.gauge-wind { position: absolute; right: 1px; top: 15px; width: 13px; height: 13px; opacity: 0; transition: opacity 0.6s; }
+.gauge-wind.on { opacity: 0.95; animation: windPulse 2.2s ease-in-out infinite; }
+.gauge-wind svg { width: 100%; height: 100%; fill: none; stroke: var(--ui); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--ui)); }
+@keyframes windPulse { 0%, 100% { transform: translateY(0); opacity: 0.95; } 50% { transform: translateY(-2px); opacity: 0.55; } }
 .banner.crisis .over { color: #ff7a5c; }
 .banner.crisis .big { text-shadow: 0 0 44px rgba(255, 70, 40, 0.85); }
 

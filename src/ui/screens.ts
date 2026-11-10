@@ -66,14 +66,30 @@ export class Screens {
 
   // ------------------------------------------------------------------ bannière & toast
 
-  banner(kind: 'era' | 'crisis', over: string, big: string, sub: string): void {
-    const b = el('div', `banner ${kind}`, `<div class="over">${esc(over)}</div><div class="big">${esc(big)}</div><div class="sub">${esc(sub)}</div>`);
+  banner(kind: 'era' | 'crisis', over: string, big: string, sub: string, note = ''): void {
+    const b = el('div', `banner ${kind}`, `<div class="over">${esc(over)}</div><div class="big">${esc(big)}</div><div class="sub">${esc(sub)}</div>${note ? `<div class="note">${esc(note)}</div>` : ''}`);
     b.setAttribute('role', 'status');
     this.host.append(b);
     void b.offsetWidth;
     b.classList.add('show');
     b.addEventListener('animationend', () => b.remove());
-    setTimeout(() => b.remove(), 4200);
+    // un geste suffit à l'écarter
+    const dismiss = () => {
+      window.removeEventListener('pointerdown', dismiss);
+      window.removeEventListener('keydown', dismiss);
+      b.classList.add('out');
+      setTimeout(() => b.remove(), 260);
+    };
+    setTimeout(() => {
+      if (!b.isConnected) return;
+      window.addEventListener('pointerdown', dismiss);
+      window.addEventListener('keydown', dismiss);
+    }, 500);
+    setTimeout(() => {
+      window.removeEventListener('pointerdown', dismiss);
+      window.removeEventListener('keydown', dismiss);
+      b.remove();
+    }, 5200);
   }
 
   toast(html: string, ms = 2400): void {

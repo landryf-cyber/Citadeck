@@ -11,7 +11,8 @@
     "typecheck": "tsc",
     "sim": "tsx src/sim/run.ts",
     "shots": "tsx scripts/screenshots.ts",
-    "autotune": "tsx src/sim/autotune.ts"
+    "autotune": "tsx src/sim/autotune.ts",
+    "perf": "tsx scripts/perf.ts"
   },
   "repository": {
     "type": "git",

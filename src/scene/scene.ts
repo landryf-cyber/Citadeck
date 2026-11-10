@@ -49,9 +49,9 @@ export interface Mood {
 }
 
 const TIER_CFG = [
-  { dpr: 1, backEvery: 6, cityEvery: 8, particles: 22, rays: false, glow: false },
-  { dpr: 1.5, backEvery: 3, cityEvery: 5, particles: 48, rays: true, glow: true },
-  { dpr: 2, backEvery: 2, cityEvery: 4, particles: 90, rays: true, glow: true },
+  { dpr: 1, backEvery: 12, cityEvery: 30, particles: 18, rays: false, glow: false },
+  { dpr: 1.5, backEvery: 4, cityEvery: 10, particles: 44, rays: true, glow: true },
+  { dpr: 2, backEvery: 2, cityEvery: 5, particles: 90, rays: true, glow: true },
 ];
 
 export class Scene {
@@ -109,6 +109,8 @@ export class Scene {
   private fastFrames = 0;
   private downgrades = 0;
   reducedMotion = false;
+  /** appelé quand le palier de qualité change (0 bas, 1 moyen, 2 haut) */
+  onTier: (tier: number) => void = () => undefined;
   /** images par seconde mesurées (pour les tests de performance) */
   fps = 60;
 
@@ -168,6 +170,7 @@ export class Scene {
     this.u = Math.max(7.5, Math.min(22, Math.min(this.W / 40, this.H / 42)));
     this.cityDirtyUntil = this.t + 0.1;
     this.frame = 0;
+    this.onTier(this.tier);
   }
 
   // ------------------------------------------------------------------ état
@@ -372,7 +375,7 @@ export class Scene {
     this.parallax += (this.parallaxTarget - this.parallax) * k;
     const targetLight = this.mood.dead ? 0.06 : 1;
     this.lightLevel += (targetLight - this.lightLevel) * (1 - Math.pow(0.25, dt));
-    if (this.mood.dead || this.dangerSmooth > 0.02 || this.crisisSmooth > 0.02) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
+    if (this.mood.dead && this.t - this.deadAt < 4.5) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
 
     this.updateParticles(dt);
   }
@@ -415,8 +418,12 @@ export class Scene {
   private render(): void {
     const cfg = TIER_CFG[this.tier];
     const transitioning = this.trans !== null;
-    if (this.frame % cfg.backEvery === 1 || transitioning || this.frame < 3 || this.mood.dead) this.renderBack();
-    if (this.t < this.cityDirtyUntil || this.frame % cfg.cityEvery === 2 || this.frame < 3) this.renderCity();
+    // le fond et la cité ne sont jamais redessinés dans la même image (sauf transition)
+    const dying = this.mood.dead && this.t - this.deadAt < 4.5;
+    const backDue = this.frame % cfg.backEvery === 1 || transitioning || this.frame < 3 || dying;
+    if (backDue) this.renderBack();
+    const cityDirty = this.t < this.cityDirtyUntil;
+    if (this.frame < 3 || transitioning || ((cityDirty || this.frame % cfg.cityEvery === 2) && (!backDue || cityDirty) && (this.tier > 0 || !cityDirty || this.frame % 2 === 0))) this.renderCity();
 
     const ctx = this.ctx;
     const { W, H, dpr } = this;

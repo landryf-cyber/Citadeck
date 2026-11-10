@@ -7,6 +7,7 @@ interface GaugeEl {
   fill: SVGRectElement;
   prev: HTMLElement;
   delta: HTMLElement;
+  wind: HTMLElement;
 }
 
 /** Les quatre jauges, intégrées en haut de la scène. */
@@ -28,9 +29,10 @@ export class Hud {
       const icon = el('div', 'gauge-icon', gaugeSvg(id));
       const label = el('div', 'gauge-label', GAUGE_LABEL[id]);
       const delta = el('div', 'gauge-delta');
-      root.append(prev, icon, label, delta);
+      const wind = el('div', 'gauge-wind');
+      root.append(prev, icon, label, delta, wind);
       this.root.append(root);
-      this.g[id] = { root, fill: icon.querySelector('.g-fill') as SVGRectElement, prev, delta };
+      this.g[id] = { root, fill: icon.querySelector('.g-fill') as SVGRectElement, prev, delta, wind };
     }
   }
 
@@ -43,6 +45,17 @@ export class Hud {
       ge.fill.style.transform = `translateY(${y.toFixed(2)}px)`;
       ge.root.classList.toggle('danger', v <= TUNING.dangerLow || v >= TUNING.dangerHigh);
       ge.root.setAttribute('aria-valuenow', String(Math.round(v)));
+    }
+  }
+
+  /** Le vent de l'ère : un petit chevron permanent sur la jauge qu'il pousse. */
+  setWind(wind: Delta): void {
+    for (const id of GAUGES) {
+      const d = wind[id] ?? 0;
+      const ge = this.g[id];
+      ge.wind.innerHTML = d ? ICONS[d > 0 ? 'up1' : 'down1'] : '';
+      ge.wind.classList.toggle('on', d !== 0);
+      ge.wind.title = d ? (d > 0 ? 'Le vent de l’ère fait monter cette jauge' : 'Le vent de l’ère fait baisser cette jauge') : '';
     }
   }
 
