@@ -30,6 +30,7 @@ export interface CardSpec {
   art?: ArtSpec;
   tutorial?: string;
   locked?: boolean;
+  variants?: CardDef['variants'];
 }
 
 export function card(s: CardSpec): CardDef {
@@ -48,6 +49,7 @@ export function card(s: CardSpec): CardDef {
   if (s.art) def.art = s.art;
   if (s.tutorial) def.tutorial = s.tutorial;
   if (s.locked) def.locked = true;
+  if (s.variants) def.variants = s.variants;
   return def;
 }
 

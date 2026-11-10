@@ -20,6 +20,7 @@ import {
 export const SAVE_VERSION = 3;
 export const ERA_COUNT = 5;
 export const START_GAUGE = 50;
+export const MAX_SWING = 24;
 
 export type GameEvent =
   | { type: 'gauges'; delta: Delta; before: Gauges; after: Gauges }
@@ -194,7 +195,8 @@ export class Engine {
       }
     }
     for (const g of GAUGES) {
-      if (delta[g] !== undefined) delta[g] = Math.round(delta[g]!);
+      // aucune carte ne déplace une jauge de plus d'un quart d'un coup
+      if (delta[g] !== undefined) delta[g] = Math.max(-MAX_SWING, Math.min(MAX_SWING, Math.round(delta[g]!)));
       if (delta[g] === 0) delete delta[g];
     }
     return delta;
@@ -217,7 +219,14 @@ export class Engine {
     return d;
   }
 
-  /** Aperçu de l'effet d'une option (direction et intensité, pour l'interface). */
+  /** Effet de la carte seule (sans le vent de l'ère) : c'est ce que montrent les flèches d'aperçu. */
+  previewCard(state: GameState, side: Side): Delta {
+    const card = this.currentCard(state);
+    if (!card) return {};
+    return this.computeDelta(state, card, card[side].effect);
+  }
+
+  /** Effet total d'une option, vent compris : c'est exactement ce qui sera appliqué. */
   preview(state: GameState, side: Side): Delta {
     const card = this.currentCard(state);
     if (!card) return {};

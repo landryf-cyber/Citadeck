@@ -15,12 +15,12 @@ export const wonders: WonderDef[] = [
   {
     id: 'w_phare', name: 'Le Phare', era: 1, keywords: ['Commerce'],
     text: 'Un feu sur la mer. Les navires viennent. Les gains de Trésor sont amplifiés.',
-    passive: { type: 'amplify', gauge: 'treasure', factor: 1.35 },
+    passive: { type: 'amplify', gauge: 'treasure', factor: 1.25 },
   },
   {
     id: 'w_bibliotheque', name: 'La Grande Bibliothèque', era: 1, keywords: ['Science'],
     text: 'Tous les livres du monde, et un toit en bois. Les gains de Savoir sont amplifiés.',
-    passive: { type: 'amplify', gauge: 'knowledge', factor: 1.35 },
+    passive: { type: 'amplify', gauge: 'knowledge', factor: 1.25 },
   },
   {
     id: 'w_muraille', name: 'La Grande Muraille', era: 1, keywords: ['Guerre'],

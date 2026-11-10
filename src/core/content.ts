@@ -51,7 +51,11 @@ export function validateContent(c: Content): string[] {
       walk(opt.effect);
       if (opt.text.length > 32) errors.push(`${card.id}: option trop longue "${opt.text}"`);
     }
-    if (card.text.length > 120) errors.push(`${card.id}: texte trop long (${card.text.length})`);
+    if (card.text.length > 125) errors.push(`${card.id}: texte trop long (${card.text.length})`);
+    for (const [era, v] of Object.entries(card.variants ?? {})) {
+      if (v.text.length > 125) errors.push(`${card.id}/${era}: texte trop long (${v.text.length})`);
+      for (const t of [v.left, v.right]) if (t && t.length > 32) errors.push(`${card.id}/${era}: option trop longue "${t}"`);
+    }
   }
   return errors;
 }

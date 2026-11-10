@@ -12,7 +12,8 @@
     "sim": "tsx src/sim/run.ts",
     "shots": "tsx scripts/screenshots.ts",
     "autotune": "tsx src/sim/autotune.ts",
-    "perf": "tsx scripts/perf.ts"
+    "perf": "tsx scripts/perf.ts",
+    "play": "tsx scripts/playthrough.ts"
   },
   "repository": {
     "type": "git",

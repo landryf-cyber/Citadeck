@@ -1,7 +1,7 @@
 /** Contrôleur : relie le moteur, l'interface, la scène, le son et la sauvegarde. */
 import { Engine, type GameEvent } from './core/engine';
 import { codeToSeed } from './core/rng';
-import { TUNING, GAUGES, KEYWORDS, type CardDef, type GameState, type Side } from './core/types';
+import { TUNING, GAUGES, KEYWORDS, cardFace, type CardDef, type GameState, type Side } from './core/types';
 import type { AudioEngine } from './audio/audio';
 import type { Scene } from './scene/scene';
 import type { CivSnapshot } from './scene/city';
@@ -80,7 +80,7 @@ export class Game {
 
     this.cardView.onPreview = (side) => {
       if (!this.state) return;
-      this.hud.preview(side ? this.engine.preview(this.state, side) : null);
+      this.hud.preview(side ? this.engine.previewCard(this.state, side) : null);
     };
     this.cardView.onDrag = (f) => this.scene.setParallax(f);
     this.cardView.onChoose = (side) => this.choose(side);
@@ -247,7 +247,7 @@ export class Game {
         const c = this.engine.card(h.card);
         const eff = c[h.side].effect;
         const adds = [...(eff.add ?? []), ...(eff.then?.add ?? []), ...(eff.else?.add ?? [])];
-        if (adds.some((a) => a.card === card.id)) return `Suite de · ${c.title}`;
+        if (adds.some((a) => a.card === card.id)) return `Suite de · ${cardFace(c, h.era).title}`;
       }
       return KIND_TAG.consequence;
     }
@@ -259,7 +259,9 @@ export class Game {
     if (!s || !s.current || (s.phase !== 'card' && s.phase !== 'crisis')) return;
     const card = this.engine.card(s.current);
     const remaining = s.phase === 'crisis' ? s.crisis!.cards.length - s.crisis!.index - 1 : s.drawPile.length + 1;
-    this.cardView.show(card, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining });
+    const face = cardFace(card, s.era);
+    const shown: CardDef = { ...card, title: face.title, text: face.text, left: { ...card.left, text: face.left }, right: { ...card.right, text: face.right } };
+    this.cardView.show(shown, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining });
     this.cardView.enabled = true;
     this.audio.cardIn();
     this.hint.textContent = card.tutorial ?? '';
@@ -319,13 +321,14 @@ export class Game {
     this.hint.classList.remove('show');
     this.hud.preview(null);
     this.audio.swipe(side);
+    const face = cardFace(card, s.era);
     const events = this.engine.choose(s, side);
     saveGame(s);
     if (s.turn >= 3 && !this.settings.tutorialDone) {
       this.settings.tutorialDone = true;
       saveSettings(this.settings);
     }
-    this.showReply(card[side].reply ?? '');
+    this.showReply((side === 'left' ? face.replyLeft : face.replyRight) ?? '');
     void this.after(events, token);
   }
 

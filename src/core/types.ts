@@ -102,6 +102,39 @@ export interface CardDef {
   tutorial?: string;
   /** ne peut pas être retirée du deck par le joueur */
   locked?: boolean;
+  /** habillage par ère (1..4) : la même carte, racontée autrement selon l'époque */
+  variants?: Record<number, CardVariant>;
+}
+
+export interface CardVariant {
+  title?: string;
+  text: string;
+  left?: string;
+  right?: string;
+  replyLeft?: string;
+  replyRight?: string;
+}
+
+/** Ce que le joueur lit : la carte habillée pour une ère donnée. */
+export interface CardFace {
+  title: string;
+  text: string;
+  left: string;
+  right: string;
+  replyLeft?: string;
+  replyRight?: string;
+}
+
+export function cardFace(card: CardDef, era: number): CardFace {
+  const v = card.variants?.[era];
+  return {
+    title: v?.title ?? card.title,
+    text: v?.text ?? card.text,
+    left: v?.left ?? card.left.text,
+    right: v?.right ?? card.right.text,
+    replyLeft: v?.replyLeft ?? card.left.reply,
+    replyRight: v?.replyRight ?? card.right.reply,
+  };
 }
 
 export interface CrisisDef {

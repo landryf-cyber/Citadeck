@@ -2,6 +2,9 @@ import { GAUGES, GAUGE_LABEL, TUNING, type Delta, type GaugeId, type Gauges } fr
 import { gaugeSvg } from './art';
 import { el, ICONS } from './dom';
 
+/** à partir de cette amplitude, l'aperçu montre une double flèche */
+const BIG = 13;
+
 interface GaugeEl {
   root: HTMLElement;
   fill: SVGRectElement;
@@ -68,7 +71,7 @@ export class Hud {
         ge.root.classList.remove('prev');
         continue;
       }
-      const big = Math.abs(d) >= 9;
+      const big = Math.abs(d) >= BIG;
       const key = d > 0 ? (big ? 'up2' : 'up1') : big ? 'down2' : 'down1';
       if (ge.prev.dataset.k !== key) {
         ge.prev.innerHTML = ICONS[key];
@@ -89,7 +92,7 @@ export class Hud {
       ge.delta.classList.remove('go-up', 'go-down');
       void ge.root.offsetWidth;
       ge.root.classList.add(up ? 'bump-up' : 'bump-down');
-      ge.delta.innerHTML = ICONS[up ? (Math.abs(d) >= 9 ? 'up2' : 'up1') : Math.abs(d) >= 9 ? 'down2' : 'down1'];
+      ge.delta.innerHTML = ICONS[up ? (Math.abs(d) >= BIG ? 'up2' : 'up1') : Math.abs(d) >= BIG ? 'down2' : 'down1'];
       ge.delta.classList.add(up ? 'go-up' : 'go-down');
     }
   }

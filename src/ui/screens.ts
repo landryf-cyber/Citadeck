@@ -1,6 +1,6 @@
 import type { Engine } from '../core/engine';
 import { codeToSeed, seedToCode } from '../core/rng';
-import { GAUGE_LABEL, KEYWORDS, type GameState, type GaugeId, type Keyword } from '../core/types';
+import { GAUGE_LABEL, KEYWORDS, cardFace, type GameState, type GaugeId, type Keyword } from '../core/types';
 import type { Settings } from '../save';
 import { cardArt, keywordGlyph, KEYWORD_HUE } from './art';
 import { el, esc, ICONS, ROMAN, wait } from './dom';
@@ -392,7 +392,7 @@ ${why}
         const c = engine.card(h.card);
         const eff = c[h.side].effect;
         const adds = [...(eff.add ?? []), ...(eff.then?.add ?? []), ...(eff.else?.add ?? [])];
-        if (adds.some((a) => a.card === cardId)) return ` — suite de « ${c[h.side].text} »`;
+        if (adds.some((a) => a.card === cardId)) return ` — suite de « ${cardFace(c, h.era)[h.side]} »`;
       }
       return '';
     };
@@ -402,7 +402,8 @@ ${why}
         const c = engine.card(h.card);
         const ago = last - r.i;
         const when = ago === 0 ? 'à l’instant' : `il y a ${ago} tour${ago > 1 ? 's' : ''}`;
-        return `<div class="why-row"><span class="w-card">${esc(c.title)}${esc(origin(c.id, r.i))}</span><span class="w-choice">« ${esc(c[h.side].text)} »</span><span class="w-when"><b>${sign < 0 ? '−' : '+'}${r.d}</b>${when}</span></div>`;
+        const f = cardFace(c, h.era);
+        return `<div class="why-row"><span class="w-card">${esc(f.title)}${esc(origin(c.id, r.i))}</span><span class="w-choice">« ${esc(f[h.side])} »</span><span class="w-when"><b>${sign < 0 ? '−' : '+'}${r.d}</b>${when}</span></div>`;
       })
       .join('');
     return `<div class="why"><div class="why-title">Ce qui a pesé sur ${esc(GAUGE_LABEL[gauge].toLowerCase())}</div>${html}</div>`;
