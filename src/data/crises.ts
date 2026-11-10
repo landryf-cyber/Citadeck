@@ -105,15 +105,15 @@ export const crisisCards = [
   card({
     id: 'x2_barricades', title: 'Les Barricades', kind: 'crisis',
     text: 'La ville est à eux. Le palais, encore à vous. Ils demandent du pain, puis votre tête. Dans cet ordre.',
-    left: opt('Du pain', { when: { gauge: 'food', gte: 45 }, then: { delta: D(-10, 0, 0, -4), scale: [{ keyword: 'Nature', delta: D(3) }] }, else: { delta: D(-10, -8, 0, -4), scale: [{ keyword: 'Nature', delta: D(3) }] } }, 'Ils ont mangé. Ils ont gardé les barricades. Au cas où.'),
+    left: opt('Du pain', { when: { gauge: 'food', gte: 45 }, then: { delta: D(-10, 0, 0, -4), scale: [{ keyword: 'Nature', delta: D(3) }] }, else: { delta: D(-10, -5, -4, -4), scale: [{ keyword: 'Nature', delta: D(3) }] } }, 'Ils ont mangé. Ils ont gardé les barricades. Au cas où.'),
     right: opt('La troupe', { when: { gauge: 'army', gte: 55 }, then: { delta: D(-4, -7, -4, 0), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] }, else: { delta: D(-6, -14, -4, -4), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] } }, 'Les rues sont calmes. Elles ont été nettoyées.'),
     art: { motif: 'flame' },
   }),
   card({
     id: 'x2_charte', title: 'La Charte', kind: 'crisis',
     text: 'Les rebelles proposent une charte. Vous régnez, mais ils décident. Vous signez ou vous partez.',
-    left: opt('Signer', { delta: D(0, -10, 4, -7), scale: [{ keyword: 'Culture', delta: D(0, 2, 2) }], flags: ['charte'] }, 'Vous régnez. Entre guillemets.'),
-    right: opt('Déchirer', { when: { gauge: 'army', gte: 50 }, then: { delta: D(-5, 6, -7, 3), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, else: { delta: D(-8, -8, -8, -4) } }, 'Vous régnez. Sur une ville qui vous regarde de travers.'),
+    left: opt('Signer', { delta: D(0, -6, 5, -7), scale: [{ keyword: 'Culture', delta: D(0, 2, 2) }], flags: ['charte'] }, 'Vous régnez. Entre guillemets.'),
+    right: opt('Déchirer', { when: { gauge: 'army', gte: 50 }, then: { delta: D(-5, 6, -7, 3), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, else: { delta: D(-8, -4, -10, -4) } }, 'Vous régnez. Sur une ville qui vous regarde de travers.'),
     art: { motif: 'scroll' },
   }),
   card({
@@ -156,7 +156,7 @@ export const crisisCards = [
   card({
     id: 'x3_armistice', title: 'L’Armistice', kind: 'crisis',
     text: 'Tout le monde est épuisé. Les voisins proposent la paix. Leurs conditions tiennent sur dix pages.',
-    left: opt('Signer', { delta: D(3, -8, 0, -10), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }], rival: 12 }, 'La paix. Chère. Les généraux parlent de trahison.'),
+    left: opt('Signer', { delta: D(3, -5, -4, -10), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }], rival: 12 }, 'La paix. Chère. Les généraux parlent de trahison.'),
     right: opt('Dicter vos conditions', { when: { flag: 'rivalDefeated' }, then: { delta: D(4, 4, 0, 10), rival: -15 }, else: { delta: D(-5, -8, -4, -5), rival: -15 } }, 'Vos dix pages contre les leurs. Les leurs sont mieux armées.'),
     art: { motif: 'scroll' },
   }),
