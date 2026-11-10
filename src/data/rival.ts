@@ -8,7 +8,7 @@ export const rivalHostile = [
     id: 'v_raid', title: 'Le Raid', kind: 'rival', oneShot: true,
     text: 'Vos voisins ont brûlé trois villages. Ils disent que c’était une erreur de carte.',
     left: opt('Représailles', { when: { gauge: 'army', gte: 50 }, then: { delta: D(0, -5, 0, 6), rival: -10 }, else: { delta: D(-5, -10, 0, -3), rival: -10 } }, 'Trois de leurs villages. Erreur de carte.'),
-    right: opt('Encaisser', { delta: D(-9, -4, 0, -4), rival: 4 }, 'Vous avez reconstruit. Ils ont pris des notes.'),
+    right: opt('Encaisser', { delta: D(-7, -3, -3, -4), rival: 4 }, 'Vous avez reconstruit. Ils ont pris des notes.'),
     art: { motif: 'flame' },
   }),
   card({
@@ -21,8 +21,8 @@ export const rivalHostile = [
   card({
     id: 'v_guerre', title: 'La Guerre', kind: 'rival', oneShot: true,
     text: 'Leur armée est à deux jours de marche. La vôtre est… quelque part.',
-    left: opt('Attaquer les premiers', { when: { gauge: 'army', gte: 55 }, then: { delta: D(-5, -8, 0, 10), rival: -5, flags: ['rivalDefeated'] }, else: { delta: D(-10, -14, 0, -4), rival: -5 } }, 'Victoire. Le champ est plein de choses qu’on préfère ne pas nommer.'),
-    right: opt('Défendre les murs', { when: { gauge: 'treasure', gte: 50 }, then: { delta: D(-7, -4, 0, -9), rival: 0 }, else: { delta: D(-12, -8, 0, -4), rival: 0 } }, 'Ils sont repartis. Ils reviendront.'),
+    left: opt('Attaquer les premiers', { when: { gauge: 'army', gte: 55 }, then: { delta: D(-5, -8, 0, 10), rival: -5, flags: ['rivalDefeated'] }, else: { delta: D(-7, -13, 0, -4), rival: -5 } }, 'Victoire. Le champ est plein de choses qu’on préfère ne pas nommer.'),
+    right: opt('Défendre les murs', { when: { gauge: 'treasure', gte: 50 }, then: { delta: D(-5, -4, -3, -8), rival: 0 }, else: { delta: D(-8, -8, -4, -5), rival: 0 } }, 'Ils sont repartis. Ils reviendront.'),
     art: { motif: 'shield' },
   }),
   card({

@@ -3,17 +3,22 @@
 ## Fait
 - Pile : Vite + TypeScript, Vitest, Playwright, fontes embarquées (Cinzel, Source Sans 3)
 - Moteur pur (`src/core`) : jauges, deck, ères, crises, récompenses, merveilles, rivale, fins, RNG à graine
-- Contenu (`src/data`) : cartes de départ, tutoriel, 5 pools d'ère, récompenses, conséquences, rivale, 5 crises, 12 merveilles
-- Tests du moteur et du contenu
+- Contenu (`src/data`) : ~190 cartes, 5 crises, 12 merveilles, enjeux et « vent » par ère
+- Tests du moteur et du contenu (32)
+- Interface : carte (swipe, souris, clavier), jauges, écrans titre/récompense/merveille/retrait/fin/réglages/deck
+- Scène Canvas 2D : lumière par ère, civilisation générative, particules, transitions, défaite, timelapse
+- Audio WebAudio, sauvegarde automatique, script de captures (`npm run shots`)
+- Simulation (`npm run sim`), bots, cibles automatiques, équilibreur d'options (`npm run autotune`)
 
 ## En cours
-- Simulation et premier équilibrage
+- Équilibrage : répartition des défaites par jauge (savoir trop sûr, armée trop mortelle),
+  puis repasser l'autotune une fois les paramètres globaux figés
 
 ## Reste à faire
-- Interface : carte, swipe, jauges, écrans (titre, récompense, fin, réglages)
-- Scène : civilisation générative, lumière par ère, particules, transitions
-- Audio WebAudio
-- Sauvegarde automatique
-- Script de captures Playwright
-- Passes DA (x3 dont une animations), parties jouées à la main, tests par agents séparés
-- Déploiement GitHub Pages, README
+- Interface : indicateur du vent de l'ère sur la jauge, annonce dans la bannière d'ère
+- Passes DA 2 et 3 (dont une sur animations/transitions), ère industrielle à enrichir
+- Test de performance 60 fps profil mobile
+- Parties complètes jouées à la main dans le navigateur, notes tour par tour
+- Tests par agents séparés (x2)
+- Déploiement GitHub Pages (workflow), vérification du build déployé
+- README, relecture des textes, cas limites

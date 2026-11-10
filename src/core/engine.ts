@@ -3,8 +3,7 @@ import type { Content } from './content';
 import {
   GAUGES,
   KEYWORDS,
-  DANGER_HIGH,
-  DANGER_LOW,
+  TUNING,
   type CardDef,
   type Condition,
   type Delta,
@@ -179,6 +178,10 @@ export class Engine {
       }
     }
     const inCrisis = state.phase === 'crisis';
+    // les enjeux montent avec les ères
+    const eraDef = this.content.eras[state.era];
+    const stakes = (eraDef?.stakes ?? 1) * (inCrisis ? eraDef?.crisisStakes ?? 1 : 1);
+    if (stakes !== 1) for (const g of GAUGES) if (delta[g]) delta[g] = delta[g]! * stakes;
     for (const wid of state.wonders) {
       const p = this.wonder(wid).passive;
       for (const g of GAUGES) {
@@ -197,11 +200,28 @@ export class Engine {
     return delta;
   }
 
+  /** Le vent de l'ère : dérive appliquée à chaque décision hors crise. */
+  wind(state: GameState): Delta {
+    if (state.phase !== 'card') return {};
+    return this.content.eras[state.era]?.wind ?? {};
+  }
+
+  /** Effet total d'une option : la carte plus le vent de l'ère. */
+  totalDelta(state: GameState, card: CardDef, effect: Effect): Delta {
+    const d = this.computeDelta(state, card, effect);
+    const w = this.wind(state);
+    for (const g of GAUGES) {
+      if (w[g]) d[g] = (d[g] ?? 0) + w[g]!;
+      if (d[g] === 0) delete d[g];
+    }
+    return d;
+  }
+
   /** Aperçu de l'effet d'une option (direction et intensité, pour l'interface). */
   preview(state: GameState, side: Side): Delta {
     const card = this.currentCard(state);
     if (!card) return {};
-    return this.computeDelta(state, card, card[side].effect);
+    return this.totalDelta(state, card, card[side].effect);
   }
 
   private applyDelta(state: GameState, delta: Delta, events: GameEvent[]): void {
@@ -237,7 +257,7 @@ export class Engine {
 
   private applyEffect(state: GameState, card: CardDef, effect: Effect, rng: Rng, events: GameEvent[]): void {
     const resolved = this.resolveEffect(state, effect);
-    const delta = this.computeDelta(state, card, effect);
+    const delta = this.totalDelta(state, card, effect);
     this.applyDelta(state, delta, events);
     for (const f of resolved.flags ?? []) {
       if (!state.flags.includes(f)) {
@@ -292,7 +312,7 @@ export class Engine {
   // ---------------------------------------------------------------- tour de jeu
 
   inDanger(g: Gauges): GaugeId[] {
-    return GAUGES.filter((k) => g[k] <= DANGER_LOW || g[k] >= DANGER_HIGH);
+    return GAUGES.filter((k) => g[k] <= TUNING.dangerLow || g[k] >= TUNING.dangerHigh);
   }
 
   private checkDefeat(state: GameState, card: CardDef, events: GameEvent[]): boolean {
@@ -533,8 +553,8 @@ export class Engine {
     const flag = (f: string) => (state.flags.includes(f) ? 1 : 0);
     return {
       science: counts.Science * 2 + g.knowledge / 10 + flag('endingScience') * 6 + flag('rocket') * 3,
-      military: counts.Guerre * 2 + g.army / 10 + flag('endingMilitary') * 6 + flag('rivalDefeated') * 4,
-      culture: (counts.Foi + counts.Culture + counts.Commerce) * 1.2 + (g.treasure + g.food) / 20 + flag('endingCulture') * 6 + flag('rivalAllied') * 3,
+      military: counts.Guerre * 2 + g.army / 12 + flag('endingMilitary') * 5 + flag('rivalDefeated') * 2,
+      culture: (counts.Foi + counts.Culture + counts.Commerce) * 1.2 + (g.treasure + g.food) / 20 + flag('endingCulture') * 6 + flag('rivalAllied') * 2,
     };
   }
 

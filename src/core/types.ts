@@ -143,6 +143,14 @@ export interface EraDef {
   subtitle: string;
   /** nombre de cartes d'ère injectées */
   packSize: number;
+  /** multiplicateur des effets de cartes : les enjeux montent avec les ères */
+  stakes?: number;
+  /** multiplicateur supplémentaire pendant la crise de l'ère */
+  crisisStakes?: number;
+  /** le vent de l'ère : une dérive appliquée à chaque décision (hors crise) */
+  wind?: Delta;
+  /** phrase qui annonce ce vent au joueur */
+  windText?: string;
 }
 
 export type EndingId = 'science' | 'military' | 'culture';
@@ -218,5 +226,5 @@ export interface GameState {
   growth: number;
 }
 
-export const DANGER_LOW = 20;
-export const DANGER_HIGH = 80;
+/** Seuils de la zone de danger (modifiables pour les balayages de simulation). */
+export const TUNING = { dangerLow: 30, dangerHigh: 70 };

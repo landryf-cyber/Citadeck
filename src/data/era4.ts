@@ -79,4 +79,25 @@ export const era4 = [
     right: opt('Interdire', { delta: D(0, -5, -8, 3), scale: [{ keyword: 'Foi', delta: D(0, 3) }] }, 'Les voisins n’ont pas interdit. Leurs enfants sont grands.'),
     art: { motif: 'leaf' },
   }),
+  card({
+    id: 'e4_percee', title: 'La Percée', kind: 'era', era: 4, kw: ['Science'],
+    text: 'Un laboratoire a tout résolu. La fusion, le rhume, les embouteillages. Il demande quoi faire ensuite.',
+    left: opt('Tout publier', { delta: D(0, -7, 13, 0), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }], rival: 5 }, 'Le monde entier sait. Le monde entier a des idées.'),
+    right: opt('Classer secret', D(0, 5, 6, -6), 'Personne ne sait. Sauf les trois mille personnes qui savent.'),
+    art: { motif: 'star' },
+  }),
+  card({
+    id: 'e4_milices', title: 'Les Armées privées', kind: 'era', era: 4, kw: ['Guerre', 'Commerce'],
+    text: 'Chaque entreprise a son armée. Elles sont mieux équipées que la vôtre. Elles ont un service client.',
+    left: opt('Les intégrer', { delta: D(0, 12, 0, -7), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, 'Une seule armée. Énorme. Sponsorisée.'),
+    right: opt('Les tolérer', D(0, 5, -4, 6), 'Elles se surveillent entre elles. Pour l’instant.'),
+    art: { motif: 'shield' },
+  }),
+  card({
+    id: 'e4_synthese', title: 'La Synthèse', kind: 'era', era: 4, kw: ['Nature', 'Science'],
+    text: 'On imprime la nourriture. Autant qu’on veut. Elle a le goût qu’on lui dit d’avoir.',
+    left: opt('Pour tous, gratuite', D(14, -5, 0, -8), 'Plus personne n’a faim. Plus personne ne se lève.'),
+    right: opt('La vendre', D(7, -4, 3, 6), 'Le pain est une application. Avec abonnement.'),
+    art: { motif: 'wheat' },
+  }),
 ];

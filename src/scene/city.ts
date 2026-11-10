@@ -3,7 +3,7 @@
  * et des silhouettes dessinées par code. Aucune mécanique : tout est décor.
  */
 import { Rng, hashString } from '../core/rng';
-import { KEYWORDS, type Gauges } from '../core/types';
+import { KEYWORDS, TUNING, type Gauges } from '../core/types';
 
 export interface CivSnapshot {
   seed: number;
@@ -123,14 +123,14 @@ export function layoutCity(s: CivSnapshot): Elem[] {
   const nWall = Math.round((g.army / 100) * 12);
   for (let i = 0; i < nWall; i++) {
     const idx = slots.wallOrder[i];
-    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 1.5, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.army <= 20 ? 1 : g.army >= 80 ? 2 : 0 });
+    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 1.5, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.army <= TUNING.dangerLow ? 1 : g.army >= TUNING.dangerHigh ? 2 : 0 });
   }
 
   // champs (nourriture)
   const nField = Math.max(1, Math.round((g.food / 100) * 8));
   for (let i = 0; i < nField; i++) {
     const idx = slots.fieldOrder[i];
-    out.push({ key: `f${idx}`, kind: 'field', sub: '', x: (idx + 0.5) / 8, layer: 3, size: 1, r: (idx * 0.61) % 1, r2: 0, age: 0, state: g.food <= 20 ? 1 : g.food >= 80 ? 2 : 0 });
+    out.push({ key: `f${idx}`, kind: 'field', sub: '', x: (idx + 0.5) / 8, layer: 3, size: 1, r: (idx * 0.61) % 1, r2: 0, age: 0, state: g.food <= TUNING.dangerLow ? 1 : g.food >= TUNING.dangerHigh ? 2 : 0 });
   }
   const nGran = g.food >= 70 ? 2 : g.food >= 40 ? 1 : 0;
   for (let i = 0; i < nGran; i++) {
@@ -141,7 +141,7 @@ export function layoutCity(s: CivSnapshot): Elem[] {
   const nStall = Math.round((g.treasure / 100) * 6);
   for (let i = 0; i < nStall; i++) {
     const idx = slots.stallOrder[i];
-    out.push({ key: `m${idx}`, kind: 'stall', sub: '', x: 0.1 + (idx / 5) * 0.8 + 0.03 * Math.sin(idx * 9.1), layer: 2.5, size: 1, r: (idx * 0.43) % 1, r2: 0, age: 0, state: g.treasure >= 80 ? 2 : 0 });
+    out.push({ key: `m${idx}`, kind: 'stall', sub: '', x: 0.1 + (idx / 5) * 0.8 + 0.03 * Math.sin(idx * 9.1), layer: 2.5, size: 1, r: (idx * 0.43) % 1, r2: 0, age: 0, state: g.treasure >= TUNING.dangerHigh ? 2 : 0 });
   }
 
   return out;

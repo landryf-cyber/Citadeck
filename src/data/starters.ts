@@ -24,7 +24,7 @@ export const starters = [
     art: { motif: 'eye' },
   }),
   card({
-    id: 's_solde', title: 'La Solde', kind: 'starter', kw: ['Guerre'],
+    id: 's_solde', title: 'La Solde', kind: 'starter',
     text: 'Les soldats veulent leur paie. Les coffres veulent la paix.',
     left: opt('Payer', D(0, 8, 0, -10), 'Payés. Loyaux jusqu’à la prochaine fois.'),
     right: opt('Promettre', { delta: D(0, -9, 0, 3), add: [{ card: 'q_solde_impayee', delay: 7 }] }, 'Ils ont noté. Ils savent compter.'),

@@ -79,4 +79,18 @@ export const era2 = [
     right: opt('Prier avec l’abbé', { delta: D(-9, 3, 0, 0), scale: [{ keyword: 'Foi', delta: D(2, 2) }] }, 'On a beaucoup prié. On a un peu mangé.'),
     art: { motif: 'wheat' },
   }),
+  card({
+    id: 'e2_index', title: 'L’Index', kind: 'era', era: 2, kw: ['Foi'],
+    text: 'L’Église publie la liste des livres interdits. Elle est longue. Elle contient la liste elle-même.',
+    left: opt('Brûler les livres', { delta: D(0, 6, -11, 0), scale: [{ keyword: 'Foi', delta: D(0, 2) }] }, 'Un grand feu. On s’y est réchauffé.'),
+    right: opt('Les cacher', { delta: D(0, -7, -4, -4), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }] }, 'Dans les caves. Avec le vin. Les moines lisent beaucoup.'),
+    art: { motif: 'flame' },
+  }),
+  card({
+    id: 'e2_maitres', title: 'Les Maîtres', kind: 'era', era: 2, kw: ['Science'],
+    text: 'Vos meilleurs maîtres partent enseigner ailleurs. On les y paie mieux. On ne les y brûle pas.',
+    left: opt('Les retenir de force', D(0, -6, -4, -3), 'Ils enseignent. Derrière des barreaux.'),
+    right: opt('Bon voyage', D(0, 0, -11, 5), 'Les écoles sont vides. Les économies, réelles.'),
+    art: { motif: 'scroll' },
+  }),
 ];

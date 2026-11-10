@@ -79,4 +79,18 @@ export const era3 = [
     right: opt('Les champs d’abord', D(8, 3, -9, 3), 'Ils ne lisent pas. Ils cueillent. Ils cueillent bien.'),
     art: { motif: 'scroll' },
   }),
+  card({
+    id: 'e3_course', title: 'La Course', kind: 'era', era: 3, kw: ['Guerre'],
+    text: 'Les voisins ont un cuirassé. Vos amiraux en veulent deux. Leurs amiraux en voudront trois.',
+    left: opt('Deux', { delta: D(0, 13, 0, -10), scale: [{ keyword: 'Guerre', delta: D(0, 2) }], rival: -6 }, 'Deux cuirassés. Ils en ont commandé trois.'),
+    right: opt('Un seul, plus gros', { delta: D(-5, 6, 3, 0), rival: -2 }, 'Le plus gros du monde. Il ne passe pas sous le pont.'),
+    art: { motif: 'wave' },
+  }),
+  card({
+    id: 'e3_or', title: 'La Ruée', kind: 'era', era: 3, kw: ['Commerce'],
+    text: 'On a trouvé de l’or dans les collines. Tout le monde y court. Plus personne ne laboure.',
+    left: opt('Taxer les chercheurs', { delta: D(-6, 0, 0, 13), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 2) }] }, 'Les coffres débordent. Les champs sont en friche.'),
+    right: opt('Fermer les collines', D(-4, -6, 0, 6), 'On a fermé. Ils creusent la nuit.'),
+    art: { motif: 'coin' },
+  }),
 ];

@@ -4,6 +4,7 @@
  * la cité (pleine résolution, rafraîchie à la demande) et les éléments vivants (chaque image).
  */
 import { Rng, hashString } from '../core/rng';
+import { TUNING } from '../core/types';
 import { layoutCity, drawElem, type CivSnapshot, type DrawEnv, type Elem } from './city';
 import { LOOKS, mixLook, mix, rgb, ease, clamp01, lerp, type EraLook, type RGB } from './palette';
 
@@ -717,7 +718,7 @@ export class Scene {
     if (!snap) return;
     this.lampAmount = l.smoke > 0.5 ? clamp01((l.smoke - 0.5) * 2) : 0;
     const k01 = snap.gauges.knowledge / 100;
-    const lit = (snap.gauges.knowledge <= 20 ? 0.06 + k01 * 0.3 : 0.16 + 0.84 * k01) * (0.25 + 0.75 * Math.min(1, lv + 0.2));
+    const lit = (snap.gauges.knowledge <= TUNING.dangerLow ? 0.06 + k01 * 0.3 : 0.16 + 0.84 * k01) * (0.25 + 0.75 * Math.min(1, lv + 0.2));
     const out = this.mood.dead ? clamp01((this.t - this.deadAt) / 3.2) : 0;
     const env: DrawEnv = {
       ctx,

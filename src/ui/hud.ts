@@ -1,4 +1,4 @@
-import { GAUGES, GAUGE_LABEL, DANGER_HIGH, DANGER_LOW, type Delta, type GaugeId, type Gauges } from '../core/types';
+import { GAUGES, GAUGE_LABEL, TUNING, type Delta, type GaugeId, type Gauges } from '../core/types';
 import { gaugeSvg } from './art';
 import { el, ICONS } from './dom';
 
@@ -41,7 +41,7 @@ export class Hud {
       // la forme utile de l'icône occupe ~y 2..38
       const y = 38 - (v / 100) * 36;
       ge.fill.style.transform = `translateY(${y.toFixed(2)}px)`;
-      ge.root.classList.toggle('danger', v <= DANGER_LOW || v >= DANGER_HIGH);
+      ge.root.classList.toggle('danger', v <= TUNING.dangerLow || v >= TUNING.dangerHigh);
       ge.root.setAttribute('aria-valuenow', String(Math.round(v)));
     }
   }

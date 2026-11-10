@@ -1,7 +1,7 @@
 /** Contrôleur : relie le moteur, l'interface, la scène, le son et la sauvegarde. */
 import { Engine, type GameEvent } from './core/engine';
 import { codeToSeed } from './core/rng';
-import { DANGER_HIGH, DANGER_LOW, GAUGES, KEYWORDS, type CardDef, type GameState, type Side } from './core/types';
+import { TUNING, GAUGES, KEYWORDS, type CardDef, type GameState, type Side } from './core/types';
 import type { AudioEngine } from './audio/audio';
 import type { Scene } from './scene/scene';
 import type { CivSnapshot } from './scene/city';
@@ -230,7 +230,7 @@ export class Game {
     let worst = 0;
     for (const g of GAUGES) {
       const v = s.gauges[g];
-      const d = v <= DANGER_LOW ? (DANGER_LOW - v) / DANGER_LOW : v >= DANGER_HIGH ? (v - DANGER_HIGH) / (100 - DANGER_HIGH) : -1;
+      const d = v <= TUNING.dangerLow ? (TUNING.dangerLow - v) / TUNING.dangerLow : v >= TUNING.dangerHigh ? (v - TUNING.dangerHigh) / (100 - TUNING.dangerHigh) : -1;
       if (d >= 0) worst = Math.max(worst, 0.45 + 0.55 * d);
     }
     return worst;

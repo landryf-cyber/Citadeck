@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc",
     "sim": "tsx src/sim/run.ts",
-    "shots": "tsx scripts/screenshots.ts"
+    "shots": "tsx scripts/screenshots.ts",
+    "autotune": "tsx src/sim/autotune.ts"
   },
   "repository": {
     "type": "git",

@@ -13,6 +13,7 @@ import { rivalFriendly, rivalHostile, rivalNames, rivalNeutral } from './rival';
 import { crises, crisisCards } from './crises';
 import { wonders } from './wonders';
 import { eras } from './eras';
+import { tuneCard } from './tuning';
 
 const allCards = [
   ...starters,
@@ -28,7 +29,7 @@ const allCards = [
   ...rivalNeutral,
   ...rivalFriendly,
   ...crisisCards,
-];
+].map(tuneCard);
 
 export const content: Content = {
   cards: toRecord(allCards),

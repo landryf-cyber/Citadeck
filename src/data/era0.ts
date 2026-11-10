@@ -79,4 +79,18 @@ export const era0 = [
     right: opt('Trop loin', D(-4, 4, 4), 'On reste. On mange fade. On réfléchit.'),
     art: { motif: 'star' },
   }),
+  card({
+    id: 'e0_troupeau', title: 'Le Grand Troupeau', kind: 'era', era: 0, kw: ['Nature'],
+    text: 'Des milliers de bêtes traversent la vallée. Trop pour tout manger. On va essayer.',
+    left: opt('Un festin', D(13, -6, 0, 0), 'Trois jours de festin. Personne ne peut plus lever une lance.'),
+    right: opt('Fumer la viande', D(7, 0, -4, 5), 'De la viande pour l’hiver. Et une odeur pour la vie.'),
+    art: { motif: 'mountain' },
+  }),
+  card({
+    id: 'e0_anciens', title: 'La Toux', kind: 'era', era: 0,
+    text: 'Les anciens toussent. Ce sont eux qui savent où poussent les baies. Et lesquelles tuent.',
+    left: opt('Les soigner', D(-6, 0, -3, -4), 'Deux ont survécu. Ils ont oublié la moitié.'),
+    right: opt('Apprendre vite', D(0, -5, -7, 0), 'Les jeunes ont retenu les baies. Pas lesquelles tuent.'),
+    art: { motif: 'leaf' },
+  }),
 ];

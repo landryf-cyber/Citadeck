@@ -79,4 +79,18 @@ export const era1 = [
     right: opt('Un poste lointain', { delta: D(0, -8, 3, 5), rival: -4 }, 'Il garde une frontière. Il écrit beaucoup.'),
     art: { motif: 'crown' },
   }),
+  card({
+    id: 'e1_veterans', title: 'Les Vétérans', kind: 'era', era: 1, kw: ['Guerre'],
+    text: 'Vingt mille vétérans rentrent de campagne. Ils n’ont pas de métier. Ils ont des épées.',
+    left: opt('Les garder sous les armes', { delta: D(0, 11, 0, -8), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, 'Ils campent sous vos fenêtres. Fidèles. Nombreux.'),
+    right: opt('Leur donner des terres', D(-7, 5, 0, -3), 'Des paysans qui labourent en formation.'),
+    art: { motif: 'shield' },
+  }),
+  card({
+    id: 'e1_academie', title: 'L’Académie', kind: 'era', era: 1, kw: ['Science'],
+    text: 'Les savants de toute la mer affluent. Ils parlent, ils comptent, ils mesurent la Terre. Ils ont trouvé.',
+    left: opt('Les loger tous', { delta: D(-5, 0, 12, -5), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }] }, 'La Terre est ronde. Les prêtres sont pâles.'),
+    right: opt('Garder les meilleurs', D(0, -5, 6, 0), 'Trois génies. Ils se détestent.'),
+    art: { motif: 'star' },
+  }),
 ];
