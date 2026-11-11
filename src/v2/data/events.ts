@@ -31,7 +31,7 @@ export const eventCards = [
     ],
   }),
   card({
-    id: 'ev_etranger', kind: 'evenement', eras: [0, 1], art: { motif: 'mask', hue: 268 },
+    id: 'ev_etranger', kind: 'evenement', scale: true, eras: [0, 1], art: { motif: 'mask', hue: 268 },
     title: 'L’Étranger',
     text: 'Un inconnu parle une langue bizarre. Il dessine des cartes de chez {rival}. Il a très faim et un sourire très large.',
     options: [
@@ -60,7 +60,7 @@ export const eventCards = [
     ],
   }),
   card({
-    id: 'ev_jeux', kind: 'evenement', eras: [1, 2], art: { motif: 'ring', hue: 30 },
+    id: 'ev_jeux', kind: 'evenement', scale: true, eras: [1, 2], art: { motif: 'ring', hue: 30 },
     title: 'Les Jeux',
     text: 'Les jeux des cités voisines commencent. Il faut envoyer des athlètes. Ou des espions déguisés en athlètes, qui courent moins vite.',
     options: [
@@ -109,7 +109,7 @@ export const eventCards = [
     ],
   }),
   card({
-    id: 'ev_horloge', kind: 'evenement', eras: [2, 3], art: { motif: 'gear', hue: 40 },
+    id: 'ev_horloge', kind: 'evenement', scale: true, eras: [2, 3], art: { motif: 'gear', hue: 40 },
     title: 'L’Horloge',
     text: 'Une horloge sur la place sonne les heures. Les gens arrivent à l’heure. Personne ne sait si c’est un progrès ou une malédiction.',
     options: [
@@ -142,8 +142,8 @@ export const eventCards = [
     title: 'Les Comptoirs se révoltent',
     text: 'Les colonies se révoltent. Elles ont appris la guerre. De vous, essentiellement.',
     options: [
-      { label: 'Tenir', warn: 'Sans 10 Armée, un quartier tombe',
-        effect: { if: { res: $('A10') }, then: { gain: $('A-4 T4'), reply: 'Tenu. À quel prix, personne ne compte. Les comptables refusent.' },
+      { label: 'Tenir', warn: 'Sans 14 Armée, un quartier tombe',
+        effect: { if: { res: $('A14') }, then: { gain: $('A-4 T4'), reply: 'Tenu. À quel prix, personne ne compte. Les comptables refusent.' },
           else: { quartiers: -1, cause: 'la révolte des colonies', reply: 'Les colonies ont gagné. Elles gardent le sucre. Et un quartier de marchands.' } } },
       { label: 'Partir', effect: { gain: $('T-3'), loy: { troc: -1 }, rival: 1 }, reply: 'Les bateaux rentrent, vides. Les colonies deviennent des pays. Ils vous envoient des cartes postales.' },
     ],
@@ -154,8 +154,8 @@ export const eventCards = [
     text: 'Les mineurs arrêtent le travail. Sans charbon, rien ne tourne : ni les usines, ni les trains, ni vous.',
     options: [
       { label: 'Négocier', cost: $('T4'), effect: { loy: { sel: 1, troc: -1 } }, reply: 'Dix heures par jour au lieu de quatorze. {F:troc} pleure, avec des larmes de quatorze heures.' },
-      { label: 'Briser la grève', warn: 'Sans 9 Armée, un quartier brûle',
-        effect: { if: { res: $('A9') }, then: { gain: $('T4'), loy: { sel: -1, troc: 1 }, reply: 'La mine rouvre. Il y a eu des coups de feu. On en reparlera, longtemps.' },
+      { label: 'Briser la grève', warn: 'Sans 13 Armée, un quartier brûle',
+        effect: { if: { res: $('A13') }, then: { gain: $('T4'), loy: { sel: -1, troc: 1 }, reply: 'La mine rouvre. Il y a eu des coups de feu. On en reparlera, longtemps.' },
           else: { quartiers: -1, cause: 'la grève des mineurs', reply: 'La troupe ne passe pas. Le quartier des mines s’éteint, lampe par lampe.' } } },
     ],
   }),
@@ -204,16 +204,16 @@ export const eventCards = [
 /** Cartes de la rivale, selon l'état de la relation. */
 export const rivalCards = [
   card({
-    id: 'v_lettre', kind: 'rivale', eras: [0, 1, 2, 3, 4], art: { motif: 'scroll', hue: 268 }, speaker: '{Reine}',
+    id: 'v_lettre', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'scroll', hue: 268 }, speaker: '{Reine}',
     title: 'Une lettre de {reine}',
     text: '« Ma chère voisine, j’ai appris vos difficultés. Je prie pour vous. J’envoie aussi un ambassadeur, pour prier de plus près. Affectueusement. »',
     options: [
       { label: 'Recevoir l’ambassadeur', cost: $('V2'), effect: { rival: 1, gain: $('S2') }, reply: 'L’ambassadeur prie beaucoup, surtout près des archives.' },
-      { label: 'Répondre poliment non', effect: { rival: -1, gain: $('A1') }, reply: '{Reine} vous répond qu’elle comprend. Elle ne comprend pas.' },
+      { label: 'Répondre poliment non', effect: { rival: -1, gain: $('A1') }, reply: '{Reine} vous répond qu’{elle} comprend. {Elle} ne comprend pas.' },
     ],
   }),
   card({
-    id: 'v_frontiere', kind: 'rivale', eras: [0, 1, 2, 3, 4], art: { motif: 'wheat', hue: 268 }, speaker: '{Reine}',
+    id: 'v_frontiere', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'wheat', hue: 268 }, speaker: '{Reine}',
     title: 'Le Champ de la discorde',
     text: 'Un champ. {Rival} disent qu’il est à eux. Votre carte dit le contraire. Les deux cartes sont fausses, mais la vôtre est mieux dessinée.',
     options: [
@@ -222,27 +222,27 @@ export const rivalCards = [
     ],
   }),
   card({
-    id: 'v_mariage', kind: 'rivale', eras: [1, 2, 3], art: { motif: 'ring', hue: 268 }, speaker: '{Reine}',
+    id: 'v_mariage', kind: 'rivale', scale: true, eras: [1, 2, 3], art: { motif: 'ring', hue: 268 }, speaker: '{Reine}',
     title: 'Le Mariage',
     text: '{Reine} propose un mariage entre vos héritiers. Les héritiers ne sont pas d’accord. Personne ne leur a demandé, c’est l’usage.',
     options: [
       { label: 'Accepter', cost: $('T4'), effect: { rival: 2, mem: ['mariage'] }, reply: 'Des noces somptueuses. Les mariés ne se parlent pas. Les familles, si : elles comptent.' },
-      { label: 'Refuser', effect: { rival: -1, loy: { ourk: 1 } }, reply: 'Vexée, {reine} marie son héritier ailleurs. Avec quelqu’un de plus grand.' },
+      { label: 'Refuser', effect: { rival: -1, loy: { ourk: 1 } }, reply: '{Reine}, {?rivalshe|vexée|vexé}, marie son héritier ailleurs. Avec quelqu’un de plus grand.' },
     ],
   }),
   card({
-    id: 'v_raid', kind: 'rivale', eras: [0, 1, 2, 3, 4], art: { motif: 'flame', hue: 0 }, speaker: '{Reine}',
+    id: 'v_raid', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'flame', hue: 0 }, speaker: '{Reine}',
     title: 'Les Villages brûlés',
     text: '{Rival} ont brûlé trois villages. {Reine} parle d’une « erreur de carte ». Les cartes, chez {rival}, se trompent souvent dans votre direction.',
     options: [
-      { label: 'Représailles', warn: 'Sans 6 Armée, un quartier brûle',
+      { label: 'Représailles', warn: 'Sans {s:6} Armée, un quartier brûle',
         effect: { rival: -1, if: { res: $('A6') }, then: { gain: $('A-2 T4'), rivalJalon: -1, reply: 'Trois de leurs villages, et un chantier. Erreur de carte, évidemment.' },
           else: { quartiers: -1, cause: 'les raids de la rivale', reply: 'Vos représailles ont été repoussées. Ils ont brûlé un quartier, pour l’erreur de carte.' } } },
       { label: 'Encaisser', effect: { gain: $('V-3'), rival: 1 }, reply: 'Vous reconstruisez. {Reine} vous envoie des condoléances, et une facture pour les torches.' },
     ],
   }),
   card({
-    id: 'v_ultimatum', kind: 'rivale', eras: [1, 2, 3, 4], art: { motif: 'scroll', hue: 0 }, speaker: '{Reine}',
+    id: 'v_ultimatum', kind: 'rivale', scale: true, eras: [1, 2, 3, 4], art: { motif: 'scroll', hue: 0 }, speaker: '{Reine}',
     title: 'L’Ultimatum',
     text: '« Cédez la vallée ou brûlez. » La lettre est signée « {reine}, affectueusement ». Le messager attend une réponse. Il a l’air pressé, et inflammable.',
     options: [
@@ -251,7 +251,7 @@ export const rivalCards = [
     ],
   }),
   card({
-    id: 'v_espion', kind: 'rivale', eras: [1, 2, 3, 4], art: { motif: 'eye', hue: 268 }, speaker: '{Reine}',
+    id: 'v_espion', kind: 'rivale', scale: true, eras: [1, 2, 3, 4], art: { motif: 'eye', hue: 268 }, speaker: '{Reine}',
     title: 'L’Espion',
     text: 'Un espion de {rival} a été pris dans vos archives. Il dit qu’il visitait. Il visitait avec un plan, une lanterne et un faux nez.',
     options: [
@@ -260,30 +260,30 @@ export const rivalCards = [
     ],
   }),
   card({
-    id: 'v_alliance', kind: 'rivale', eras: [0, 1, 2, 3, 4], art: { motif: 'ring', hue: 140 }, speaker: '{Reine}',
+    id: 'v_alliance', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'ring', hue: 140 }, speaker: '{Reine}',
     title: 'L’Alliance',
-    text: '{Reine} propose une alliance. Contre qui, elle ne le précise pas. « Nous trouverons bien. »',
+    text: '{Reine} propose une alliance. Contre qui, {elle} ne le précise pas. « Nous trouverons bien. »',
     options: [
-      { label: 'Signer', cost: $('T3'), effect: { rival: 1, gain: $('A4'), mem: ['alliance'] }, reply: 'Alliés. Elle a déjà un ennemi en tête. Vous espérez que ce n’est pas vous.' },
-      { label: 'Rester libre', effect: { gain: $('S2'), rival: -1 }, reply: 'Libre et seul. Elle signe avec quelqu’un d’autre, plus petit, plus docile.' },
+      { label: 'Signer', cost: $('T3'), effect: { rival: 1, gain: $('A4'), mem: ['alliance'] }, reply: 'Alliés. {Elle} a déjà un ennemi en tête. Vous espérez que ce n’est pas vous.' },
+      { label: 'Rester libre', effect: { gain: $('S2'), rival: -1 }, reply: 'Libre et seul. {Elle} signe avec quelqu’un d’autre, plus petit, plus docile.' },
     ],
   }),
   card({
-    id: 'v_savants', kind: 'rivale', eras: [1, 2, 3, 4], art: { motif: 'scroll', hue: 140 }, speaker: '{Reine}',
+    id: 'v_savants', kind: 'rivale', scale: true, eras: [1, 2, 3, 4], art: { motif: 'scroll', hue: 140 }, speaker: '{Reine}',
     title: 'L’Échange de savants',
-    text: '{Reine} propose d’échanger des savants. Elle envoie les siens. Elle voudrait {F:brume}, en échange. Juste pour une saison.',
+    text: '{Reine} propose d’échanger des savants. {Elle} envoie les siens. {Elle} voudrait {F:brume}, en échange. Juste pour une saison.',
     options: [
       { label: 'Accepter l’échange', effect: { gain: $('S6'), rival: 1, loy: { brume: -2 } }, reply: '{F:brume} part. Les savants de {rival} arrivent, très polis, très curieux. {F:brume} revient en colère, et plus savant.' },
       { label: 'Garder Brume', effect: { loy: { brume: 2 }, rival: -1 }, reply: '{F:brume} est touché. Il le dit en corrigeant votre grammaire.' },
     ],
   }),
   card({
-    id: 'v_commerce', kind: 'rivale', eras: [0, 1, 2, 3, 4], art: { motif: 'coin', hue: 140 }, speaker: '{Reine}',
+    id: 'v_commerce', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'coin', hue: 140 }, speaker: '{Reine}',
     title: 'Le Traité de commerce',
     text: '{Reine} propose d’ouvrir les frontières au commerce. Vos marchands applaudissent. Les siens aussi, et ils sont plus nombreux.',
     options: [
       { label: 'Ouvrir', effect: { gain: $('T5'), rival: 1, loy: { troc: 1, ourk: -1 } }, reply: 'Les marchandises circulent. Les rumeurs aussi. Elles sont toutes en sa faveur.' },
-      { label: 'Taxer ses marchands', effect: { gain: $('T3'), rival: -1 }, reply: 'Ses marchands paient. Elle taxe les vôtres, deux fois plus. Par amitié.' },
+      { label: 'Taxer ses marchands', effect: { gain: $('T3'), rival: -1 }, reply: 'Ses marchands paient. {Elle} taxe les vôtres, deux fois plus. Par amitié.' },
     ],
   }),
 ];

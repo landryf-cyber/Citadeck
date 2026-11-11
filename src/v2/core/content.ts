@@ -1,5 +1,7 @@
 import type { CardDef, CrisisDef, DesseinDef, FamilyDef, FamilyId, OriginDef, RivalDef, RouteDef } from './types';
 
+export interface Moods { hostile: string; cold: string; warm: string; devoted: string }
+
 /** Tout le contenu du jeu, assemblé dans src/v2/data. */
 export interface Content {
   cards: Record<string, CardDef>;
@@ -22,6 +24,10 @@ export interface Content {
   tutorial: string[];
   ruinsCard: string;
   revenantCard: string;
+  /** humeur affichée en tête des cartes de famille */
+  moods: Record<FamilyId, Moods>;
+  /** souvenirs rappelés par les familles */
+  recalls: { family: FamilyId; mem: string; line: string }[];
 }
 
 export function validateContent(c: Content): string[] {

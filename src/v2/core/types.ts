@@ -137,6 +137,8 @@ export interface CardDef {
   price?: number;
   /** découverte : ce qu'elle apporte, en une ligne */
   gift?: string;
+  /** carte valable à toutes les ères : coûts, gains et seuils grandissent avec l'ère */
+  scale?: boolean;
 }
 
 export interface FamilyDef {
@@ -230,6 +232,8 @@ export interface RivalDef {
   /** souveraine, par ère (une dynastie, comme vos familles) */
   leader: [string, string, string, string, string];
   voice: string;
+  /** la souveraine est une femme (accords dans les lettres) */
+  she: boolean;
   hue: number;
   /** son propre dessein, visible sur son horizon */
   jalons: [string, string, string, string, string];
@@ -283,7 +287,7 @@ export interface Prompt {
   from?: string;
 }
 
-export type Phase = 'presage' | 'saison' | 'crise' | 'finere' | 'fin';
+export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fin';
 
 export interface Result {
   type: 'victoire' | 'defaite';
@@ -315,7 +319,7 @@ export interface GameState {
   fam: Record<FamilyId, FamilyStatus>;
   mem: string[];
   /** pour chaque souvenir : la décision exacte et sa date (les familles citent) */
-  memo: Record<string, { label: string; date: string; title: string }>;
+  memo: Record<string, { label: string; date: string; title: string; era: number }>;
   deck: string[];
   jalons: boolean[];
   rivalRel: number;

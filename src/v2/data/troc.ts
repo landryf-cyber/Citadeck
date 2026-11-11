@@ -75,7 +75,7 @@ export const trocCards = [
     ],
   }),
   card({
-    id: 'trahison_troc', kind: 'trahison', family: 'troc', art: { motif: 'coin', hue: 0 },
+    id: 'trahison_troc', kind: 'trahison', scale: true, family: 'troc', art: { motif: 'coin', hue: 0 },
     title: 'La Caisse',
     text: 'En pleine crise, {H:troc} sont partis avec la caisse. {F:troc} a laissé un mot : « Prix d’ami. »',
     options: [
@@ -85,7 +85,7 @@ export const trocCards = [
     ],
   }),
   card({
-    id: 'hommage_troc', kind: 'hommage', family: 'troc', art: { motif: 'coin' },
+    id: 'hommage_troc', kind: 'hommage', scale: true, family: 'troc', art: { motif: 'coin' },
     title: 'Le Dividende',
     text: '{F:troc} vous verse un dividende. « Nous n’oublions pas nos amis : {citation}, {quand}. Un excellent placement, rétrospectivement. »',
     options: [

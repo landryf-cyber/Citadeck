@@ -90,7 +90,7 @@ export const brumeCards = [
     ],
   }),
   card({
-    id: 'trahison_brume', kind: 'trahison', family: 'brume', art: { motif: 'spiral', hue: 0 },
+    id: 'trahison_brume', kind: 'trahison', scale: true, family: 'brume', art: { motif: 'spiral', hue: 0 },
     title: 'L’Expérience',
     text: 'En pleine crise, {F:brume} teste une invention sur la cité « pour voir ». {?mem:brume_spolie|« L’ancêtre avait une roue. On lui a pris. »|}',
     options: [
@@ -100,7 +100,7 @@ export const brumeCards = [
     ],
   }),
   card({
-    id: 'hommage_brume', kind: 'hommage', family: 'brume', art: { motif: 'spiral' },
+    id: 'hommage_brume', kind: 'hommage', scale: true, family: 'brume', art: { motif: 'spiral' },
     title: 'La Démonstration',
     text: '{F:brume} vous fait une démonstration. « Techniquement, vous avez été utile : {citation}, {quand}. » Il vous offre le fruit de ses recherches.',
     options: [

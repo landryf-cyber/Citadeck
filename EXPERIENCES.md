@@ -34,3 +34,28 @@ Journal des expériences : hypothèse, changement, test, résultat, décision.
 - **Lecture** : dans P1, le dessein est inatteignable parce qu'accumuler une jauge rapproche de la mort à 100 : le cadre Reigns interdit le fil rouge. P2 rend le texte décisif mais laisse 12 % de défaites que rien ne permettait d'éviter. P3 divise ce chiffre par deux : choisir sa route, c'est choisir son risque. C'est aussi P3 qui sépare le mieux le prudent (survit) du gourmand (meurt plus tôt).
 - **Limite** : contenu synthétique ; les spécialistes y gagnent un peu moins que le prudent. Le vrai contenu devra récompenser davantage la spécialisation (options réservées plus fortes, jalons exigeants).
 - **Décision** : **P3 retenu**. Garder les dégâts de crise déterministes (seuils annoncés) pour que chaque perte soit attribuable.
+
+## E4 — Premier passage des bots sur le vrai contenu V2 : trop facile
+- **Hypothèse** : le squelette de contenu (4 familles, rencontres, crises, découvertes) produit déjà une partie tendue.
+- **Test** : `npx tsx src/v2/sim/run.ts 150`, 8 profils de bots (lecteur qui simule chaque option sur une copie de l'état, indicateurs seuls, prudent, gourmand, trois spécialistes, aléatoire).
+- **Résultat** : lecture nécessaire (lecteur 95 % contre indicateurs 0 %), 33-37 % de cartes dépendantes, ~10 formes de dilemme par partie. Mais le lecteur survit 99 % et le prudent aussi : l'économie ne pèse pas. Les ressources s'accumulent sans limite dès l'ère III.
+- **Décision** : ajouter de la pression sans hasard pur : humeurs des familles et procès (E5), mise à l'échelle par ère, chantier avant la crise, érosion de l'armée et du trésor.
+
+## E5 — Mise à l'échelle, chantier avant la crise, érosion
+- **Changement** : les cartes `scale` (rencontres, rivale, découvertes, ruines, trahisons…) multiplient coûts, gains et seuils par ère (×1 à ×2,7) ; le jalon se bâtit avant la crise (on paie la gloire avec ce qui protège) ; 30 % de l'armée et 20 % du trésor s'érodent à chaque fin d'ère ; les crises ont leur propre coefficient (`crisisK`).
+- **Résultat** : la survie du lecteur tombe vers 80-90 %, mais le gourmand (tout dans les jalons) devient dominant : 93 % de survie, 83 % de grandes victoires. Construire ne coûte rien de plus à long terme.
+- **Décision** : le profil gourmand est rendu réaliste (il dépense tout dans le dessein, sans tricher sur les crises) et on cherche un mécanisme qui fasse payer la gloire *plus tard*.
+
+## E6 — L'envie : les merveilles attirent les crises
+- **Hypothèse** : si chaque jalon bâti durcit les crises suivantes (« vos merveilles attirent les regards »), la gloire devient un pari : le gourmand gagne plus souvent grand mais meurt plus souvent, le prudent survit mais reste modeste. Sans toucher à la lisibilité : le présage annonce l'intensité.
+- **Changement** : intensité de crise = `crisisK × (1 + envie × jalons bâtis)`.
+- **Test** : `npx tsx src/v2/sim/sweep.ts '[...]' 60`, trois réglages (survie / grande victoire) :
+
+| Réglage | lecteur | prudent | gourmand | étoiles | empire | postérité |
+|---|---|---|---|---|---|---|
+| K 1,2 · envie 0,15 | 83/53 | 92/17 | 80/70 | 88/65 | 93/47 | 82/58 |
+| K 1,2 · envie 0,25 | 85/52 | 88/25 | 75/68 | 75/58 | 88/43 | 78/55 |
+| K 1,1 · envie 0,35 | 68/38 | 90/20 | 72/65 | 83/60 | 92/45 | 62/35 |
+
+- **Décision** : **K 1,2 · envie 0,25**. Mesure complète (200 parties par profil) : lecteur 85 % de survie / 50 % de grandes victoires ; prudent 91 % / 17 % ; gourmand 71 % / 63 %, mort en moyenne à l'ère 4,1 ; indicateurs seuls 0 %, aléatoire 3 %. Quatre stratégies viables (étoiles, empire, postérité, gourmand) ; aucune défaite forcée ; les trois desseins gagnent (45 / 66 / 58 victoires). Les pertes viennent surtout des crises, de la famine et des trahisons : des causes que le joueur voit venir.
+- **Reste** : le présage doit annoncer l'envie en clair, sinon la règle est invisible.

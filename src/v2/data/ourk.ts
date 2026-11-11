@@ -61,8 +61,8 @@ export const ourkCards = [
     options: [
       { label: 'Céder à tout', cost: $('T6'), effect: { loy: { ourk: 3 }, unmem: ['ourk_humilie'], mem: ['ourk_greve_cedee'] },
         reply: 'Onze mille ans de rancune, effacés par une hausse de salaire. L’Histoire est bon marché.' },
-      { label: 'Envoyer la troupe', cost: $('A4'), warn: 'Sans 10 Armée, un quartier brûle',
-        effect: { if: { res: $('A10') }, then: { loy: { ourk: -2 }, mem: ['ourk_ecrase'], reply: 'La grève est brisée. Le colonel Ourkov note la date. Les Ourkov notent toujours la date.' },
+      { label: 'Envoyer la troupe', cost: $('A4'), warn: 'Sans 14 Armée, un quartier brûle',
+        effect: { if: { res: $('A14') }, then: { loy: { ourk: -2 }, mem: ['ourk_ecrase'], reply: 'La grève est brisée. Le colonel Ourkov note la date. Les Ourkov notent toujours la date.' },
           else: { quartiers: -1, cause: 'la grève générale des Ourkov', loy: { ourk: -1 }, reply: 'La troupe a rejoint la grève. Le quartier des usines aussi, en flammes.' } } },
       { label: 'S’excuser pour le mammouth', effect: { loy: { ourk: 1 }, gain: $('A2'), mem: ['ourk_excuses'] },
         reply: 'Le colonel accepte les excuses au nom de l’ancêtre. Il garde les fusils. Par sentiment.' },
@@ -88,8 +88,8 @@ export const ourkCards = [
     options: [
       { label: 'Lui céder la flotte', cost: $('A6'), effect: { loy: { ourk: 3 }, rivalJalon: -1 },
         reply: 'OURK-7 EST SATISFAITE. OURK-7 VA S’OCCUPER DE {RIVAL}. VOUS POUVEZ GARDER LE TRÔNE. POUR L’INSTANT.' },
-      { label: 'La mettre aux arrêts', warn: 'Sans 14 Armée, un quartier brûle',
-        effect: { if: { res: $('A14') }, then: { loy: { ourk: -1 }, gain: $('A-4'), reply: 'OURK-7 EST AUX ARRÊTS. OURK-7 PRÉPARE SES MÉMOIRES. TOME UN : LE MAMMOUTH.' },
+      { label: 'La mettre aux arrêts', warn: 'Sans 20 Armée, un quartier brûle',
+        effect: { if: { res: $('A20') }, then: { loy: { ourk: -1 }, gain: $('A-4'), reply: 'OURK-7 EST AUX ARRÊTS. OURK-7 PRÉPARE SES MÉMOIRES. TOME UN : LE MAMMOUTH.' },
           else: { quartiers: -2, cause: 'le putsch de l’amirale Ourk-7', reply: 'LE CROISEUR A TIRÉ SUR LE PALAIS. OURK-7 S’EXCUSE POUR LE BRUIT.' } } },
     ],
   }),
@@ -124,26 +124,26 @@ export const ourkCards = [
     options: [
       { label: '{?mem:ourk_coregent|Simplifions : la guerre à lui|Lui offrir le commandement}', effect: { gain: $('A6'), loy: { ourk: 3 }, mem: ['ourk_regne'] },
         reply: 'Il commande les armées, vous commandez le reste. Le reste est petit.' },
-      { label: 'Le faire arrêter', warn: 'Sans 9 Armée, un quartier brûle',
-        effect: { if: { res: $('A9') }, then: { loy: { ourk: -3 }, gain: $('T4'), reply: 'Arrêté au petit matin. Ses biens remplissent le trésor. Sa famille remplit un registre de rancunes.' },
+      { label: 'Le faire arrêter', warn: 'Sans 11 Armée, un quartier brûle',
+        effect: { if: { res: $('A11') }, then: { loy: { ourk: -3 }, gain: $('T4'), reply: 'Arrêté au petit matin. Ses biens remplissent le trésor. Sa famille remplit un registre de rancunes.' },
           else: { quartiers: -1, cause: 'le coup de force des Ourk', loy: { ourk: -1 }, reply: 'Les gardes ont choisi leur camp. Pas le vôtre. Un quartier brûle pour la forme.' } } },
     ],
   }),
 
   // ------------------------------------------------------------------ trahison et hommage
   card({
-    id: 'trahison_ourk', kind: 'trahison', family: 'ourk', art: { motif: 'fang', hue: 0 },
+    id: 'trahison_ourk', kind: 'trahison', scale: true, family: 'ourk', art: { motif: 'fang', hue: 0 },
     title: 'Les Portes ouvertes',
     text: 'En pleine crise, {H:ourk} ont ouvert une porte de la cité. « Elle grinçait », explique {F:ourk}.{?mem:ourk_humilie| Il ajoute, sans raison apparente : « Mammouth. »|}',
     options: [
-      { label: 'Boucher la brèche', cost: $('A4'), warn: 'Sans 4 Armée, un quartier tombe',
+      { label: 'Boucher la brèche', cost: $('A4'), warn: 'Sans {s:4} Armée, un quartier tombe',
         effect: { loy: { ourk: 1 } }, reply: 'La brèche est bouchée. {F:ourk} est déçu, mais il fait semblant d’aider.' },
       { label: 'Laisser brûler', effect: { quartiers: -1, cause: 'la trahison des Ourk', loy: { ourk: 1 } },
         reply: 'Le quartier brûle. {F:ourk} se dit vengé, pour cette fois. Pour cette fois.' },
     ],
   }),
   card({
-    id: 'hommage_ourk', kind: 'hommage', family: 'ourk', art: { motif: 'fang' },
+    id: 'hommage_ourk', kind: 'hommage', scale: true, family: 'ourk', art: { motif: 'fang' },
     title: 'Le Banquet des {H:ourk}',
     text: '{F:ourk} lève sa coupe : « Ourk se souvient. {citation}, {quand}. Ourk boit à ça. » Il propose de vous offrir quelque chose. Quelque chose de lourd.',
     options: [

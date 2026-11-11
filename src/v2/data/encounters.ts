@@ -4,16 +4,16 @@ import { $, card } from './dsl';
 export const encounterCards = [
   // ------------------------------------------------------------------ chez les Ourk
   card({
-    id: 'r_ourk_recrue', kind: 'rencontre', family: 'ourk', art: { motif: 'shield', hue: 8 },
+    id: 'r_ourk_recrue', kind: 'rencontre', scale: true, family: 'ourk', art: { motif: 'shield', hue: 8 },
     title: 'La Recrue',
-    text: 'Un jeune {T:ourk} veut entrer dans la garde. Il a tout : la force, la fougue, et une haine sincère pour {H:brume}, qui l’ont recalé à l’école.',
+    text: 'Un jeune cousin de {F:ourk} veut entrer dans la garde. Il a tout : la force, la fougue, et une haine sincère pour {H:brume}, qui l’ont recalé à l’école.',
     options: [
       { label: 'Engagé', cost: $('V2'), effect: { gain: $('A4'), loy: { ourk: 1, brume: -1 } }, reply: 'Il garde la porte de {H:brume}. Il la garde très, très près.' },
       { label: 'Qu’il repasse l’école', effect: { gain: $('S2'), loy: { ourk: -1, brume: 1 } }, reply: 'Il repasse l’école. Il la repasse en tenue de combat.' },
     ],
   }),
   card({
-    id: 'r_ourk_defile', kind: 'rencontre', family: 'ourk', art: { motif: 'crown', hue: 8 },
+    id: 'r_ourk_defile', kind: 'rencontre', scale: true, family: 'ourk', art: { motif: 'crown', hue: 8 },
     title: 'Le Défilé',
     text: '{F:ourk} veut un défilé. « Le peuple doit voir sa force. » Le peuple a vu. Le peuple voudrait surtout voir le dîner.',
     options: [
@@ -23,18 +23,18 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_ourk_trophee', kind: 'rencontre', family: 'ourk', art: { motif: 'skull', hue: 8 },
+    id: 'r_ourk_trophee', kind: 'rencontre', scale: true, family: 'ourk', art: { motif: 'skull', hue: 8 },
     title: 'Le Trophée',
     text: '{H:ourk} ont ramené un trophée de chez {rival} : une statue de {reine}. Ils voudraient la mettre sur la place. À l’envers.',
     options: [
-      { label: 'À l’envers', effect: { gain: $('A2 T2'), loy: { ourk: 1 }, rival: -1 }, reply: 'La statue trône à l’envers. {Reine} vous écrit. Elle souligne trois fois le mot « inacceptable ».' },
-      { label: 'La rendre', cost: $('A1'), effect: { rival: 2, loy: { ourk: -1 } }, reply: '{Reine} vous remercie. Elle remarque qu’il manque le nez.' },
+      { label: 'À l’envers', effect: { gain: $('A2 T2'), loy: { ourk: 1 }, rival: -1 }, reply: 'La statue trône à l’envers. {Reine} vous écrit. {Elle} souligne trois fois le mot « inacceptable ».' },
+      { label: 'La rendre', cost: $('A1'), effect: { rival: 2, loy: { ourk: -1 } }, reply: '{Reine} vous remercie. {Elle} remarque qu’il manque le nez.' },
     ],
   }),
 
   // ------------------------------------------------------------------ chez les Sel
   card({
-    id: 'r_sel_miracle', kind: 'rencontre', family: 'sel', art: { motif: 'sun', hue: 44 },
+    id: 'r_sel_miracle', kind: 'rencontre', scale: true, family: 'sel', art: { motif: 'sun', hue: 44 },
     title: 'Le Miracle',
     text: '{F:sel} annonce un miracle pour demain : les greniers vont se remplir. « Le ciel est formel. Il faudrait juste avancer un peu de grain. »',
     options: [
@@ -46,7 +46,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_sel_relique', kind: 'rencontre', family: 'sel', art: { motif: 'hand', hue: 44 },
+    id: 'r_sel_relique', kind: 'rencontre', scale: true, family: 'sel', art: { motif: 'hand', hue: 44 },
     title: 'La Relique',
     text: '{H:sel} ont trouvé la relique d’un saint : un os. {F:troc} propose de l’acheter, de la découper et de vendre les morceaux.',
     options: [
@@ -55,7 +55,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_sel_jeune', kind: 'rencontre', family: 'sel', art: { motif: 'eye', hue: 44 },
+    id: 'r_sel_jeune', kind: 'rencontre', scale: true, family: 'sel', art: { motif: 'eye', hue: 44 },
     title: 'Le Jeûne',
     text: '{F:sel} prescrit un grand jeûne pour apaiser le ciel. « Le ciel aime voir les gens maigres. Il est un peu bizarre, le ciel. »',
     options: [
@@ -66,7 +66,7 @@ export const encounterCards = [
 
   // ------------------------------------------------------------------ chez les Brume
   card({
-    id: 'r_brume_eleve', kind: 'rencontre', family: 'brume', art: { motif: 'scroll', hue: 205 },
+    id: 'r_brume_eleve', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'scroll', hue: 205 },
     title: 'L’Élève',
     text: 'L’élève de {F:brume} a eu une idée meilleure que celle de son maître. {F:brume} demande qu’on l’exile. « Techniquement, pour son bien. »',
     options: [
@@ -75,7 +75,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_brume_erreur', kind: 'rencontre', family: 'brume', art: { motif: 'spiral', hue: 205 },
+    id: 'r_brume_erreur', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'spiral', hue: 205 },
     title: 'L’Erreur de calcul',
     text: '{F:brume} a trouvé une erreur dans les calculs de l’ancêtre. La Terre ne tourne pas dans le bon sens. « Il faudrait tout recalculer. Ça coûte. »',
     options: [
@@ -84,7 +84,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_brume_machine', kind: 'rencontre', family: 'brume', art: { motif: 'gear', hue: 205 },
+    id: 'r_brume_machine', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'gear', hue: 205 },
     title: 'La Machine',
     text: '{F:brume} a construit une machine qui fait le travail de dix {T:ourk}. Elle fait aussi le bruit de dix {T:ourk}.',
     options: [
@@ -95,7 +95,7 @@ export const encounterCards = [
 
   // ------------------------------------------------------------------ chez les Troc
   card({
-    id: 'r_troc_marche', kind: 'rencontre', family: 'troc', art: { motif: 'coin', hue: 150 },
+    id: 'r_troc_marche', kind: 'rencontre', scale: true, family: 'troc', art: { motif: 'coin', hue: 150 },
     title: 'Le Marché',
     text: '{F:troc} vous fait visiter le marché. Tout est à vendre. « Même ça. Surtout ça. Pour vous, prix d’ami. »',
     options: [
@@ -105,7 +105,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_troc_contrat', kind: 'rencontre', family: 'troc', art: { motif: 'scroll', hue: 150 },
+    id: 'r_troc_contrat', kind: 'rencontre', scale: true, family: 'troc', art: { motif: 'scroll', hue: 150 },
     title: 'Le Contrat',
     text: '{F:troc} propose un contrat d’exclusivité : tout votre commerce passera par sa maison. En échange, une avance. « C’est sans risque. Pour moi. »',
     options: [
@@ -115,7 +115,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_troc_faillite', kind: 'rencontre', family: 'troc', art: { motif: 'scales', hue: 150 },
+    id: 'r_troc_faillite', kind: 'rencontre', scale: true, family: 'troc', art: { motif: 'scales', hue: 150 },
     title: 'La Faillite',
     text: 'Une maison rivale de {H:troc} fait faillite. {F:troc} propose de racheter ses dettes et ses clients. « Les clients sont fournis avec les dettes. »',
     options: [
@@ -126,18 +126,18 @@ export const encounterCards = [
 
   // ------------------------------------------------------------------ la frontière
   card({
-    id: 'r_front_raid', kind: 'rencontre', art: { motif: 'flame', hue: 0 },
+    id: 'r_front_raid', kind: 'rencontre', scale: true, art: { motif: 'flame', hue: 0 },
     title: 'Le Raid',
     text: 'Des pillards de {rival} brûlent les fermes de la frontière. Ils prétendent être des marchands. Ils ont des torches pour s’éclairer.',
     options: [
-      { label: 'Les repousser', warn: 'Sans 5 Armée, un quartier brûle',
+      { label: 'Les repousser', warn: 'Sans {s:5} Armée, un quartier brûle',
         effect: { if: { res: $('A5') }, then: { gain: $('A-2 T5'), rival: -1, reply: 'Repoussés. Ils ont laissé leurs torches. Et leurs marchandises, finalement.' },
           else: { quartiers: -1, cause: 'un raid à la frontière', rival: -1, reply: 'Ils étaient plus nombreux que vos soldats. Les fermes, puis le quartier, ont brûlé.' } } },
       { label: 'Payer une rançon', cost: $('T4'), effect: { rival: 1 }, reply: 'Ils repartent avec l’or. Ils promettent de revenir, ce qui est gentil.' },
     ],
   }),
   card({
-    id: 'r_front_marchands', kind: 'rencontre', art: { motif: 'road', hue: 30 },
+    id: 'r_front_marchands', kind: 'rencontre', scale: true, art: { motif: 'road', hue: 30 },
     title: 'La Caravane',
     text: 'Une caravane de {rival} veut traverser vos terres. Elle paiera. Elle transporte des épices, de l’or, et un homme qui prend beaucoup de notes.',
     options: [
@@ -146,7 +146,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_front_deserteur', kind: 'rencontre', art: { motif: 'hand', hue: 0 },
+    id: 'r_front_deserteur', kind: 'rencontre', scale: true, art: { motif: 'hand', hue: 0 },
     title: 'Le Déserteur',
     text: 'Un officier de {rival} déserte. Il connaît tous les secrets de {reine}. Il demande l’asile, un château, et qu’on l’appelle « Excellence ».',
     options: [
@@ -157,7 +157,7 @@ export const encounterCards = [
 
   // ------------------------------------------------------------------ l'inconnu
   card({
-    id: 'r_inc_voyageur', kind: 'rencontre', art: { motif: 'star', hue: 280 },
+    id: 'r_inc_voyageur', kind: 'rencontre', scale: true, art: { motif: 'star', hue: 280 },
     title: 'Le Voyageur',
     text: 'Un voyageur affirme venir du futur. Il connaît la fin de votre civilisation. Il accepte de la dire, pour un repas chaud.',
     options: [
@@ -166,7 +166,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_inc_puits', kind: 'rencontre', art: { motif: 'moon', hue: 280 },
+    id: 'r_inc_puits', kind: 'rencontre', scale: true, art: { motif: 'moon', hue: 280 },
     title: 'Le Puits aux souhaits',
     text: 'Un puits exauce les souhaits, mais toujours un peu de travers. Vos familles ont chacune un souhait. Un seul passera.',
     form: 'qui',
@@ -181,7 +181,7 @@ export const encounterCards = [
     options: [],
   }),
   card({
-    id: 'r_inc_comete', kind: 'rencontre', art: { motif: 'comet', hue: 280 },
+    id: 'r_inc_comete', kind: 'rencontre', scale: true, art: { motif: 'comet', hue: 280 },
     title: 'La Pierre tombée',
     text: 'Une pierre est tombée du ciel. Elle est chaude, elle bourdonne et elle a l’air de vouloir quelque chose.',
     options: [

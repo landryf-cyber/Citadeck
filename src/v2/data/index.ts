@@ -9,6 +9,7 @@ import { crises, crisisCards } from './crises';
 import { discoveryCards } from './discoveries';
 import { eventCards, rivalCards } from './events';
 import { desseins, engineCards, families, origins, rivalries, rivals, routes } from './world';
+import { moods, recalls } from './moods';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
@@ -41,6 +42,8 @@ export const content: Content = {
   tutorial: [],
   ruinsCard: 'ruines',
   revenantCard: 'revenants',
+  moods,
+  recalls,
 };
 
 export const CARD_COUNT = all.filter((c) => !['presage', 'carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(c.kind)).length;

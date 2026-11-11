@@ -10,12 +10,13 @@ Documents de référence : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `
 - Moteur V2 sans interface : `src/v2/core/` (types, gabarits de texte avec citations datées, moteur, validation)
 - Squelette de contenu V2 : `src/v2/data/` — 4 familles × 5 ères + intrigues + trahisons + hommages, 18 rencontres de route, 5 crises × 3, 16 découvertes, ~20 événements, 9 cartes de rivale, ruines et revenants
 - Test de cohérence du contenu V2 (`tests/v2.content.test.ts`)
+- Bots V2 (`src/v2/sim/`: bots, sim, run avec `--transcript`, econ, sweep) et équilibrage (EXPERIENCES E4-E6) : `TUNING = { crisisK 1.2, envie 0.25 }`
 
 ## En cours
-- Étape 1 du plan : bots V2 + transcriptions + mesures sur le squelette ; valider fil rouge, impact des choix, méta
+- Étape 2 : méta-progression (module pur `src/v2/core/meta.ts`)
 
 ## Reste à faire (dans l'ordre)
-1. Bots V2 (lecteur, indicateurs seuls, prudent, gourmand, 3 spécialistes, aléatoire), mesures, transcriptions lisibles ; équilibrage
+1. ~~Bots V2, mesures, équilibrage~~ (fait ; annoncer l'envie dans le présage)
 2. Méta-progression (chronique, ruines, revenants, testament, déblocages) en module pur + tests
 3. Enrichir le contenu là où les transcriptions montrent des répétitions ; relecture des textes
 4. Interface V2 : scène ~40 % de hauteur, carte compacte, HUD (ressources, quartiers, familles), carrefour, procès, jalon, découverte, présage, chronique, fin, testament ; ruines et merveilles dans la scène ; portraits de famille qui vieillissent

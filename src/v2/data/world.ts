@@ -41,10 +41,10 @@ export const desseins: DesseinDef[] = [
     pitch: 'Partir. Un jour, tous. Il faudra du Savoir, et des savants qui vous aiment.',
     jalons: [
       { name: 'Le Cercle de pierres', text: 'Des pierres dressées qui annoncent les saisons.', cost: $('S5'), gift: 'Il rapporte 1 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 1 }, shape: 'cercle' },
-      { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S8 V2'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour' },
-      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S11 T3'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome' },
-      { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S14 T5'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee' },
-      { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S16 T6 V4'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche' },
+      { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S9 V3'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour' },
+      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S14 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome' },
+      { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S19 T8'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee' },
+      { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S22 T9 V6'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche' },
     ],
   },
   {
@@ -52,10 +52,10 @@ export const desseins: DesseinDef[] = [
     pitch: 'La vallée sera à vous, et {rival} avec. Il faudra de l’Armée, et des guerriers fidèles.',
     jalons: [
       { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'palissade' },
-      { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A8 T2'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle' },
-      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A11 V3'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse' },
-      { name: 'L’Arsenal', text: 'Une usine qui ne fabrique qu’une chose. Beaucoup.', cost: $('A14 T5'), req: { tags: { Guerre: 4 } }, gift: 'Il rapporte 2 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 2 }, shape: 'arsenal' },
-      { name: 'La Capitulation', text: '{Rival} signent. Sur votre table, avec votre stylo.', cost: $('A16 T6'), req: { tags: { Guerre: 5 } }, gift: 'La vallée.', shape: 'drapeau' },
+      { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A8 T3'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle' },
+      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A11 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse' },
+      { name: 'L’Arsenal', text: 'Une usine qui ne fabrique qu’une chose. Beaucoup.', cost: $('A15 T6'), req: { tags: { Guerre: 4 } }, gift: 'Il rapporte 2 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 2 }, shape: 'arsenal' },
+      { name: 'La Capitulation', text: '{Rival} signent. Sur votre table, avec votre stylo.', cost: $('A19 T8 V5'), req: { tags: { Guerre: 5 } }, gift: 'La vallée.', shape: 'drapeau' },
     ],
   },
   {
@@ -63,10 +63,10 @@ export const desseins: DesseinDef[] = [
     pitch: 'Qu’on chante {cite} quand plus personne ne se souviendra de {rival}. Il faudra du Trésor, et une culture.',
     jalons: [
       { name: 'Les Peintures de la grotte', text: 'Des mains, des bisons, et vous, plus grand que nature.', cost: $('T5'), gift: 'Personne ne peut tout à fait vous haïr : aucune loyauté ne descend sous −2.', passive: { type: 'loyalty', family: 'all', floor: -2 }, shape: 'grotte' },
-      { name: 'Le Théâtre', text: 'Des gradins de pierre où l’on rit de vous, ce qui vous rend populaire.', cost: $('T8 V2'), req: { tags: { Culture: 2 } }, gift: 'Il rapporte 1 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 1 }, shape: 'theatre' },
-      { name: 'La Cathédrale', text: 'Trois siècles de chantier. On y entend une mouche penser.', cost: $('T11 S3'), req: { tags: { Culture: 3 } }, gift: 'Elle rapporte 2 Vivres par saison.', passive: { type: 'income', res: 'vivres', amount: 2 }, shape: 'cathedrale' },
-      { name: 'L’Exposition universelle', text: 'Une tour de fer, provisoire. Elle restera.', cost: $('T14 S4'), req: { tags: { Culture: 4 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'tour_fer' },
-      { name: 'Le Grand Récit', text: 'Votre histoire, gravée, chantée, diffusée, traduite dans toutes les langues. Même les mortes.', cost: $('T16 V4 S4'), req: { tags: { Culture: 5 } }, gift: 'L’éternité.', shape: 'recit' },
+      { name: 'Le Théâtre', text: 'Des gradins de pierre où l’on rit de vous, ce qui vous rend populaire.', cost: $('T9 V3'), req: { tags: { Culture: 2 } }, gift: 'Il rapporte 1 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 1 }, shape: 'theatre' },
+      { name: 'La Cathédrale', text: 'Trois siècles de chantier. On y entend une mouche penser.', cost: $('T13 S5'), req: { tags: { Culture: 3 } }, gift: 'Elle rapporte 2 Vivres par saison.', passive: { type: 'income', res: 'vivres', amount: 2 }, shape: 'cathedrale' },
+      { name: 'L’Exposition universelle', text: 'Une tour de fer, provisoire. Elle restera.', cost: $('T18 S7'), req: { tags: { Culture: 4 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'tour_fer' },
+      { name: 'Le Grand Récit', text: 'Votre histoire, gravée, chantée, diffusée, traduite dans toutes les langues. Même les mortes.', cost: $('T22 V6 S6'), req: { tags: { Culture: 5 } }, gift: 'L’éternité.', shape: 'recit' },
     ],
   },
 ];
@@ -78,13 +78,13 @@ export const origins: OriginDef[] = [
 ];
 
 export const rivals: RivalDef[] = [
-  { id: 'orvandes', name: 'les Orvandes', hue: 268, voice: 'Une politesse assassine, par lettres.',
+  { id: 'orvandes', name: 'les Orvandes', hue: 268, she: true, voice: 'Une politesse assassine, par lettres.',
     leader: ['la cheffe Ysolde', 'la reine Ysolde II', 'la reine Ysolde IX', 'la présidente Ysolde', 'Ysolde-∞'],
     jalons: ['le Menhir des Orvandes', 'le Colosse d’Ysolde', 'la Grande Muraille', 'le Chemin de fer d’Ysolde', 'l’Ascenseur spatial'] },
-  { id: 'harsk', name: 'les Harsk', hue: 0, voice: 'Hurle ses lettres. Les signe avec une hache.',
+  { id: 'harsk', name: 'les Harsk', hue: 0, she: false, voice: 'Hurle ses lettres. Les signe avec une hache.',
     leader: ['le grand Harsk', 'Harsk le Conquérant', 'le roi Harsk XIV', 'le maréchal Harsk', 'HARSK PRIME'],
     jalons: ['le Tumulus des Harsk', 'l’Arène de Harsk', 'la Forteresse noire', 'l’Usine à canons', 'la Lune de guerre'] },
-  { id: 'ombre', name: 'la Ligue d’Ombre', hue: 230, voice: 'Ne signe jamais. Sait déjà ce que vous allez répondre.',
+  { id: 'ombre', name: 'la Ligue d’Ombre', hue: 230, she: true, voice: 'Ne signe jamais. Sait déjà ce que vous allez répondre.',
     leader: ['l’Ombre', 'l’Ombre pourpre', 'le Conseil d’Ombre', 'la Directrice', 'OMBRE'],
     jalons: ['la Pierre qui écoute', 'la Bibliothèque fermée', 'le Labyrinthe', 'le Bureau des fiches', 'le Grand Miroir'] },
 ];
@@ -121,7 +121,7 @@ export const engineCards = [
   card({ id: 'croissance', kind: 'croissance', title: 'Les Greniers débordent', text: 'Assez de vivres pour fonder un nouveau quartier. Ou pour tenir le prochain hiver, qui sera long. Ils le sont tous.', options: [], art: { motif: 'house' } }),
   card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation : {citation}, {quand}. « Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),
   card({
-    id: 'ruines', kind: 'ruines', title: 'Les Ruines de {ancienne}', art: { motif: 'skull' },
+    id: 'ruines', kind: 'ruines', scale: true, title: 'Les Ruines de {ancienne}', art: { motif: 'skull' },
     text: 'Sous la colline dorment les restes de {ancienne}, tombée par {cause}. Sur une stèle, leurs derniers mots : « {testament} ».',
     options: [
       { label: 'Fouiller les ruines', cost: $('V2'), effect: { gain: $('S5 T3'), mem: ['ruines_fouillees'] },
@@ -133,7 +133,7 @@ export const engineCards = [
     ],
   }),
   card({
-    id: 'revenants', kind: 'revenant', title: 'Les Revenants', art: { motif: 'hand' },
+    id: 'revenants', kind: 'revenant', scale: true, title: 'Les Revenants', art: { motif: 'hand' },
     text: 'Des réfugiés arrivent des ruines de {ancienne}. Ce sont {griefmaison}. Ils portent une stèle : « {griefdate} : {grief} ». Ils pensent que c’était vous. Ils n’ont pas tout à fait tort.',
     options: [
       { label: 'Les accueillir', cost: $('V4'), effect: { quartiers: 1, mem: ['revenants_accueillis'] },

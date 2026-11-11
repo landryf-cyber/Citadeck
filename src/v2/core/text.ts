@@ -19,6 +19,13 @@
 import type { FamilyId, GameState } from './types';
 import type { Content } from './content';
 
+/** coefficient des crises (réglé par le moteur) */
+let CRISIS_K = 1;
+export const crisisK = () => CRISIS_K;
+export function setCrisisK(k: number): void {
+  CRISIS_K = k;
+}
+
 export function eraDate(era: number, turn: number): string {
   const base = [-9200, -1400, 1080, 1810, 2150][era];
   const step = [140, 45, 22, 6, 3][era];
@@ -57,6 +64,7 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
       else if ((m = test.match(/^jalon:(\d)$/))) ok = !!s.jalons[Number(m[1])];
       else if ((m = test.match(/^dessein:(.+)$/))) ok = s.dessein === m[1];
       else if ((m = test.match(/^state:(\w+)=(\w+)$/))) ok = s.fam[m[1] as FamilyId]?.state === m[2];
+      else if (test === 'rivalshe') ok = !!(c.rivals.find((r) => r.id === s.rival) ?? c.rivals[0]).she;
       return ok ? yes : no;
     });
   }
@@ -72,11 +80,28 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
     .replace(/\{Rival\}/g, capitalize(rival.name))
     .replace(/\{reine\}/g, rival.leader[s.era])
     .replace(/\{Reine\}/g, capitalize(rival.leader[s.era]))
+    .replace(/\{s:(\d+)\}/g, (_m, n: string) => String(Math.max(1, Math.round(Number(n) * [1, 1.35, 1.75, 2.2, 2.7][s.era]))))
+    .replace(/\{k:(\d+)\}/g, (_m, n: string) => String(Math.max(1, Math.round(Number(n) * crisisK()))))
     .replace(/\{date\}/g, eraDate(s.era, s.turn))
     .replace(/\{Q:(\w+)\}/g, (_m, k: string) => (s.memo[k] ? `« ${s.memo[k].label} »` : '« … »'))
     .replace(/\{D:(\w+)\}/g, (_m, k: string) => s.memo[k]?.date ?? 'un jour')
+    .replace(/\{elle\}/g, rival.she ? 'elle' : 'il')
+    .replace(/\{Elle\}/g, rival.she ? 'Elle' : 'Il')
     .replace(/\{(\w+)\}/g, (m, k: string) => extra[k] ?? m);
-  return out.replace(/\s{2,}/g, ' ').trim();
+  return polish(out);
+}
+
+/** Grammaire française après substitution : contractions et majuscules en début de phrase. */
+export function polish(text: string): string {
+  let out = text.replace(/\s{2,}/g, ' ').trim();
+  out = out
+    .replace(/\b([dD])e les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
+    .replace(/\b([àÀ]) les (?=[A-ZÉÈ])/g, (_m, a: string) => (a === 'à' ? 'aux ' : 'Aux '))
+    .replace(/\b([dD])e le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'du ' : 'Du '))
+    .replace(/\b([àÀ]) le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, a: string) => (a === 'à' ? 'au ' : 'Au '));
+  // majuscule en début de texte, après une ponctuation forte, après un guillemet ouvrant
+  out = out.replace(/(^|[.!?…]\s+|«\s?)([a-zàâçéèêëîïôûùüÿœ])/g, (_m, pre: string, ch: string) => pre + ch.toUpperCase());
+  return out;
 }
 
 export function capitalize(s: string): string {

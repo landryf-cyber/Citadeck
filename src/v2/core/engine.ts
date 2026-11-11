@@ -4,7 +4,7 @@
  */
 import { Rng } from '../../core/rng';
 import type { Content } from './content';
-import { eraDate, fill, civName, capitalize } from './text';
+import { eraDate, fill, civName, capitalize, setCrisisK } from './text';
 import {
   FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
@@ -14,6 +14,34 @@ import {
 export const SAVE_VERSION = 20;
 export const ERAS = 5;
 export const SAISON_CARDS = 4;
+/** Réglages d'équilibrage (balayés par src/v2/sim/sweep.ts) */
+export const TUNING = { crisisK: 1.2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.25 };
+/** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
+export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
+const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
+const scaleBag = (b: Bag | undefined, era: number): Bag | undefined => {
+  if (!b) return b;
+  const o: Bag = {};
+  for (const k of Object.keys(b) as Res[]) o[k] = scaleN(b[k]!, era);
+  return o;
+};
+/** Une option d'une carte « à l'échelle », ramenée à l'ère en cours. */
+function scaleOption(o: Option, era: number, k = ERA_SCALE[era]): Option {
+  const scaleBag = (b: Bag | undefined, _e: number): Bag | undefined => {
+    if (!b) return b;
+    const out: Bag = {};
+    for (const r of Object.keys(b) as Res[]) out[r] = b[r] === 0 ? 0 : Math.sign(b[r]!) * Math.max(1, Math.round(Math.abs(b[r]!) * k));
+    return out;
+  };
+  const se = (e: Effect | undefined): Effect | undefined => {
+    if (!e) return e;
+    const out: Effect = { ...e, gain: scaleBag(e.gain, era), then: se(e.then), else: se(e.else) };
+    if (e.if?.res) out.if = { ...e.if, res: scaleBag(e.if.res, era) };
+    if (e.bet) out.bet = { ...e.bet, win: se(e.bet.win)!, lose: se(e.bet.lose)! };
+    return out;
+  };
+  return { ...o, cost: scaleBag(o.cost, era), req: o.req?.res ? { ...o.req, res: scaleBag(o.req.res, era) } : o.req, effect: se(o.effect)! };
+}
 
 export interface Setup {
   dessein: string;
@@ -45,6 +73,7 @@ export type Ev =
   | { type: 'defect'; family: FamilyId }
   | { type: 'neglect'; family: FamilyId }
   | { type: 'famine' }
+  | { type: 'decay'; armee: number; tresor: number }
   | { type: 'income'; bag: Bag }
   | { type: 'end'; result: NonNullable<GameState['result']> };
 
@@ -166,6 +195,8 @@ export class Engine {
     for (const id of s.deck) if (this.c.cards[id]?.tags?.includes(tag)) n++;
     for (const f of this.present(s)) if (this.c.families[f].tag === tag && s.fam[f].loy >= 1) n++;
     if (this.dessein(s).tag === tag) n += s.jalons.filter(Boolean).length;
+    // être chanté, c'est être aimé : chaque famille dévouée compte pour la Culture
+    if (tag === 'Culture') n += this.present(s).filter((f) => s.fam[f].loy >= 2).length;
     for (const p of this.passives(s)) if (p.type === 'tagBonus' && p.tag === tag) n += p.amount;
     return n;
   }
@@ -258,7 +289,7 @@ export class Engine {
       return opts;
     }
     if (card.kind === 'proces') return this.trialOptions(s, p);
-    if (card.qui && p.qui) return p.qui.map((f) => card.qui!.option(f));
+    if (card.qui && p.qui) return p.qui.map((f) => (card.scale ? scaleOption(card.qui!.option(f), s.era) : card.qui!.option(f)));
     if (card.kind === 'croissance') {
       const extra = this.passives(s).filter((x) => x.type === 'growth').reduce((a, x) => a + (x as { amount: number }).amount, 0);
       return [
@@ -273,10 +304,12 @@ export class Engine {
         { label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' },
       ];
     }
-    return card.options;
+    if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
+    return card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
   }
 
   view(s: GameState): View | null {
+    setCrisisK(this.crisisK(s));
     const p = s.prompt;
     if (!p) return null;
     const card = this.card(p.card);
@@ -316,6 +349,10 @@ export class Engine {
         extra.griefmaison = r.grudge ? capitalize(r.grudge.house) : '';
       }
     }
+    if (card.kind === 'famille' && card.family) {
+      const lead = this.familyLead(s, card.family);
+      if (lead) text = `${lead} ${text}`;
+    }
     if (p.from) header = `Suite de · ${p.from}`;
     if (card.kind === 'crise') {
       const cr = this.c.crises[s.era];
@@ -348,7 +385,7 @@ export class Engine {
     const walk = (e: Effect | undefined) => {
       if (!e) return;
       for (const f of Object.keys(e.loy ?? {}) as FamilyId[]) if (e.loy![f]) fams.add(f);
-      if (e.sched?.length || e.addCard?.length) later = true;
+      if (e.sched?.length) later = true;
       if (e.famState) fams.add(e.famState.id);
       walk(e.then);
       walk(e.else);
@@ -384,6 +421,21 @@ export class Engine {
     }
     if (card.kind === 'proces' && p.qui?.[i]) v.families = [p.qui[i], p.plaintiff!];
     return v;
+  }
+
+  /** Intensité des crises : vos merveilles attirent les prédateurs. */
+  crisisK(s: GameState): number {
+    return TUNING.crisisK * (1 + TUNING.envy * s.jalons.filter(Boolean).length);
+  }
+
+  /** Humeur et souvenir de la famille, en tête de sa carte. */
+  familyLead(s: GameState, f: FamilyId): string {
+    const loy = s.fam[f].loy;
+    const m = this.c.moods[f];
+    const mood = loy <= -2 ? m.hostile : loy === -1 ? m.cold : loy === 1 ? m.warm : loy >= 2 ? m.devoted : '';
+    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era);
+    const recall = rec.length ? rec[(s.era + rec.length) % rec.length].line : '';
+    return [mood, recall].filter(Boolean).join(' ');
   }
 
   rival(s: GameState) {
@@ -434,7 +486,7 @@ export class Engine {
     if (card.family && s.fam[card.family]) s.fam[card.family].seen = s.era;
 
     // les souvenirs gardent la décision mot pour mot, avec sa date : les familles s'en serviront
-    for (const m of s.mem) if (!memBefore.has(m)) s.memo[m] = { label: view.label, date, title: titleNow };
+    for (const m of s.mem) if (!memBefore.has(m)) s.memo[m] = { label: view.label, date, title: titleNow, era: s.era };
     const loy: Partial<Record<FamilyId, number>> = {};
     for (const f of FAMILIES) if (s.fam[f].loy !== loyBefore[f]) loy[f] = s.fam[f].loy - loyBefore[f];
     const v = this.view(s);
@@ -663,6 +715,12 @@ export class Engine {
           s.prompt = { card: 'carrefour', routes: this.routesFor(s, rng) };
           return;
         }
+        // le chantier du jalon, avant la crise : bâtir, c'est affronter la crise plus pauvre
+        s.phase = 'chantier';
+        s.prompt = { card: 'jalon' };
+        return;
+      }
+      if (s.phase === 'chantier') {
         // la crise
         s.phase = 'crise';
         const cr = this.c.crises[s.era];
@@ -760,8 +818,16 @@ export class Engine {
         ev.push({ type: 'income', bag: { [r]: 3 } });
       }
     }
+    // les vétérans rentrent chez eux, les comptables se servent
+    const da = Math.floor(s.res.armee * TUNING.armyDecay);
+    const dt = Math.floor(s.res.tresor * TUNING.treasureDecay);
+    if (da || dt) {
+      s.res.armee -= da;
+      s.res.tresor -= dt;
+      ev.push({ type: 'decay', armee: da, tresor: dt });
+    }
     // la cité mange
-    const upkeep = s.quartiers;
+    const upkeep = Math.ceil(s.quartiers * 1.5);
     if (s.res.vivres >= upkeep) s.res.vivres -= upkeep;
     else {
       s.res.vivres = 0;
@@ -777,7 +843,7 @@ export class Engine {
       s.rivalJalons = Math.min(5, s.rivalJalons + 1);
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
-    const steps = ['croissance', 'proces', 'jalon'];
+    const steps = ['croissance', 'proces'];
     if (s.era < ERAS - 1) steps.push('decouverte');
     s.steps = steps;
   }
@@ -788,12 +854,13 @@ export class Engine {
     }
     if (step === 'proces') {
       const fams = this.present(s);
-      const angry = fams.filter((f) => s.fam[f].loy <= -1).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+      // la famille la plus lésée : loyauté basse et un grief précis dans le journal
+      const angry = fams.filter((f) => s.fam[f].loy <= 0 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
       if (angry) {
         const others = fams.filter((f) => f !== angry).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
         return { card: 'proces', plaintiff: angry, quote: this.worstAct(s, angry), qui: others };
       }
-      const fond = fams.filter((f) => s.fam[f].loy >= 2).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
+      const fond = fams.filter((f) => s.fam[f].loy >= 1 && this.bestAct(s, f) >= 0).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
       if (fond) return { card: `hommage_${fond}`, quote: this.bestAct(s, fond) };
       return null;
     }
@@ -811,7 +878,7 @@ export class Engine {
   }
 
   growthCost(s: GameState): number {
-    return 3 + s.quartiers;
+    return TUNING.growthBase + s.quartiers;
   }
 
   /** La décision qui a le plus blessé une famille (index dans l'historique). */
@@ -820,7 +887,7 @@ export class Engine {
     let worst = 0;
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
-      if (d < worst || (d === worst && d < 0)) {
+      if (d < 0 && (d < worst || d === worst)) {
         worst = d;
         best = i;
       }

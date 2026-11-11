@@ -78,7 +78,7 @@ export const selCards = [
     ],
   }),
   card({
-    id: 'trahison_sel', kind: 'trahison', family: 'sel', art: { motif: 'eye', hue: 0 },
+    id: 'trahison_sel', kind: 'trahison', scale: true, family: 'sel', art: { motif: 'eye', hue: 0 },
     title: 'Le Sermon',
     text: 'En pleine crise, {F:sel} prêche que c’est votre faute. Le ciel est formel.{?mem:sel_bafouee| Il est aussi question d’un louveteau.|} La foule écoute.',
     options: [
@@ -88,7 +88,7 @@ export const selCards = [
     ],
   }),
   card({
-    id: 'hommage_sel', kind: 'hommage', family: 'sel', art: { motif: 'eye' },
+    id: 'hommage_sel', kind: 'hommage', scale: true, family: 'sel', art: { motif: 'eye' },
     title: 'La Bénédiction',
     text: '{F:sel} vous bénit en public. « Le ciel se souvient : {citation}, {quand}. Le ciel vous offre quelque chose. Gratuitement. Cette fois. »',
     options: [

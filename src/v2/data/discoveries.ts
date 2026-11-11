@@ -8,7 +8,7 @@ import { $, card } from './dsl';
 export const discoveryCards = [
   // ------------------------------------------------------------------ proposées à la fin de l'âge de pierre
   card({
-    id: 'd_ecriture', kind: 'decouverte', eras: [1], tags: ['Science'], art: { motif: 'scroll', hue: 205 }, price: 3,
+    id: 'd_ecriture', kind: 'decouverte', scale: true, eras: [1], tags: ['Science'], art: { motif: 'scroll', hue: 205 }, price: 3,
     passive: [{ type: 'income', res: 'savoir', amount: 1 }], gift: '+1 Savoir par saison. Compte pour la Science.',
     title: 'L’Écriture',
     text: 'Les scribes veulent tout noter. Surtout ce que vous préféreriez oublier.',
@@ -18,7 +18,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_bronze', kind: 'decouverte', eras: [1], tags: ['Guerre'], art: { motif: 'shield', hue: 30 }, price: 3,
+    id: 'd_bronze', kind: 'decouverte', scale: true, eras: [1], tags: ['Guerre'], art: { motif: 'shield', hue: 30 }, price: 3,
     passive: [{ type: 'income', res: 'armee', amount: 1 }], gift: '+1 Armée par saison. Compte pour la Guerre.',
     title: 'Le Bronze',
     text: 'Les forgerons demandent : des épées ou des charrues ? « Les deux, c’est possible, mais pas avec le même bras. »',
@@ -28,7 +28,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_calendrier', kind: 'decouverte', eras: [1], tags: ['Foi'], art: { motif: 'moon', hue: 44 }, price: 3,
+    id: 'd_calendrier', kind: 'decouverte', scale: true, eras: [1], tags: ['Foi'], art: { motif: 'moon', hue: 44 }, price: 3,
     passive: [{ type: 'income', res: 'vivres', amount: 1 }], gift: '+1 Vivres par saison. Compte pour la Foi.',
     title: 'Le Calendrier',
     text: 'Le nouveau calendrier compte deux cents jours de fête. {F:sel} en propose un de plus. {F:troc} propose d’en vendre.',
@@ -38,7 +38,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_conte', kind: 'decouverte', eras: [1], tags: ['Culture'], art: { motif: 'mask', hue: 300 }, price: 3,
+    id: 'd_conte', kind: 'decouverte', scale: true, eras: [1], tags: ['Culture'], art: { motif: 'mask', hue: 300 }, price: 3,
     passive: [{ type: 'income', res: 'tresor', amount: 1 }], gift: '+1 Trésor par saison. Compte pour la Culture.',
     title: 'Les Conteurs',
     text: 'Les conteurs racontent vos exploits. Ils en inventent la moitié. La meilleure moitié. Ils demandent à être payés pour l’autre.',
@@ -50,7 +50,7 @@ export const discoveryCards = [
 
   // ------------------------------------------------------------------ fin de l'Antiquité
   card({
-    id: 'd_monnaie', kind: 'decouverte', eras: [2], tags: ['Commerce'], art: { motif: 'coin', hue: 150 }, price: 4,
+    id: 'd_monnaie', kind: 'decouverte', scale: true, eras: [2], tags: ['Commerce'], art: { motif: 'coin', hue: 150 }, price: 4,
     passive: [{ type: 'income', res: 'tresor', amount: 1 }, { type: 'discount', res: 'tresor', amount: 1 }], gift: '+1 Trésor par saison, et les coûts en Trésor baissent de 1.',
     title: 'La Monnaie',
     text: 'Des pièces à votre effigie. Le trésorier propose d’en frapper beaucoup. Vraiment beaucoup. Il a déjà frappé les premières.',
@@ -60,7 +60,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_aqueduc', kind: 'decouverte', eras: [2], tags: ['Culture'], art: { motif: 'arch', hue: 190 }, price: 4,
+    id: 'd_aqueduc', kind: 'decouverte', scale: true, eras: [2], tags: ['Culture'], art: { motif: 'arch', hue: 190 }, price: 4,
     passive: [{ type: 'income', res: 'vivres', amount: 2 }], gift: '+2 Vivres par saison. Compte pour la Culture.',
     title: 'L’Aqueduc',
     text: 'L’eau arrive en ville. Les ingénieurs veulent un deuxième aqueduc, juste au cas où le premier aurait une idée.',
@@ -70,7 +70,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_philosophie', kind: 'decouverte', eras: [2], tags: ['Science', 'Culture'], art: { motif: 'eye', hue: 230 }, price: 5,
+    id: 'd_philosophie', kind: 'decouverte', scale: true, eras: [2], tags: ['Science', 'Culture'], art: { motif: 'eye', hue: 230 }, price: 5,
     passive: [], gift: 'Compte pour la Science et pour la Culture.',
     title: 'La Philosophie',
     text: 'Un philosophe pieds nus demande sur la place ce qu’est la justice. Les jeunes l’adorent. Les juges le détestent. Les deux ont raison.',
@@ -80,7 +80,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_cavalerie', kind: 'decouverte', eras: [2], tags: ['Guerre'], art: { motif: 'road', hue: 10 }, price: 4,
+    id: 'd_cavalerie', kind: 'decouverte', scale: true, eras: [2], tags: ['Guerre'], art: { motif: 'road', hue: 10 }, price: 4,
     passive: [{ type: 'income', res: 'armee', amount: 1 }], gift: '+1 Armée par saison. Compte pour la Guerre.',
     title: 'La Cavalerie',
     text: 'Les chevaux mangent plus que les soldats. Les soldats veulent des chevaux. Les chevaux, eux, ne veulent rien, ce qui les rend précieux.',
@@ -92,7 +92,7 @@ export const discoveryCards = [
 
   // ------------------------------------------------------------------ fin du Moyen Âge
   card({
-    id: 'd_imprimerie', kind: 'decouverte', eras: [3], tags: ['Science', 'Culture'], art: { motif: 'scroll', hue: 260 }, price: 6,
+    id: 'd_imprimerie', kind: 'decouverte', scale: true, eras: [3], tags: ['Science', 'Culture'], art: { motif: 'scroll', hue: 260 }, price: 6,
     passive: [{ type: 'income', res: 'savoir', amount: 1 }], gift: '+1 Savoir par saison. Compte pour la Science et la Culture.',
     title: 'L’Imprimerie',
     text: 'Une machine copie un livre en une heure. Les copistes pleurent. {F:sel} s’inquiète de ce que les gens vont lire. Avec raison.',
@@ -102,7 +102,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_comptabilite', kind: 'decouverte', eras: [3], tags: ['Commerce'], art: { motif: 'scales', hue: 150 }, price: 5,
+    id: 'd_comptabilite', kind: 'decouverte', scale: true, eras: [3], tags: ['Commerce'], art: { motif: 'scales', hue: 150 }, price: 5,
     passive: [{ type: 'income', res: 'tresor', amount: 2 }], gift: '+2 Trésor par saison. Compte pour le Commerce.',
     title: 'La Partie double',
     text: 'Les comptables écrivent tout deux fois. Ils ont découvert que vous dépensez plus que vous ne gagnez. Deux fois.',
@@ -112,7 +112,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_poudre', kind: 'decouverte', eras: [3], tags: ['Guerre'], art: { motif: 'flame', hue: 15 }, price: 5,
+    id: 'd_poudre', kind: 'decouverte', scale: true, eras: [3], tags: ['Guerre'], art: { motif: 'flame', hue: 15 }, price: 5,
     passive: [{ type: 'income', res: 'armee', amount: 2 }], gift: '+2 Armée par saison. Compte pour la Guerre.',
     title: 'L’Artillerie',
     text: 'Des canons qui portent à mille pas. {F:ourk} veut savoir sur quoi tirer. {F:brume} veut savoir pourquoi c’est toujours sur lui.',
@@ -122,7 +122,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_universite', kind: 'decouverte', eras: [3], tags: ['Science'], art: { motif: 'arch', hue: 205 }, price: 6,
+    id: 'd_universite', kind: 'decouverte', scale: true, eras: [3], tags: ['Science'], art: { motif: 'arch', hue: 205 }, price: 6,
     passive: [{ type: 'discount', res: 'savoir', amount: 1 }, { type: 'income', res: 'savoir', amount: 1 }], gift: '+1 Savoir par saison, et les coûts en Savoir baissent de 1.',
     title: 'L’Université',
     text: 'Des étudiants, des maîtres, des tavernes. Les étudiants veulent des privilèges. Les maîtres veulent des étudiants. Les tavernes veulent tout le monde.',
@@ -134,7 +134,7 @@ export const discoveryCards = [
 
   // ------------------------------------------------------------------ fin de l'ère industrielle
   card({
-    id: 'd_vaccin', kind: 'decouverte', eras: [4], tags: ['Science'], art: { motif: 'spiral', hue: 160 }, price: 7,
+    id: 'd_vaccin', kind: 'decouverte', scale: true, eras: [4], tags: ['Science'], art: { motif: 'spiral', hue: 160 }, price: 7,
     passive: [{ type: 'shield', amount: 1 }], gift: 'Chaque ère, la première perte de quartier est évitée. Compte pour la Science.',
     title: 'Le Vaccin',
     text: 'Le docteur Brumel veut injecter du pus de vache à tout le monde. Il jure que ça marche. La vache n’a pas été consultée.',
@@ -144,7 +144,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_cinema', kind: 'decouverte', eras: [4], tags: ['Culture'], art: { motif: 'star', hue: 300 }, price: 6,
+    id: 'd_cinema', kind: 'decouverte', scale: true, eras: [4], tags: ['Culture'], art: { motif: 'star', hue: 300 }, price: 6,
     passive: [{ type: 'income', res: 'tresor', amount: 2 }, { type: 'tagBonus', tag: 'Culture', amount: 1 }], gift: '+2 Trésor par saison. Compte pour deux cartes Culture.',
     title: 'Le Cinéma',
     text: 'Des images qui bougent. On propose un film sur votre vie. Le scénariste veut savoir si vous préférez la vérité ou le succès.',
@@ -154,7 +154,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_vapeur', kind: 'decouverte', eras: [4], tags: ['Commerce'], art: { motif: 'gear', hue: 40 }, price: 6,
+    id: 'd_vapeur', kind: 'decouverte', scale: true, eras: [4], tags: ['Commerce'], art: { motif: 'gear', hue: 40 }, price: 6,
     passive: [{ type: 'income', res: 'tresor', amount: 1 }, { type: 'income', res: 'vivres', amount: 1 }], gift: '+1 Trésor et +1 Vivres par saison. Compte pour le Commerce.',
     title: 'La Vapeur',
     text: 'Une machine fait le travail de cent fileuses. Les cent fileuses sont devant votre porte. Elles ont des questions.',
@@ -164,7 +164,7 @@ export const discoveryCards = [
     ],
   }),
   card({
-    id: 'd_radar', kind: 'decouverte', eras: [4], tags: ['Guerre', 'Science'], art: { motif: 'ring', hue: 0 }, price: 7,
+    id: 'd_radar', kind: 'decouverte', scale: true, eras: [4], tags: ['Guerre', 'Science'], art: { motif: 'ring', hue: 0 }, price: 7,
     passive: [{ type: 'income', res: 'armee', amount: 1 }, { type: 'income', res: 'savoir', amount: 1 }], gift: '+1 Armée et +1 Savoir par saison. Compte pour la Guerre et la Science.',
     title: 'Le Radar',
     text: 'Une antenne voit tout ce qui vole à cent lieues. Elle voit aussi les pigeons. Elle déclenche l’alerte pour chaque pigeon.',
