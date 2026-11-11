@@ -3,8 +3,8 @@ import { gaugeSvg } from './art';
 import { el, ICONS } from './dom';
 
 /** à partir de cette amplitude, l'aperçu montre une double flèche */
-const BIG = 7;
-const HUGE = 13;
+const BIG = 6;
+const HUGE = 12;
 const level = (d: number) => (Math.abs(d) >= HUGE ? 3 : Math.abs(d) >= BIG ? 2 : 1);
 
 interface GaugeEl {

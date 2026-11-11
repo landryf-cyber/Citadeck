@@ -192,7 +192,7 @@ export class Screens {
         .map((id) => {
           const c = engine.card(id);
           const syn = (c.keywords ?? [])
-            .map((k) => (counts[k] > 0 ? `${k} : renforcée par vos ${counts[k]} autre${counts[k] > 1 ? 's' : ''} carte${counts[k] > 1 ? 's' : ''} ${k}` : `Votre première carte ${k}`))
+            .map((k) => (counts[k] > 1 ? `${k} : renforcée par vos ${counts[k]} autres cartes ${k}` : counts[k] === 1 ? `${k} : renforcée par votre autre carte ${k}` : `Votre première carte ${k}`))
             .join(' · ');
           return `<button class="tile" data-id="${id}" aria-label="${esc(c.title)}">
 <div class="tile-art">${cardArt(c)}</div>
@@ -284,7 +284,7 @@ export class Screens {
 <p class="h-sub">Une carte oubliée ne reviendra plus. Son dilemme non plus.</p>
 <div class="chips">${chips}</div>
 <div class="chip-detail"></div>
-<div class="reward-actions dock"><button class="btn" data-a="keep">Tout garder</button><button class="btn ghost" data-a="ok" disabled style="margin-top:8px">Oublier</button></div>`;
+<div class="reward-actions"><button class="btn" data-a="keep">Tout garder</button><button class="btn ghost" data-a="ok" disabled style="margin-top:8px">Oublier</button></div>`;
       const detail = s.querySelector('.chip-detail') as HTMLElement;
       const ok = s.querySelector('[data-a=ok]') as HTMLButtonElement;
       remove = await new Promise<string | null>((resolve) => {

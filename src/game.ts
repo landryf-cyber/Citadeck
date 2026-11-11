@@ -8,7 +8,7 @@ import type { CivSnapshot } from './scene/city';
 import { LOOKS, rgb } from './scene/palette';
 import { clearGame, loadGame, saveGame, saveSettings, type Settings } from './save';
 import { CardView } from './ui/cardView';
-import { el, esc, ICONS, ROMAN, wait } from './ui/dom';
+import { el, esc, ICONS, ROMAN, typo, wait } from './ui/dom';
 import { Hud } from './ui/hud';
 import { Screens } from './ui/screens';
 import { KIND_TAG } from './ui/texts';
@@ -262,10 +262,18 @@ export class Game {
     const remaining = s.phase === 'crisis' ? s.crisis!.cards.length - s.crisis!.index - 1 : s.drawPile.length + 1;
     const face = cardFace(card, s.era);
     const shown: CardDef = { ...card, title: face.title, text: face.text, left: { ...card.left, text: face.left }, right: { ...card.right, text: face.right } };
-    const dep = (side: Side): string | undefined => {
+    // une option « selon… » dit d'avance si la condition est remplie
+    const dep = (side: Side): { text: string; ok: boolean } | undefined => {
       const w = card[side].effect.when;
-      if (w?.gauge) return `selon ${w.gauge === 'army' ? 'l’Armée' : w.gauge === 'food' ? 'la Nourriture' : w.gauge === 'knowledge' ? 'le Savoir' : 'le Trésor'}`;
-      if (w?.keyword) return `selon vos cartes ${w.keyword}`;
+      if (!w) return undefined;
+      const ok = this.engine.checkCondition(s, w);
+      if (w.gauge) {
+        const name = w.gauge === 'army' ? 'Armée' : w.gauge === 'food' ? 'Nourriture' : w.gauge === 'knowledge' ? 'Savoir' : 'Trésor';
+        const fem = w.gauge === 'army' || w.gauge === 'food';
+        return { text: `${name} ${ok ? 'suffisant' : 'insuffisant'}${fem ? 'e' : ''}`, ok };
+      }
+      if (w.keyword) return { text: ok ? `assez de cartes ${w.keyword}` : `trop peu de cartes ${w.keyword}`, ok };
+      if (w.flag) return { text: ok ? 'vos choix passés aident' : 'vos choix passés pèsent', ok };
       return undefined;
     };
     this.cardView.show(shown, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining, depends: { left: dep('left'), right: dep('right') } });
@@ -274,7 +282,7 @@ export class Game {
     const fine = matchMedia('(pointer: fine)').matches;
     let hint = card.tutorial ? card.tutorial + (card.id === 't_feu' && fine ? ' Au clavier : ← ou → pour pencher, la même touche pour valider.' : '') : '';
     if (!hint) hint = this.contextHint(card, !!(dep('left') || dep('right')));
-    this.hint.textContent = hint;
+    this.hint.textContent = typo(hint);
     this.hint.classList.toggle('show', !!hint);
     if (card.tutorial) this.showReply('');
     this.updateFoot();
@@ -289,8 +297,8 @@ export class Game {
       return true;
     };
     if (this.engine.inDanger(s.gauges).length > 0 && once('danger')) return 'Une barre est dans le rouge : danger, pas encore la fin. Ramenez-la vers le milieu.';
-    if (card.kind === 'rival' && once('rivale')) return `Cette carte vient de ${s.rival.name}, votre rivale. Elle en glisse dans votre deck ; vos réponses changent son humeur.`;
-    if (conditional && once('selon')) return '« Selon… » : l’issue de cette option dépend du niveau de la jauge nommée. Les flèches montrent ce qui arriverait maintenant.';
+    if (card.kind === 'rival' && once('rivale')) return `Cette carte vient ${s.rival.name.startsWith('les ') ? 'des ' + s.rival.name.slice(4) : 'de ' + s.rival.name}, votre rivale. Elle en glisse dans votre deck. Vos réponses changent son humeur.`;
+    if (conditional && once('selon')) return 'Certaines options dépendent d’une jauge : la mention sous l’option dit si elle est suffisante. Les flèches montrent ce qui arrivera.';
     if (card.kind === 'consequence' && once('suite')) return 'Une suite : cette carte existe à cause d’un de vos choix passés.';
     const kw = (card.keywords ?? []).find((k) => this.engine.keywordCount(s, k, card.id) >= 1 && [card.left.effect, card.right.effect].some((e) => (e.scale ?? []).some((x) => x.keyword === k)));
     if (kw && once('motcle')) return `Mot-clé ${kw} : cette carte frappe plus fort, car votre deck en contient d’autres.`;
@@ -303,7 +311,7 @@ export class Game {
       this.reply.classList.remove('show');
       return;
     }
-    this.reply.textContent = text;
+    this.reply.textContent = typo(text);
     this.reply.classList.add('show');
     this.replyTimer = window.setTimeout(() => this.reply.classList.remove('show'), 3600);
   }

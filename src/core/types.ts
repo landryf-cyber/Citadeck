@@ -262,4 +262,4 @@ export interface GameState {
 }
 
 /** Seuils de la zone de danger (modifiables pour les balayages de simulation). */
-export const TUNING = { dangerLow: 30, dangerHigh: 70 };
+export const TUNING = { dangerLow: 30, dangerHigh: 70, maxSwing: 15 };

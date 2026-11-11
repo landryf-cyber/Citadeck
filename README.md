@@ -102,7 +102,7 @@ scripts/      captures, parties automatiques, mesure de performance
 - **Le deck** : six cartes de départ qui changent d'habit à chaque ère, les cartes choisies entre les ères,
   et sept cartes tirées du pool de l'ère en cours.
 - **La tension** : les enjeux montent d'ère en ère, et chaque ère pousse une jauge à chaque décision
-  (le « vent de l'ère »). La zone de danger commence à 30 et 70. Aucune carte ne déplace une jauge de plus de 18 points, et une carte dont les deux options tuent accorde un sursis, une fois par ère.
+  (le « vent de l'ère »). La zone de danger commence à 30 et 70. Aucune carte ne déplace une jauge de plus de 15 points, et une carte dont les deux options tuent accorde un sursis, une fois par ère.
 - **L'équilibrage est outillé** : `npm run sim` vérifie les cibles, `npm run autotune` corrige les options
   dominantes. Les valeurs écrites dans les cartes sont corrigées par `tuning.ts` puis `adjust.ts`.
 

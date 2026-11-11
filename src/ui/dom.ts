@@ -5,6 +5,11 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, 
   return e;
 }
 
+/** Espaces insécables de la typographie française (pour du texte brut). */
+export function typo(s: string): string {
+  return s.replace(/ ([?!;])/g, '\u202f$1').replace(/ :/g, '\u00a0:').replace(/« /g, '«\u00a0').replace(/ »/g, '\u00a0»');
+}
+
 /** Échappe le HTML et pose les espaces insécables de la typographie française. */
 export function esc(s: string): string {
   return s

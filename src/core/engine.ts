@@ -20,7 +20,6 @@ import {
 export const SAVE_VERSION = 3;
 export const ERA_COUNT = 5;
 export const START_GAUGE = 50;
-export const MAX_SWING = 18;
 
 export type GameEvent =
   | { type: 'gauges'; delta: Delta; before: Gauges; after: Gauges }
@@ -197,7 +196,7 @@ export class Engine {
     }
     for (const g of GAUGES) {
       // aucune carte ne déplace une jauge de plus d'un quart d'un coup
-      if (delta[g] !== undefined) delta[g] = Math.max(-MAX_SWING, Math.min(MAX_SWING, Math.round(delta[g]!)));
+      if (delta[g] !== undefined) delta[g] = Math.max(-TUNING.maxSwing, Math.min(TUNING.maxSwing, Math.round(delta[g]!)));
       if (delta[g] === 0) delete delta[g];
     }
     return delta;
@@ -439,7 +438,9 @@ export class Engine {
         return c && (c.era === undefined || c.era <= state.era) && this.checkCondition(state, c.requires);
       });
       if (eligible.length === 0) return;
-      const id = rng.pick(eligible);
+      // pas deux fois la même carte tant qu'il en reste de nouvelles
+      const fresh = eligible.filter((id) => !state.seen.includes(id) && !state.drawPile.includes(id));
+      const id = rng.pick(fresh.length ? fresh : eligible);
       const pos = rng.int(0, Math.min(3, state.drawPile.length));
       state.drawPile.splice(pos, 0, id);
       events.push({ type: 'rivalCard', card: id });

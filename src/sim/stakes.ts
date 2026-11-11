@@ -1,12 +1,22 @@
 /** Balayage des enjeux par ère : npx tsx src/sim/stakes.ts '[[1.3,1.5,1.6,1.8,2.0],…]' */
 import { content } from '../data';
+import { TUNING } from '../core/types';
 import { COMPETENT, prudentBot } from './bots';
 import { deathShares, simulate } from './simulate';
 
 const sets: number[][] = JSON.parse(process.argv[2]);
+const cap = Number(process.argv[4] ?? 18);
+const windMul = Number(process.argv[5] ?? 1);
+TUNING.maxSwing = cap;
+const baseWind = content.eras.map((e) => ({ ...e.wind }));
 const games = Number(process.argv[3] ?? 300);
 for (const st of sets) {
-  content.eras.forEach((e, i) => (e.stakes = st[i]));
+  content.eras.forEach((e, i) => {
+    e.stakes = st[i];
+    const w: Record<string, number> = {};
+    for (const [k, v] of Object.entries(baseWind[i])) w[k] = Math.round((v as number) * windMul);
+    e.wind = w;
+  });
   const res = simulate(content, [prudentBot, ...COMPETENT], games);
   const pr = res.bots[0];
   const comp = res.bots.slice(1);

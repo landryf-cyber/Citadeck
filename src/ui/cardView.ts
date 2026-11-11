@@ -8,7 +8,7 @@ export interface CardShowOpts {
   /** cartes restantes derrière celle-ci (pour l'épaisseur de la pile) */
   remaining: number;
   /** mention sous une option dont l'issue dépend de l'état (« selon l'Armée ») */
-  depends?: { left?: string; right?: string };
+  depends?: { left?: { text: string; ok: boolean }; right?: { text: string; ok: boolean } };
 }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -84,8 +84,8 @@ export class CardView {
 <p class="card-text">${esc(def.text)}</p>
 </div>
 <div class="card-foot">
-<button type="button" class="opt left" aria-label="Gauche : ${esc(def.left.text)}">${ICONS.left}<span>${esc(def.left.text)}${o.depends?.left ? `<em>${esc(o.depends.left)}</em>` : ''}</span></button>
-<button type="button" class="opt right" aria-label="Droite : ${esc(def.right.text)}"><span>${esc(def.right.text)}${o.depends?.right ? `<em>${esc(o.depends.right)}</em>` : ''}</span>${ICONS.right}</button>
+<button type="button" class="opt left" aria-label="Gauche : ${esc(def.left.text)}">${ICONS.left}<span>${esc(def.left.text)}${o.depends?.left ? `<em class="${o.depends.left.ok ? 'ok' : 'ko'}">${esc(o.depends.left.text)}</em>` : ''}</span></button>
+<button type="button" class="opt right" aria-label="Droite : ${esc(def.right.text)}"><span>${esc(def.right.text)}${o.depends?.right ? `<em class="${o.depends.right.ok ? 'ok' : 'ko'}">${esc(o.depends.right.text)}</em>` : ''}</span>${ICONS.right}</button>
 </div>
 <div class="card-sheen"></div>
 <div class="card-choice left">${esc(def.left.text)}</div>
@@ -150,7 +150,7 @@ export class CardView {
     if (this.choiceL) this.choiceL.style.opacity = dx < 0 ? String(a) : '0';
     if (this.choiceR) this.choiceR.style.opacity = dx > 0 ? String(a) : '0';
     const tag = c.querySelector('.card-tag') as HTMLElement | null;
-    if (tag) tag.style.opacity = String(1 - a);
+    if (tag) tag.style.opacity = String(Math.max(0, 1 - a * 4));
     this.onDrag(clamp(dx / w, -1, 1));
   }
 
