@@ -49,6 +49,7 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 | `npm run shots` | captures de chaque écran, mobile et bureau, dans `shots/` |
 | `npm run perf -- 2` | images par seconde sur un profil mobile (CPU ralenti ×2) |
 | `npm run single` | le jeu en un seul fichier HTML, dans `dist-single/` |
+| `npx tsx scripts/play.ts new <dossier>` | jouer en mode texte, une décision par commande (voir l’en-tête du script) |
 
 Les scripts de capture utilisent le Chromium de `/opt/pw-browsers/chromium`.
 

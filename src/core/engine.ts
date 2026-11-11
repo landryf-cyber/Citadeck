@@ -580,7 +580,7 @@ export class Engine {
       jalon: s.jalons[s.era] ? null : jv(j),
       alt: alt && !s.jalons[s.era] ? jv(alt) : null,
       built,
-      crisis: { name: cr.name, intro: fill(cr.intro, s, this.c), protects: fill(cr.protects, s, this.c) },
+      crisis: { name: cr.name, intro: fill(cr.intro, s, this.c), protects: ((t) => t.charAt(0).toLowerCase() + t.slice(1))(fill(cr.protects, s, this.c)) },
       envy: built > 0 ? Math.round((k - 1) * 100) : 0,
       rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
       legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
