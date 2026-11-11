@@ -1,35 +1,27 @@
-# PROGRESS — Citadeck
+# PROGRESS — Citadeck V2
+
+Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
+Documents de référence : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md` (journal des expériences), `DECISIONS.md`.
 
 ## Fait
-- Pile : Vite + TypeScript, Vitest, Playwright, fontes embarquées (Cinzel, Source Sans 3)
-- Moteur pur (`src/core`) : jauges, deck, ères, crises, récompenses, merveilles, rivale, fins, RNG à graine
-- Contenu (`src/data`) : ~190 cartes, 5 crises, 12 merveilles, enjeux et « vent » par ère
-- Tests du moteur et du contenu (32)
-- Interface : carte (swipe, souris, clavier), jauges, écrans titre/récompense/merveille/retrait/fin/réglages/deck
-- Scène Canvas 2D : lumière par ère, civilisation générative, particules, transitions, défaite, timelapse
-- Audio WebAudio, sauvegarde automatique, script de captures (`npm run shots`)
-- Simulation (`npm run sim`), bots, cibles automatiques, équilibreur d'options (`npm run autotune`)
+- Diagnostic chiffré de la V1 (`src/sim/v1/diagnose.ts`) → DESIGN-V2 §1
+- 12 concepts explorés, 3 boucles prototypées sans interface (`src/proto/`), comparées à difficulté égale → P3 « Lignées + Carrefours » retenu (EXPERIENCES E1-E3)
+- Avocat du diable (agent séparé) sur le design → réponses DESIGN-V2 §6 (procès, reçus, 4 familles, fusions, ruines personnelles, testament)
+- Moteur V2 sans interface : `src/v2/core/` (types, gabarits de texte avec citations datées, moteur, validation)
+- Squelette de contenu V2 : `src/v2/data/` — 4 familles × 5 ères + intrigues + trahisons + hommages, 18 rencontres de route, 5 crises × 3, 16 découvertes, ~20 événements, 9 cartes de rivale, ruines et revenants
+- Test de cohérence du contenu V2 (`tests/v2.content.test.ts`)
 
-- Équilibrage : toutes les cibles de `npm run sim` atteintes (1500 parties par bot)
-- Vent de l'ère (moteur + interface), variantes d'ère des cartes de départ, plafond de 24 points par carte
-- Passes DA 1, 2 et 3 (la 3e sur pellicules d'animation), cité recomposée (merveilles sur butte, remparts)
-- Parties complètes jouées par l'interface (`npm run play`) : les 3 fins vues, aucune erreur console
-- Test de performance (`npm run perf`), README, typographie française, écran paysage, tablette
-- Workflow GitHub Pages écrit
+## En cours
+- Étape 1 du plan : bots V2 + transcriptions + mesures sur le squelette ; valider fil rouge, impact des choix, méta
 
-- Tests joueurs par agents séparés : n°1 (partiel), n°2 (complet, clarté 4/10), n°3 (une partie) ; corrections appliquées après chacun
-  (options cliquables, jauges en barres avec zones rouges, aides ponctuelles, conditions explicites,
-  répliques d'échec, sursis, plafond de 15 points par carte, rivale sans répétition)
-- Build en un seul fichier, publié : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom
+## Reste à faire (dans l'ordre)
+1. Bots V2 (lecteur, indicateurs seuls, prudent, gourmand, 3 spécialistes, aléatoire), mesures, transcriptions lisibles ; équilibrage
+2. Méta-progression (chronique, ruines, revenants, testament, déblocages) en module pur + tests
+3. Enrichir le contenu là où les transcriptions montrent des répétitions ; relecture des textes
+4. Interface V2 : scène ~40 % de hauteur, carte compacte, HUD (ressources, quartiers, familles), carrefour, procès, jalon, découverte, présage, chronique, fin, testament ; ruines et merveilles dans la scène ; portraits de famille qui vieillissent
+5. Effets visuels rétablis (cible 30 i/s), son, animations ; tutoriel intégré
+6. Retirer la V1 (code, tests) une fois la V2 jouable
+7. Mesures finales, tests par agents (joueurs), juges (3, notes ≥ 8), captures ×3 passes, déploiement (page hébergée : le push GitHub est refusé en 403)
 
-- Test joueur n°4 complet (clarté 6, tension 7, textes 8,5, beauté 9, envie de rejouer 7) : remarques corrigées
-- Test joueur n°5 interrompu par quota après 13 décisions : aucune incompréhension ni blocage relevé sur ce début
-- Vérification finale : 42 tests, cibles de simulation, 60 fps profil mobile, parties complètes sur le fichier publié
-
-## Non terminé
-- Un test joueur complet sur la toute dernière version n'a pas pu aller au bout (quotas des agents épuisés).
-- `git push` refusé (403) : le déploiement GitHub Pages attend que le propriétaire rétablisse l'accès,
-  pousse la branche, la fusionne dans `main` et active Pages (Settings → Pages → Source : GitHub Actions).
-
-## Publié
-- https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (build en un seul fichier)
+## Bloqué
+- `git push` refusé (403, l'app GitHub n'a pas l'accès en écriture). Publication par page hébergée claude.ai : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom

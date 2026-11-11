@@ -155,3 +155,16 @@ L'emblème de chaque famille change avec les ères (les crocs des Ourk prennent 
 
 ### Une ère, révisée
 Ouverture (jalon, nature de la crise) → deux saisons (carrefour : quel domaine visiter ; puis quatre cartes) → crise en trois scènes → fin d'ère : le Procès, le jalon, une découverte. Environ 15 décisions par ère, 75 par partie, de sept formes différentes.
+
+## 7. La voix
+
+- **Phrases courtes, sèches.** Deux lignes de texte de carte, au plus trois. Une seule information décisive par carte.
+- **Humour noir et absurde, jamais de clin d'œil.** Le narrateur constate ; il ne rit pas de ses blagues.
+- **Chaque famille a un tic qui traverse les millénaires.**
+  - *Ourk* parle de lui à la troisième personne (« Ourk a faim »). L'Amirale Ourk-7 aussi, en capitales.
+  - *Sel* prédit le malheur et tend la main (« Le ciel est formel. Le ciel accepte les dons. »).
+  - *Brume* corrige tout le monde (« Techniquement… ») et fait exploser des choses.
+  - *Troc* a un prix pour tout, surtout l'amitié (« Pour vous, prix d'ami. »).
+  - *La reine rivale* écrit des lettres d'une politesse assassine (« Ma chère voisine… Affectueusement, Ysolde »).
+- **Les répliques après le choix** disent la conséquence, avec une chute.
+- **Les citations** sont exactes : quand une famille vous reproche quelque chose, elle cite le libellé de l'option que vous avez choisie et sa date.

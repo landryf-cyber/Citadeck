@@ -12,7 +12,8 @@ export type Bag = Partial<Record<Res, number>>;
 export type Tag = 'Guerre' | 'Foi' | 'Science' | 'Commerce' | 'Culture' | 'Nature';
 export const TAGS: readonly Tag[] = ['Guerre', 'Foi', 'Science', 'Commerce', 'Culture', 'Nature'];
 
-export type FamilyId = 'ourk' | 'sel' | 'brume' | 'troc' | 'pinceau' | 'racine';
+export type FamilyId = 'ourk' | 'sel' | 'brume' | 'troc';
+export const FAMILIES: readonly FamilyId[] = ['ourk', 'sel', 'brume', 'troc'];
 export type FamilyState = 'presente' | 'exilee' | 'rivale' | 'eteinte';
 
 export type Motif =
@@ -33,13 +34,15 @@ export interface Cond {
   fam?: { id: FamilyId; min?: number; max?: number; state?: FamilyState };
   mem?: string;
   notMem?: string;
-  tech?: string;
-  notTech?: string;
-  wonder?: string;
+  /** carte présente dans le deck (découverte) */
+  card?: string;
+  notCard?: string;
   rival?: { min?: number; max?: number };
   quartiers?: { min?: number; max?: number };
   era?: { min?: number; max?: number };
   dessein?: string;
+  /** au moins N jalons bâtis */
+  jalons?: number;
   /** au moins une civilisation passée dans la chronique */
   ruins?: boolean;
 }
@@ -66,10 +69,9 @@ export interface Effect {
   addCard?: string[];
   removeCard?: string[];
   rival?: number;
-  rivalPrestige?: number;
   famState?: { id: FamilyId; state: FamilyState };
-  wonder?: string;
-  tech?: string;
+  /** la rivale bâtit (+1) ou perd (-1) un jalon */
+  rivalJalon?: number;
   /** fait avancer le jalon de l'ère (bâtit le jalon) */
   jalon?: boolean;
   bet?: Bet;
@@ -100,7 +102,7 @@ export interface Option {
 
 export type CardKind =
   | 'famille' | 'evenement' | 'intrigue' | 'crise' | 'rivale' | 'institution' | 'rencontre' | 'ruines'
-  | 'tutoriel' | 'carrefour' | 'jalon' | 'tech' | 'recrue' | 'croissance' | 'presage';
+  | 'tutoriel' | 'carrefour' | 'jalon' | 'decouverte' | 'croissance' | 'presage' | 'proces' | 'hommage' | 'revenant' | 'trahison';
 
 export type Form = 'binaire' | 'qui' | 'pari' | 'dosage' | 'route' | 'seuil' | 'choix';
 
@@ -129,6 +131,12 @@ export interface CardDef {
   arc?: string;
   /** dernière étape d'une intrigue */
   finale?: boolean;
+  /** découverte : passifs tant que la carte est dans le deck */
+  passive?: Passive[];
+  /** découverte : coût en Savoir pour l'étudier */
+  price?: number;
+  /** découverte : ce qu'elle apporte, en une ligne */
+  gift?: string;
 }
 
 export interface FamilyDef {
@@ -152,6 +160,9 @@ export interface Jalon {
   text: string;
   cost: Bag;
   req?: Cond;
+  /** ce que la merveille apporte une fois bâtie */
+  passive?: Passive;
+  gift: string;
   /** silhouette dans la scène */
   shape: string;
 }
@@ -187,39 +198,21 @@ export interface CrisisDef {
   cards: string[];
 }
 
-export interface TechDef {
-  id: string;
-  name: string;
-  era: number;
-  text: string;
-  cost: number; // en Savoir
-  effect?: Effect;
-  tag?: Tag;
-}
-
-export interface WonderDef {
-  id: string;
-  name: string;
-  era: number;
-  text: string;
-  cost: Bag;
-  /** ère à laquelle la rivale la bâtit si personne ne l'a fait */
-  rivalAt: number;
-  passive: Passive;
-  tag?: Tag;
-}
-
 export type Passive =
   | { type: 'crisisShield'; amount: number } // ignore N quartiers perdus pendant les crises (par crise)
   | { type: 'income'; res: Res; amount: number } // à chaque saison
   | { type: 'loyalty'; family: FamilyId | 'all'; floor: number } // loyauté jamais sous ce plancher
+  | { type: 'shield'; amount: number } // la première perte de quartier de chaque ère est évitée
   | { type: 'growth'; amount: number } // quartiers bonus à la croissance
   | { type: 'tagBonus'; tag: Tag; amount: number } // compte pour N cartes du mot-clé
   | { type: 'discount'; res: Res; amount: number }; // coûts réduits
 
 export interface RouteDef {
   id: string;
-  name: string;
+  /** domaine d'une famille : y aller, c'est affronter ses cartes */
+  family?: FamilyId;
+  /** nom par ère (gabarit) */
+  name: string | [string, string, string, string, string];
   /** promesse affichée sur la route */
   promise: string;
   /** risque affiché, s'il y en a */
@@ -234,9 +227,12 @@ export interface RouteDef {
 export interface RivalDef {
   id: string;
   name: string; // « les Orvandes »
-  leader: string; // « la reine Ysolde »
+  /** souveraine, par ère (une dynastie, comme vos familles) */
+  leader: [string, string, string, string, string];
   voice: string;
   hue: number;
+  /** son propre dessein, visible sur son horizon */
+  jalons: [string, string, string, string, string];
 }
 
 // --------------------------------------------------------------------------- état
@@ -259,11 +255,15 @@ export interface LossEntry {
 export interface HistoryEntry {
   turn: number;
   era: number;
+  /** date lisible, pour les citations (« an 7 650 avant le Calendrier ») */
+  date: string;
   card: string;
   title: string;
   choice: number;
   label: string;
   reply?: string;
+  /** loyautés modifiées par ce choix (pour que les familles citent leurs griefs) */
+  loy?: Partial<Record<FamilyId, number>>;
   /** cartes et choix d'origine si la carte est une suite */
   from?: string;
   res: Resources;
@@ -274,9 +274,11 @@ export interface Prompt {
   card: string;
   /** données dynamiques : routes, technologies, recrues, familles d'une carte « qui ? » */
   routes?: string[];
-  techs?: string[];
   recruits?: string[];
   qui?: FamilyId[];
+  /** procès : la famille plaignante et la décision citée */
+  plaintiff?: FamilyId;
+  quote?: number;
   /** pour les suites : la décision qui l'a provoquée */
   from?: string;
 }
@@ -312,19 +314,24 @@ export interface GameState {
   quartiers: number;
   fam: Record<FamilyId, FamilyStatus>;
   mem: string[];
+  /** pour chaque souvenir : la décision exacte et sa date (les familles citent) */
+  memo: Record<string, { label: string; date: string; title: string }>;
   deck: string[];
-  techs: string[];
-  wonders: string[];
   jalons: boolean[];
   rivalRel: number;
-  rivalPrestige: number;
-  rivalWonders: string[];
+  rivalJalons: number;
+  /** cartes de l'ère pas encore jouées */
+  pool: string[];
+  /** dernière ère où chaque famille a été visitée (carrefour) */
+  visits: Record<FamilyId, number>;
+  /** cartes à usage unique déjà jouées */
+  spent: string[];
   sched: { card: string; at: number; from?: string }[];
   turn: number;
   history: HistoryEntry[];
   losses: LossEntry[];
-  /** quartiers épargnés par une merveille pendant la crise en cours */
-  shieldUsed: number;
+  /** une perte de quartier déjà évitée cette ère (passif « shield ») */
+  shieldUsed: boolean;
   result: Result | null;
   /** première partie : tutoriel intégré */
   tutorial: boolean;
@@ -351,7 +358,10 @@ export interface RuinInfo {
   enemy?: FamilyId;
   /** silhouette de son plus haut jalon */
   shape?: string;
-  wonder?: string;
+  /** derniers mots, choisis à la chute */
+  testament?: string;
+  /** le grief le plus lourd de la famille la plus furieuse, cité dans la partie suivante */
+  grudge?: { family: FamilyId; house: string; quote: string; date: string };
 }
 
 export interface MetaState {
