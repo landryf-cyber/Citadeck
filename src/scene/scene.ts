@@ -392,8 +392,8 @@ export class Scene {
 
   private layerBase(layer: number): number {
     const u = this.u;
-    if (layer <= -2) return this.horizon - 4.6 * u;
-    if (layer <= -1.5) return this.horizon - 1.2 * u;
+    if (layer <= -2) return this.horizon - 5.4 * u;
+    if (layer <= -1.5) return this.horizon - 4.0 * u;
     if (layer < 0) return this.horizon - 2.6 * u;
     if (layer <= 0) return this.horizon + 0.1 * u;
     if (layer <= 1) return this.horizon + 1.3 * u;
@@ -405,8 +405,8 @@ export class Scene {
   }
 
   private layerScale(layer: number): number {
-    if (layer <= -2) return 0.5;
-    if (layer <= -1.5) return 1.0;
+    if (layer <= -2) return 0.66;
+    if (layer <= -1.5) return 0.78;
     if (layer < 0) return 1.25;
     if (layer <= 0) return 0.82;
     if (layer <= 1) return 1;
@@ -804,19 +804,30 @@ export class Scene {
         e.layer < 0 ? mix(mix(l.far, l.mid, 0.55), l.skyLow, 0.06) : e.layer <= 0 ? mix(mix(l.far, l.mid, 0.4), l.skyLow, 0.12) : e.layer <= 1 ? l.mid : e.layer <= 1.5 ? mix(l.mid, l.near, 0.5) : l.near;
       let body = bodyCol;
       // la rivale : silhouettes teintées de sa couleur, sur la crête ; les ruines : pierre morte
-      if (e.kind === 'rival') body = mix(mix(l.far, l.skyLow, 0.25), hueRGB(e.r2), 0.32);
-      if (e.kind === 'relic') body = mix(mix(l.far, l.mid, 0.55), mix(l.light, [150, 144, 136], 0.6), 0.22 - 0.05 * e.r2);
+      if (e.kind === 'rival') body = mix(mix(l.far, l.skyLow, 0.2), hueRGB(e.r2), 0.5);
+      if (e.kind === 'relic') body = mix(mix(l.far, l.mid, 0.4), mix(l.light, [196, 186, 170], 0.55), 0.3 - 0.06 * e.r2);
       env.body = rgb(mix(body, [2, 2, 5], (1 - lv) * 0.7));
       env.era = a.styleEra;
       env.emit = e.kind === 'relic' ? () => undefined : (ex, ey, type) => {
         this.emitters.push({ x: px + ex * k, y: py - ey * k * sy, type, k });
       };
+      if (e.kind === 'rival' && cfg.glow) {
+        // la cité rivale luit de sa couleur, au loin
+        const gr = k * 9;
+        const g4 = ctx.createRadialGradient(px, py - k * 2, 0, px, py - k * 2, gr);
+        g4.addColorStop(0, rgb(hueRGB(e.r2), 0.16 * lv));
+        g4.addColorStop(1, rgb(hueRGB(e.r2), 0));
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = g4;
+        ctx.fillRect(px - gr, py - k * 2 - gr, gr * 2, gr * 2);
+        ctx.globalCompositeOperation = 'source-over';
+      }
       if (e.kind === 'relic' || e.kind === 'rival') {
-        // une butte sous chaque ruine et chaque monument lointain
-        ctx.fillStyle = env.body;
+        // une butte sous chaque ruine et chaque monument lointain, couleur des collines
+        ctx.fillStyle = rgb(mix(mix(l.far, l.skyLow, 0.15), [2, 2, 5], (1 - lv) * 0.7));
         ctx.globalAlpha = alpha;
         ctx.beginPath();
-        ctx.ellipse(px, py + u * 0.15, k * 4.2, k * 0.9, 0, Math.PI, 0);
+        ctx.ellipse(px, horizon + u * 0.4, k * 8.5, horizon + u * 0.4 - py + k * 0.9, 0, Math.PI, 0);
         ctx.fill();
         ctx.globalAlpha = 1;
       }

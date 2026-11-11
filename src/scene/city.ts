@@ -131,7 +131,7 @@ export function layoutCity(s: CivSnapshot): Elem[] {
 
   // la rivale, sur la crête lointaine
   for (let i = 0; i < Math.min(5, s.rival.count); i++) {
-    const x = slots.rivalSide ? 0.66 + i * 0.065 : 0.34 - i * 0.065;
+    const x = slots.rivalSide ? 0.62 + i * 0.075 : 0.38 - i * 0.075;
     out.push({ key: `r${i}`, kind: 'rival', sub: String(i), x, layer: -2, size: 1, r: (i * 0.37) % 1, r2: s.rival.hue, age: 0, state: 0 });
   }
 
@@ -1187,8 +1187,13 @@ const SIG: Record<string, (env: DrawEnv, e: Elem) => void> = {
  * `lightsOut` (0..1) éteint progressivement les fenêtres.
  */
 /** hauteur (unités locales) au-dessus de laquelle une ruine est rasée */
+const SHAPE_H: Record<string, number> = {
+  cercle: 3.5, tour: 9.5, dome: 5.7, fusee: 10.9, arche: 10.7, palissade: 4.9, aigle: 7.7, forteresse: 4.3, arsenal: 9,
+  drapeau: 10, grotte: 4.4, theatre: 5.6, cathedrale: 11.7, tour_fer: 13.5, recit: 13, telescope: 10, voie: 7.5, bibliotheque: 6.2,
+};
+
 function ruinHeight(e: Elem): number {
-  if (e.kind === 'relic') return 2.0 + e.r * 1.2;
+  if (e.kind === 'relic') return (SHAPE_H[e.sub] ?? 6) * (0.5 + 0.2 * e.r);
   if (e.kind === 'sig') return 1.2 + e.r * 0.6;
   return 0.7 + e.r * 0.5;
 }
@@ -1225,7 +1230,12 @@ export function drawElem(env: DrawEnv, e: Elem, lightsOut: number, alpha: number
     case 'dwelling': dwelling(env, e); break;
     case 'sig': SIG[e.sub]?.(env, e); break;
     case 'wonder': wonder(env, e); break;
-    case 'relic': wonder(env, { ...e, sub: e.sub }); break;
+    case 'relic':
+      wonder(env, { ...e, sub: e.sub });
+      // la stèle, à côté : on y lira leurs derniers mots
+      ctx.rect(6.4, 0, 0.8, 1.9);
+      poly(ctx, [6.4, 1.9, 6.8, 2.3, 7.2, 1.9]);
+      break;
     case 'rival': wonderV2(env, `rival${e.sub}`); break;
     case 'wall': wall(env, e); break;
     case 'granary': granary(env, e); break;
