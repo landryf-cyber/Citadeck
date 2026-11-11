@@ -23,6 +23,13 @@ const OUT = 'shots';
 const VIEWPORTS = [
   { name: 'mobile', width: 390, height: 844, mobile: true },
   { name: 'desktop', width: 1440, height: 900, mobile: false },
+  ...(process.argv.includes('--extra')
+    ? [
+        { name: 'paysage', width: 844, height: 390, mobile: true },
+        { name: 'petit', width: 360, height: 640, mobile: true },
+        { name: 'tablette', width: 820, height: 1180, mobile: true },
+      ]
+    : []),
 ];
 
 async function launch(): Promise<Browser> {
@@ -296,6 +303,29 @@ const SHOTS: Shot[] = [
       await p.waitForTimeout(300);
     },
   },
+  ...(['a', 'b'] as const).map((v) => ({
+    // deux parties aux choix opposés, même graine : deux silhouettes
+    name: `70-contraste-${v}`,
+    run: async (p: Page) => {
+      await p.evaluate((v) => {
+        const { game, engine } = (window as any).__citadeck;
+        const s = engine.newGame(4242, false);
+        s.era = 3;
+        s.growth = 70;
+        if (v === 'a') {
+          s.deck.push('r_caserne', 'r_phalange', 'r_chevaliers', 'r_artillerie', 'r_temple', 'r_inquisition');
+          s.wonders = ['w_muraille', 'w_colisee', 'w_cathedrale'];
+          s.gauges = { food: 32, army: 86, knowledge: 22, treasure: 38 };
+        } else {
+          s.deck.push('r_ecriture', 'r_bibliotheque', 'r_universite', 'r_marche', 'r_guilde', 'r_foret', 'r_vergers');
+          s.wonders = ['w_phare', 'w_bibliotheque', 'w_jardins', 'w_horloge'];
+          s.gauges = { food: 78, army: 24, knowledge: 84, treasure: 72 };
+        }
+        game.resume(s);
+      }, v);
+      await settle(p, 2600);
+    },
+  })),
   {
     name: '60-tutorial',
     run: async (p) => {

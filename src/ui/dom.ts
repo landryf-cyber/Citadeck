@@ -5,8 +5,16 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, 
   return e;
 }
 
+/** Échappe le HTML et pose les espaces insécables de la typographie française. */
 export function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/ ([?!;])/g, '\u202f$1')
+    .replace(/ :/g, '\u00a0:')
+    .replace(/« /g, '«\u00a0')
+    .replace(/ »/g, '\u00a0»');
 }
 
 export const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

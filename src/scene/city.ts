@@ -54,7 +54,7 @@ function slotsFor(seed: number): Slots {
   const dwell: Slots['dwell'] = [];
   for (let i = 0; i < N; i++) {
     const x = 0.02 + ((i + 0.5 + rng.range(-0.35, 0.35)) / N) * 0.96;
-    dwell.push({ x, layer: rng.chance(0.5) ? 1 : 2, r: rng.next(), r2: rng.next() });
+    dwell.push({ x, layer: rng.chance(0.4) ? 1 : 2, r: rng.next(), r2: rng.next() });
   }
   // le village pousse autour du feu : priorité à la proximité du centre, avec du bruit
   const noise = dwell.map(() => rng.range(0, 0.22));
@@ -96,7 +96,8 @@ export function layoutCity(s: CivSnapshot): Elem[] {
   out.push({ key: 'heart', kind: 'heart', sub: '', x: 0.5, layer: 2, size: 1, r: 0.5, r2: 0.5, age: 0, state: 0 });
 
   // habitations
-  const nDwell = Math.min(slots.dwell.length, Math.floor(4 + s.era * 5 + s.growth * 0.2));
+  // la population suit l'ère, le temps passé et la nourriture
+  const nDwell = Math.min(30, slots.dwell.length, Math.floor((4 + s.era * 4 + s.growth * 0.13) * (0.7 + 0.6 * (g.food / 100))));
   for (let i = 0; i < nDwell; i++) {
     const d = slots.dwell[i];
     out.push({ key: `d${i}`, kind: 'dwelling', sub: '', x: d.x, layer: d.layer, size: 1, r: d.r, r2: d.r2, age: i / slots.dwell.length, state: 0 });
@@ -107,7 +108,7 @@ export function layoutCity(s: CivSnapshot): Elem[] {
     const n = Math.min(4, s.kw[ki] ?? 0);
     for (let i = 0; i < n; i++) {
       const sp = slots.special[ki * 4 + i];
-      out.push({ key: `s${k}${i}`, kind: 'sig', sub: k, x: sp.x, layer: sp.layer, size: 1 + i * 0.12, r: sp.r, r2: sp.r2, age: i / 4, state: 0 });
+      out.push({ key: `s${k}${i}`, kind: 'sig', sub: k, x: sp.x, layer: 1, size: 1.3 + i * 0.1, r: sp.r, r2: sp.r2, age: i / 4, state: 0 });
     }
   });
 
@@ -116,14 +117,14 @@ export function layoutCity(s: CivSnapshot): Elem[] {
     const wi = WONDER_ORDER.indexOf(w);
     if (wi < 0) continue;
     const ws = slots.wonder[wi];
-    out.push({ key: w, kind: 'wonder', sub: w, x: ws.x, layer: 0, size: 1, r: ws.r, r2: 0, age: 0, state: 0 });
+    out.push({ key: w, kind: 'wonder', sub: w, x: ws.x, layer: -1, size: 1, r: ws.r, r2: 0, age: 0, state: 0 });
   }
 
   // remparts (armée)
   const nWall = Math.round((g.army / 100) * 12);
   for (let i = 0; i < nWall; i++) {
     const idx = slots.wallOrder[i];
-    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 1.5, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.army <= TUNING.dangerLow ? 1 : g.army >= TUNING.dangerHigh ? 2 : 0 });
+    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 2.2, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.army <= TUNING.dangerLow ? 1 : g.army >= TUNING.dangerHigh ? 2 : 0 });
   }
 
   // champs (nourriture)

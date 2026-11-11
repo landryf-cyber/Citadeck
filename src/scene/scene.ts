@@ -384,19 +384,23 @@ export class Scene {
 
   private layerBase(layer: number): number {
     const u = this.u;
+    if (layer < 0) return this.horizon - 2.6 * u;
     if (layer <= 0) return this.horizon + 0.1 * u;
     if (layer <= 1) return this.horizon + 1.3 * u;
     if (layer <= 1.5) return this.horizon + 2.1 * u;
     if (layer <= 2) return this.horizon + 3.1 * u;
+    if (layer <= 2.2) return this.horizon + 3.7 * u;
     if (layer <= 2.5) return this.horizon + 3.9 * u;
     return this.horizon + 4.6 * u;
   }
 
   private layerScale(layer: number): number {
+    if (layer < 0) return 1.25;
     if (layer <= 0) return 0.82;
     if (layer <= 1) return 1;
     if (layer <= 1.5) return 0.95;
     if (layer <= 2) return 1.14;
+    if (layer <= 2.2) return 0.72;
     if (layer <= 2.5) return 1.0;
     return 1.25;
   }
@@ -742,12 +746,14 @@ export class Scene {
       emit: () => undefined,
     };
 
-    let prevLayer = -1;
+    let prevLayer = -9;
+    let hazed = false;
     for (const a of this.sorted) {
       const e = a.elem;
       // voile atmosphérique entre les plans
       if (e.layer !== prevLayer) {
-        if (prevLayer === 0) {
+        if (prevLayer <= 0 && e.layer > 0 && !hazed) {
+          hazed = true;
           const fg = ctx.createLinearGradient(0, horizon - u * 10, 0, horizon + u * 1.5);
           fg.addColorStop(0, rgb(l.fog, 0));
           fg.addColorStop(0.8, rgb(mix(l.fog, l.skyLow, 0.5), 0.2 * l.fogAmount * lv));
@@ -783,12 +789,21 @@ export class Scene {
       const py = this.layerBase(e.layer);
       const k = u * this.layerScale(e.layer) * e.size * (e.kind === 'wonder' ? 1.0 : 1);
       const bodyCol: RGB =
-        e.layer <= 0 ? mix(mix(l.far, l.mid, 0.4), l.skyLow, 0.12) : e.layer <= 1 ? l.mid : e.layer <= 1.5 ? mix(l.mid, l.near, 0.5) : l.near;
+        e.layer < 0 ? mix(mix(l.far, l.mid, 0.55), l.skyLow, 0.06) : e.layer <= 0 ? mix(mix(l.far, l.mid, 0.4), l.skyLow, 0.12) : e.layer <= 1 ? l.mid : e.layer <= 1.5 ? mix(l.mid, l.near, 0.5) : l.near;
       env.body = rgb(mix(bodyCol, [2, 2, 5], (1 - lv) * 0.7));
       env.era = a.styleEra;
       env.emit = (ex, ey, type) => {
         this.emitters.push({ x: px + ex * k, y: py - ey * k * sy, type, k });
       };
+      if (e.kind === 'wonder') {
+        // chaque merveille se dresse sur sa butte, au-dessus des toits
+        ctx.fillStyle = env.body;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.ellipse(px, horizon + u * 0.6, k * 9.5, py - horizon - u * 0.6 < 0 ? horizon + u * 0.6 - py + u * 0.25 : u, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
       ctx.save();
       ctx.translate(px, py);
       ctx.scale(k, -k * sy);
