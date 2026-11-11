@@ -29,6 +29,15 @@ describe('contenu', () => {
     }
   });
 
+  it('chaque option à condition a une réplique d’échec', () => {
+    for (const c of Object.values(content.cards)) {
+      for (const side of ['left', 'right'] as const) {
+        const e = c[side].effect;
+        if (e.when && e.else && e.when.gauge) expect(e.else.reply, `${c.id} ${side}`).toBeTruthy();
+      }
+    }
+  });
+
   it('les deux options d’une carte diffèrent', () => {
     for (const c of Object.values(content.cards)) {
       expect(JSON.stringify(c.left.effect)).not.toBe(JSON.stringify(c.right.effect));

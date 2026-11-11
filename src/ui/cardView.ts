@@ -7,6 +7,8 @@ export interface CardShowOpts {
   crisis?: boolean;
   /** cartes restantes derrière celle-ci (pour l'épaisseur de la pile) */
   remaining: number;
+  /** mention sous une option dont l'issue dépend de l'état (« selon l'Armée ») */
+  depends?: { left?: string; right?: string };
 }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -80,8 +82,8 @@ export class CardView {
 <p class="card-text">${esc(def.text)}</p>
 </div>
 <div class="card-foot">
-<button type="button" class="opt left" aria-label="Gauche : ${esc(def.left.text)}">${ICONS.left}<span>${esc(def.left.text)}</span></button>
-<button type="button" class="opt right" aria-label="Droite : ${esc(def.right.text)}"><span>${esc(def.right.text)}</span>${ICONS.right}</button>
+<button type="button" class="opt left" aria-label="Gauche : ${esc(def.left.text)}">${ICONS.left}<span>${esc(def.left.text)}${o.depends?.left ? `<em>${esc(o.depends.left)}</em>` : ''}</span></button>
+<button type="button" class="opt right" aria-label="Droite : ${esc(def.right.text)}"><span>${esc(def.right.text)}${o.depends?.right ? `<em>${esc(o.depends.right)}</em>` : ''}</span>${ICONS.right}</button>
 </div>
 <div class="card-sheen"></div>
 <div class="card-choice left">${esc(def.left.text)}</div>

@@ -14,6 +14,20 @@ import { crises, crisisCards } from './crises';
 import { wonders } from './wonders';
 import { eras } from './eras';
 import { tuneCard } from './tuning';
+import { FAIL_REPLY } from './replies';
+import type { CardDef } from '../core/types';
+
+function withFailReply(c: CardDef): CardDef {
+  const f = FAIL_REPLY[c.id];
+  if (!f) return c;
+  const out = { ...c };
+  for (const side of ['left', 'right'] as const) {
+    const r = f[side];
+    const e = c[side].effect;
+    if (r && e.else) out[side] = { ...c[side], effect: { ...e, else: { ...e.else, reply: r } } };
+  }
+  return out;
+}
 
 const allCards = [
   ...starters,
@@ -29,7 +43,7 @@ const allCards = [
   ...rivalNeutral,
   ...rivalFriendly,
   ...crisisCards,
-].map(tuneCard);
+].map(tuneCard).map(withFailReply);
 
 export const content: Content = {
   cards: toRecord(allCards),

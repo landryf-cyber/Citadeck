@@ -1,0 +1,30 @@
+/**
+ * Répliques d'échec : pour les options à condition (armée ou trésor suffisants…),
+ * ce que le joueur lit quand la condition n'est pas remplie.
+ */
+export const FAIL_REPLY: Record<string, { left?: string; right?: string }> = {
+  e2_vikings: { right: 'Trop peu de lances. La plage est rouge, et c’est le vôtre.' },
+  q_revolte_carrieres: { left: 'L’armée était trop maigre. Ils ont gardé les pioches. Et la route.' },
+  q_route: { left: 'Trop peu de soldats. Ils ont pris l’or, puis la route du retour.' },
+  q_colonie_guerre: { left: 'Vos soldats étaient trop peu. La colonie a gardé les bateaux. Et quelques prisonniers.' },
+  q_general: { right: 'Les coffres étaient vides : le peuple s’est levé le ventre creux. Il a gagné, de justesse.' },
+  q_siege: { left: 'L’assaut a échoué. Il vous a renvoyé vos échelles. Avec un mot gentil.' },
+  q_danegeld: { right: 'Vous n’aviez pas assez d’hommes. Ils ont pris l’or eux-mêmes. Et le reste.' },
+  q_heritier: { right: 'L’armée a choisi l’héritier. Vous gardez le titre. Il garde tout le reste.' },
+  q_colonies: { left: 'Pas assez de troupes. On a tenu trois semaines. On en parlera longtemps.' },
+  v_raid: { left: 'Vos guerriers étaient trop peu. Ils ont brûlé un quatrième village en repartant.' },
+  v_guerre: { left: 'Votre armée était trop faible. La charge a duré une matinée.', right: 'Le trésor était vide : pas de vivres pour le siège. Les murs ont tenu. À peine.' },
+  v_blocus: { left: 'Trop peu de navires de guerre. Le blocus tient. Vos épaves aussi.' },
+  v_frappe: { left: 'Votre armée n’était pas prête. Leur riposte, si.' },
+  v_cheval: { left: 'Trop peu de gardes éveillés. Ils sont repartis en courant, les bras pleins.' },
+  x0_eclaireurs: { left: 'Vos guerriers étaient trop peu. Les éclaireurs en ont ri, puis sont repartis prévenir.' },
+  x0_portes: { left: 'Trop peu de défenseurs. La palissade a cédé par endroits. Par beaucoup d’endroits.', right: 'Le trésor ne suffisait pas. Ils ont pris le reste en nature.' },
+  x1_quarantaine: { left: 'Trop peu de gardes valides. Les portes ont été forcées, des deux côtés.' },
+  x2_barricades: { left: 'Les greniers étaient presque vides. Le pain a manqué. La colère, non.', right: 'La troupe était trop maigre. Elle a rejoint les barricades.' },
+  x2_charte: { right: 'Sans armée pour l’appuyer, votre geste a fait rire. Puis il a fait mal.' },
+  x3_tranchees: { left: 'L’armée était trop usée. Un mètre gagné. Rendu le lendemain.' },
+  x3_armistice: { right: 'Vous n’aviez rien gagné : ils ont déchiré vos dix pages. Poliment.' },
+  x4_penurie: { right: 'Votre armée n’était pas de taille. Leurs mines sont restées à eux. Vos soldats aussi.' },
+  x4_generaux: { left: 'L’armée n’était pas prête. Les voisins, si. Il reste deux moitiés de planète.' },
+  x4_fusion: { left: 'Trop peu de savants pour le surveiller. Il s’est allumé. Brièvement.' },
+};

@@ -56,6 +56,8 @@ export interface Effect {
   when?: Condition;
   then?: Effect;
   else?: Effect;
+  /** réplique propre à cette branche (remplace celle de l'option) */
+  reply?: string;
 }
 
 export interface CardOption {

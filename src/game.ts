@@ -262,7 +262,13 @@ export class Game {
     const remaining = s.phase === 'crisis' ? s.crisis!.cards.length - s.crisis!.index - 1 : s.drawPile.length + 1;
     const face = cardFace(card, s.era);
     const shown: CardDef = { ...card, title: face.title, text: face.text, left: { ...card.left, text: face.left }, right: { ...card.right, text: face.right } };
-    this.cardView.show(shown, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining });
+    const dep = (side: Side): string | undefined => {
+      const w = card[side].effect.when;
+      if (w?.gauge) return `selon ${w.gauge === 'army' ? 'l’Armée' : w.gauge === 'food' ? 'la Nourriture' : w.gauge === 'knowledge' ? 'le Savoir' : 'le Trésor'}`;
+      if (w?.keyword) return `selon vos cartes ${w.keyword}`;
+      return undefined;
+    };
+    this.cardView.show(shown, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining, depends: { left: dep('left'), right: dep('right') } });
     this.cardView.enabled = true;
     this.audio.cardIn();
     const fine = matchMedia('(pointer: fine)').matches;
@@ -324,13 +330,14 @@ export class Game {
     this.hud.preview(null);
     this.audio.swipe(side);
     const face = cardFace(card, s.era);
+    const branchReply = this.engine.resolveEffect(s, card[side].effect).reply;
     const events = this.engine.choose(s, side);
     saveGame(s);
     if (s.turn >= 3 && !this.settings.tutorialDone) {
       this.settings.tutorialDone = true;
       saveSettings(this.settings);
     }
-    this.showReply((side === 'left' ? face.replyLeft : face.replyRight) ?? '');
+    this.showReply(branchReply ?? (side === 'left' ? face.replyLeft : face.replyRight) ?? '');
     void this.after(events, token);
   }
 
