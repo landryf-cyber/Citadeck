@@ -213,7 +213,42 @@ export class App {
     this.s = this.e.newGame(seed, setup);
     store.saveGame(this.s);
     this.audio.revive();
-    this.enterGame(true);
+    if (this.meta.runs === 0) this.intro(() => this.enterGame(true));
+    else this.enterGame(true);
+  }
+
+  /** Premier lancement : les quatre familles se présentent, chacune avec sa voix. */
+  private intro(done: () => void): void {
+    const s = this.s!;
+    const lines: Record<FamilyId, string> = {
+      ourk: '« Ourk chasse. Ourk protège. Ourk n’oublie jamais qui l’a fait attendre. »',
+      sel: '« Le ciel voit tout. Pour un petit don, il sait aussi fermer les yeux. »',
+      brume: '« Techniquement, c’est nous qui avons inventé le feu. Vous l’avez juste allumé. »',
+      troc: '« Tout s’échange. Même l’amitié. Surtout l’amitié. Prix d’ami. »',
+    };
+    const go = () => {
+      this.closeScreen();
+      done();
+    };
+    this.openScreen('veil intro', (inner) => {
+      inner.innerHTML = `<div class="over">Il y a dix mille ans</div><h2 class="big">${esc(s.name)}</h2><p class="sub">Un feu, une vallée, et quatre familles autour.</p>`;
+      const list = el('div', 'fam-intro');
+      FAMILIES.forEach((f, i) => {
+        const fi = this.e.familyInfo(s, f);
+        const row = el('div', 'fi-row', `${this.famSvg(fi, 52, 0)}<div><b>${esc(fi.house)}</b> <span>${esc(fi.tag === 'Guerre' ? 'les chasseurs' : fi.tag === 'Foi' ? 'les chamanes' : fi.tag === 'Science' ? 'les sages' : 'les troqueurs')}</span><p>${esc(lines[f])}</p></div>`);
+        row.style.animationDelay = `${0.3 + i * 0.35}s`;
+        list.appendChild(row);
+      });
+      inner.appendChild(list);
+      const last = el('p', 'sub', 'Elles se souviendront de tout ce que vous déciderez. Leurs descendants aussi.');
+      last.style.cssText = 'animation: fadeUp 1s 1.9s var(--ease-out) both';
+      inner.appendChild(last);
+      const b = el('div', 'btns');
+      b.appendChild(this.button('Allumer le feu', go));
+      inner.appendChild(b);
+    }, (k) => {
+      if (k === 'Enter' || k === ' ') go();
+    });
   }
 
   private resume(s: GameState): void {

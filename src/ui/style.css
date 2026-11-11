@@ -233,6 +233,14 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .seg button { padding: 5px 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--dim); box-shadow: inset 0 0 0 1px var(--line); }
 .seg button.on { color: #1a120a; background: var(--ui); }
 
+/* introduction */
+.fam-intro { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.fi-row { display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 14px; background: rgba(14, 11, 19, 0.82); box-shadow: inset 0 0 0 1px var(--line); animation: fadeUp 0.8s var(--ease-out) both; }
+.fi-row svg { flex: none; }
+.fi-row b { font-family: var(--title); font-size: 16px; color: #fff4de; }
+.fi-row span { font-size: 12px; color: var(--faint); letter-spacing: 0.06em; }
+.fi-row p { margin: 3px 0 0; font-size: 14.5px; font-style: italic; color: rgba(246, 238, 223, 0.92); line-height: 1.3; }
+
 /* présage */
 .presage .big { font-size: clamp(30px, 9vw, 54px); }
 .wonder-line { display: flex; gap: 10px; align-items: center; }

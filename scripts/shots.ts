@@ -83,6 +83,9 @@ async function main(): Promise<void> {
     await page.waitForTimeout(700);
     await shot(page, vp.name, '02-fondation');
     await page.click('.btns .btn >> nth=0');
+    await page.waitForTimeout(2600);
+    await shot(page, vp.name, '02b-intro');
+    await page.click('text=Allumer le feu');
     await page.waitForTimeout(1200);
     await shot(page, vp.name, '03-presage');
     await page.click('text=En route');
