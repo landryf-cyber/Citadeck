@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { content } from '../data';
 import { PROFILES } from './bots';
-import { playRun, type RunStats } from './sim';
+import { campaign, playRun, type RunStats } from './sim';
 
 const args = process.argv.slice(2);
 if (args[0] === '--transcript') {
@@ -14,6 +14,27 @@ if (args[0] === '--transcript') {
   const f = `shots/transcripts/${p.name.replace(/\s/g, '_')}-${args[2] ?? 1}.md`;
   writeFileSync(f, r.lines.join('\n'));
   console.log(`${f} (${r.decisions} décisions, ${r.win ? 'victoire' : 'défaite ère ' + (r.era + 1)})`);
+  process.exit(0);
+}
+if (args[0] === '--campaign') {
+  // une suite de parties reliées : chronique, testaments, déblocages, ruines et revenants
+  const n = Number(args[1] ?? 10);
+  const p = PROFILES.find((x) => x.name === (args[2] ?? 'lecteur')) ?? PROFILES[0];
+  const { meta, states, unlocks } = campaign(content, p, Array.from({ length: n }, (_, i) => 1000 + i * 31));
+  const out: string[] = [`# Campagne de ${n} parties (${p.name})`];
+  states.forEach((s, i) => {
+    const entry = meta.chronicle[n - 1 - i];
+    out.push(`\n## ${i + 1}. ${s.name} (${s.origin}, ${s.dessein}) — ${s.result?.type}${s.iron ? ' — fer' : ''}`);
+    out.push(...entry.lines.map((l) => `> ${l}`));
+    out.push(`Épitaphe : ${entry.epitaph}`, `Héritage : ${entry.legacy?.label ?? '—'}`);
+    const r = s.history.find((h) => h.card === 'ruines');
+    const v = s.history.find((h) => h.card === 'revenants');
+    out.push(`Ruines : ${s.ruins.map((x) => x.name).join(', ') || '—'} · fouille : ${r ? r.label : 'non'} · revenants : ${v ? v.label : 'non'}`);
+    if (unlocks[i].length) out.push(`Débloqué : ${unlocks[i].join(', ')}`);
+  });
+  mkdirSync('shots/transcripts', { recursive: true });
+  writeFileSync('shots/transcripts/campagne.md', out.join('\n'));
+  console.log(out.join('\n'));
   process.exit(0);
 }
 const N = Number(args[0] ?? 200);

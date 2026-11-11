@@ -1,7 +1,8 @@
 /** Partie automatique, mesures, et transcription lisible. */
 import { Rng } from '../../core/rng';
-import { Engine, type Ev } from '../core/engine';
-import { RES_LABEL, type GameState, type RuinInfo } from '../core/types';
+import { Engine, type Ev, type Setup } from '../core/engine';
+import { newMeta, nextSetup, recordRun, testaments } from '../core/meta';
+import { RES_LABEL, type GameState, type MetaState, type RuinInfo } from '../core/types';
 import type { Content } from '../core/content';
 import { chooseIndex, type Profile } from './bots';
 
@@ -101,11 +102,33 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
   return st;
 }
 
-export function finalState(c: Content, p: Profile, seed: number): GameState {
+export function finalState(c: Content, p: Profile, seed: number, setup: Partial<Setup> = {}): GameState {
   const e = new Engine(c);
   const rng = new Rng((seed * 2246822519) >>> 0);
-  const s = e.newGame(seed, { dessein: p.dessein ?? rng.pick(c.desseins).id });
+  const s = e.newGame(seed, { dessein: p.dessein ?? rng.pick(c.desseins).id, ...setup });
   let g = 0;
   while (s.phase !== 'fin' && g++ < 400) e.act(s, chooseIndex(e, s, p, rng));
   return s;
+}
+
+/** Une suite de parties reliées par la méta-progression (chronique, ruines, testaments, déblocages). */
+export function campaign(c: Content, p: Profile, seeds: number[], pickTestament = (n: number) => n % 3): { meta: MetaState; states: GameState[]; unlocks: string[][] } {
+  const e = new Engine(c);
+  let meta = newMeta();
+  const states: GameState[] = [];
+  const unlocks: string[][] = [];
+  seeds.forEach((seed, k) => {
+    const rng = new Rng((seed * 2246822519) >>> 0);
+    const dessein = p.dessein ?? rng.pick(c.desseins).id;
+    const origin = meta.unlocked.includes('heritiers') && k % 2 === 1 ? 'heritiers' : meta.unlocked.includes('fleuve') && k % 3 === 2 ? 'fleuve' : 'feu';
+    const s = e.newGame(seed, nextSetup(meta, { dessein, origin }));
+    let g = 0;
+    while (s.phase !== 'fin' && g++ < 400) e.act(s, chooseIndex(e, s, p, rng));
+    const t = testaments(e, s);
+    const r = recordRun(meta, e, s, t[pickTestament(k) % t.length]);
+    meta = r.meta;
+    states.push(s);
+    unlocks.push(r.unlocked.map((u) => u.id));
+  });
+  return { meta, states, unlocks };
 }

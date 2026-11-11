@@ -199,6 +199,16 @@ export const eventCards = [
       { label: 'Climatiser', effect: { gain: $('T3 V-3'), loy: { troc: 1 } }, reply: 'Tout le monde est au frais. Dehors, il fait encore plus chaud. Dedans, on ne sort plus.' },
     ],
   }),
+  card({
+    id: 'ev_musee', lock: 'musee', kind: 'evenement', scale: true, eras: [3], cond: { ruins: 2 }, tags: ['Culture'], art: { motif: 'skull', hue: 40 },
+    title: 'Le Musée des civilisations',
+    text: 'On ouvre une salle pour {ruine:0}, une pour {ruine:1}. Un conservateur demande s’il faut prévoir une salle pour {cite}. « Par précaution. »',
+    options: [
+      { label: 'Ouvrir le musée', cost: $('T3'), effect: { gain: $('S4'), loy: { brume: 1, sel: 1 }, mem: ['musee'] }, reply: 'Les écoliers défilent devant les ruines de {ruine:0}. Ils trouvent la fin très drôle. Ils ont tort.' },
+      { label: 'Vendre les collections', effect: { gain: $('T7'), loy: { sel: -1, troc: 1 } }, reply: '{Rival} achètent tout. Le testament de {ruine:0} est exposé chez eux, mal traduit.' },
+      { label: 'Prévoir la salle', cost: $('S2'), effect: { loy: { sel: 1 }, mem: ['salle_prevue'] }, reply: 'La salle de {cite} est prête. Elle est vide. Le conservateur la dépoussière chaque matin, en sifflant.' },
+    ],
+  }),
 ];
 
 /** Cartes de la rivale, selon l'état de la relation. */

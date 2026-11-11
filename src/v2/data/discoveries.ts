@@ -173,4 +173,45 @@ export const discoveryCards = [
       { label: 'Recalibrer', cost: $('S2'), effect: { gain: $('S3'), loy: { brume: 1 } }, reply: 'Le radar ignore les pigeons. Il ignore aussi les petits avions. On verra bien.' },
     ],
   }),
+  // ------------------------------------------------------------------ débloquées par la méta-progression
+  card({
+    id: 'd_silos', lock: 'silos', kind: 'decouverte', scale: true, eras: [1, 2], tags: ['Foi'], art: { motif: 'house', hue: 44 }, price: 3,
+    passive: [{ type: 'income', res: 'vivres', amount: 2 }], gift: '+2 Vivres par saison. Compte pour la Foi.',
+    title: 'Les Silos',
+    text: 'Des tours à grain, hautes et sans fenêtres. Quelqu’un, quelque part, se souvient d’avoir eu très faim. {F:troc} propose d’y stocker aussi l’or.',
+    options: [
+      { label: 'Du grain, rien que du grain', effect: { gain: $('V4'), loy: { sel: 1 } }, reply: 'Les silos sont pleins. On les regarde le soir, comme d’autres regardent la mer.' },
+      { label: 'Louer la moitié à {H:troc}', effect: { gain: $('T4 V1'), loy: { troc: 1, sel: -1 } }, reply: 'Moitié grain, moitié or. En cas de famine, on pourra toujours manger l’or. Non.' },
+    ],
+  }),
+  card({
+    id: 'd_archeologie', lock: 'archeologie', kind: 'decouverte', scale: true, eras: [2, 3], tags: ['Culture'], art: { motif: 'skull', hue: 30 }, price: 4,
+    passive: [{ type: 'income', res: 'tresor', amount: 1 }], gift: '+1 Trésor par saison. Compte pour la Culture.',
+    title: 'L’Archéologie',
+    text: 'Sous la ville, des savants trouvent {ruine:0}. Sous {ruine:0}, une autre ville. {?ruins>=2|C’est {ruine:1}.|Personne ne sait laquelle.} Ils demandent s’il faut continuer à creuser.',
+    options: [
+      { label: 'Exposer les trouvailles', cost: $('T2'), effect: { gain: $('S4'), loy: { brume: 1, sel: 1 } }, reply: 'Les visiteurs défilent devant les crânes de vos prédécesseurs. Ils trouvent qu’ils vous ressemblent.' },
+      { label: 'Revendre les trouvailles', effect: { gain: $('T6'), loy: { sel: -1, troc: 1 } }, reply: 'Les morts n’ont pas d’avocat. {F:sel} se propose, contre honoraires.' },
+    ],
+  }),
+  card({
+    id: 'd_ambassade', lock: 'ambassade', kind: 'decouverte', scale: true, eras: [2, 3], tags: ['Commerce'], art: { motif: 'scroll', hue: 268 }, price: 4,
+    passive: [{ type: 'income', res: 'tresor', amount: 1 }], gift: '+1 Trésor par saison. Chaque ère : parler à {rival} avant qu’ils ne tirent.',
+    title: 'L’Ambassade',
+    text: 'Un palais chez {rival}, avec votre drapeau et un cuisinier. L’ambassadeur demande ses instructions. Il demande aussi un meilleur cuisinier.',
+    options: [
+      { label: 'Porter des cadeaux', cost: $('T3'), effect: { rival: 1, loy: { troc: 1 } }, reply: '{Reine} accepte les cadeaux. {Elle} les fait expertiser devant l’ambassadeur.' },
+      { label: 'Écouter aux portes', effect: { gain: $('S4'), rival: -1, loy: { brume: 1 } }, reply: 'L’ambassadeur rapporte des plans, des rumeurs et une recette. Le cuisinier, lui, est resté là-bas.' },
+    ],
+  }),
+  card({
+    id: 'd_droit', lock: 'droit', kind: 'decouverte', scale: true, eras: [2, 3], tags: ['Foi'], art: { motif: 'scales', hue: 44 }, price: 4,
+    passive: [{ type: 'loyalty', family: 'all', floor: -2 }], gift: 'Aucune loyauté ne descend sous −2 : plus de révolte. Les procès continuent.',
+    title: 'Le Droit',
+    text: 'Des juges, des codes, des robes noires. Vous avez eu tant de procès que la justice s’est organisée autour de vous. Reste à savoir pour qui elle travaille.',
+    options: [
+      { label: 'Juger les puissants', effect: { gain: $('V3'), loy: { sel: 1, ourk: -1, troc: -1 } }, reply: 'Un amiral et un banquier en prison le même jour. La foule applaudit. Les puissants prennent des notes.' },
+      { label: 'Juger les pauvres', effect: { gain: $('T5'), loy: { troc: 1, sel: -1 } }, reply: 'Les prisons se remplissent de voleurs de pain. Les voleurs de banques vous remercient.' },
+    ],
+  }),
 ];

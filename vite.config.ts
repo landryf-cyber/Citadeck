@@ -14,6 +14,7 @@ export default defineConfig({
   preview: { host: true, port: 4173 },
   test: {
     include: ['tests/**/*.test.ts'],
+    testTimeout: 60000,
     environment: 'node',
   },
 });

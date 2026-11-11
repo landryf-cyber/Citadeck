@@ -6,28 +6,28 @@ export const families: Record<FamilyId, FamilyDef> = {
   ourk: {
     id: 'ourk', tag: 'Guerre', res: 'armee', hue: 8, motif: 'fang',
     head: ['Ourk', 'Ourkos', 'Sire Ourquin', 'le colonel Ourkov', 'l’amirale Ourk-7'],
-    house: ['les Ourk', 'les Ourkides', 'les Ourquin', 'les Ourkov', 'la lignée Ourk'],
+    house: ['les Ourk', 'les Ourkides', 'les Ourquin', 'les Ourkov', 'les Ourkonautes'],
     trade: ['chasseurs', 'légionnaires', 'chevaliers', 'officiers', 'amiraux'],
     voice: 'Parle de lui à la troisième personne. Depuis dix mille ans.',
   },
   sel: {
     id: 'sel', tag: 'Foi', res: 'vivres', hue: 44, motif: 'eye',
     head: ['Mère Sel', 'Sélènè la Pythie', 'l’abbesse Salière', 'Monseigneur Salin', 'la révérende Sel'],
-    house: ['les Sel', 'les Sélénides', 'les Salière', 'les Salin', 'l’Église de Sel'],
+    house: ['les Sel', 'les Sélénides', 'les Salière', 'les Salin', 'les Sélestes'],
     trade: ['chamanes', 'oracles', 'moniales', 'prélats', 'télévangélistes'],
     voice: 'Prédit le malheur et tend la main.',
   },
   brume: {
     id: 'brume', tag: 'Science', res: 'savoir', hue: 205, motif: 'spiral',
     head: ['le vieux Brume', 'Brumos le Mesureur', 'frère Brumaire', 'le docteur Brumel', 'BRUME'],
-    house: ['les Brume', 'les Brumides', 'les Brumaire', 'les Brumel', 'les instances de BRUME'],
+    house: ['les Brume', 'les Brumides', 'les Brumaire', 'les Brumel', 'les BRUME'],
     trade: ['sages', 'géomètres', 'copistes', 'ingénieurs', 'intelligences'],
     voice: 'Corrige tout le monde. Fait exploser des choses.',
   },
   troc: {
     id: 'troc', tag: 'Commerce', res: 'tresor', hue: 150, motif: 'coin',
     head: ['Troc', 'Trokos l’armateur', 'maître Troquet', 'Troc et Fils', 'TrocCorp'],
-    house: ['les Troc', 'les Trokides', 'les Troquet', 'Troc et Fils', 'TrocCorp'],
+    house: ['les Troc', 'les Trokides', 'les Troquet', 'les Troc-et-Fils', 'les TrocCorp'],
     trade: ['troqueurs', 'armateurs', 'banquiers', 'industriels', 'actionnaires'],
     voice: 'A un prix pour tout. Surtout pour l’amitié.',
   },
@@ -42,7 +42,8 @@ export const desseins: DesseinDef[] = [
     jalons: [
       { name: 'Le Cercle de pierres', text: 'Des pierres dressées qui annoncent les saisons.', cost: $('S5'), gift: 'Il rapporte 1 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 1 }, shape: 'cercle' },
       { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S9 V3'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour' },
-      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S14 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome' },
+      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S14 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome',
+        alt: { lock: 'alt_etoiles', name: 'Le Grand Télescope', text: 'Un tube de cuivre long comme une rue. On y voit {reine} se gratter le nez, de l’autre côté de la vallée.', cost: $('S12 T7'), req: { tags: { Science: 3 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'telescope' } },
       { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S19 T8'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee' },
       { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S22 T9 V6'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche' },
     ],
@@ -53,7 +54,8 @@ export const desseins: DesseinDef[] = [
     jalons: [
       { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'palissade' },
       { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A8 T3'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle' },
-      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A11 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse' },
+      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A11 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse',
+        alt: { lock: 'alt_empire', name: 'La Voie impériale', text: 'Une route droite d’un bout à l’autre de la vallée. Les légions arrivent partout en trois jours. Les impôts, en deux.', cost: $('A9 T6'), req: { tags: { Guerre: 3 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'voie' } },
       { name: 'L’Arsenal', text: 'Une usine qui ne fabrique qu’une chose. Beaucoup.', cost: $('A15 T6'), req: { tags: { Guerre: 4 } }, gift: 'Il rapporte 2 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 2 }, shape: 'arsenal' },
       { name: 'La Capitulation', text: '{Rival} signent. Sur votre table, avec votre stylo.', cost: $('A19 T8 V5'), req: { tags: { Guerre: 5 } }, gift: 'La vallée.', shape: 'drapeau' },
     ],
@@ -64,7 +66,8 @@ export const desseins: DesseinDef[] = [
     jalons: [
       { name: 'Les Peintures de la grotte', text: 'Des mains, des bisons, et vous, plus grand que nature.', cost: $('T5'), gift: 'Personne ne peut tout à fait vous haïr : aucune loyauté ne descend sous −2.', passive: { type: 'loyalty', family: 'all', floor: -2 }, shape: 'grotte' },
       { name: 'Le Théâtre', text: 'Des gradins de pierre où l’on rit de vous, ce qui vous rend populaire.', cost: $('T9 V3'), req: { tags: { Culture: 2 } }, gift: 'Il rapporte 1 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 1 }, shape: 'theatre' },
-      { name: 'La Cathédrale', text: 'Trois siècles de chantier. On y entend une mouche penser.', cost: $('T13 S5'), req: { tags: { Culture: 3 } }, gift: 'Elle rapporte 2 Vivres par saison.', passive: { type: 'income', res: 'vivres', amount: 2 }, shape: 'cathedrale' },
+      { name: 'La Cathédrale', text: 'Trois siècles de chantier. On y entend une mouche penser.', cost: $('T13 S5'), req: { tags: { Culture: 3 } }, gift: 'Elle rapporte 2 Vivres par saison.', passive: { type: 'income', res: 'vivres', amount: 2 }, shape: 'cathedrale',
+        alt: { lock: 'alt_posterite', name: 'La Bibliothèque', text: 'Tous les livres du monde. Certains en deux exemplaires, au cas où. Le bibliothécaire refuse de prêter.', cost: $('T11 S7'), req: { tags: { Culture: 3 } }, gift: 'Elle compte pour deux cartes Culture.', passive: { type: 'tagBonus', tag: 'Culture', amount: 2 }, shape: 'bibliotheque' } },
       { name: 'L’Exposition universelle', text: 'Une tour de fer, provisoire. Elle restera.', cost: $('T18 S7'), req: { tags: { Culture: 4 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'tour_fer' },
       { name: 'Le Grand Récit', text: 'Votre histoire, gravée, chantée, diffusée, traduite dans toutes les langues. Même les mortes.', cost: $('T22 V6 S6'), req: { tags: { Culture: 5 } }, gift: 'L’éternité.', shape: 'recit' },
     ],
@@ -73,8 +76,8 @@ export const desseins: DesseinDef[] = [
 
 export const origins: OriginDef[] = [
   { id: 'feu', name: 'Les Gens du Feu', text: 'Un feu, quatre familles, et déjà des problèmes.', res: { vivres: 6, armee: 4, savoir: 3, tresor: 4 }, quartiers: 3, families: ['ourk', 'sel', 'brume', 'troc'] },
-  { id: 'fleuve', name: 'Les Gens du Fleuve', text: 'Une terre grasse, un fleuve qui déborde. On mange bien, on se bat mal.', res: { vivres: 10, armee: 2, savoir: 3, tresor: 4 }, quartiers: 4, families: ['ourk', 'sel', 'brume', 'troc'], unlock: 'atteindre la troisième ère' },
-  { id: 'heritiers', name: 'Les Héritiers', text: 'Vous bâtissez sur les ruines d’une civilisation morte. Elle avait laissé de l’or. Et une famille qui vous en veut déjà.', res: { vivres: 5, armee: 4, savoir: 5, tresor: 7 }, quartiers: 3, families: ['ourk', 'sel', 'brume', 'troc'], mem: ['heritiers'], unlock: 'bâtir trois jalons' },
+  { id: 'fleuve', name: 'Les Gens du Fleuve', text: 'Une terre grasse, un fleuve qui déborde. On mange bien, on se bat mal.', res: { vivres: 10, armee: 2, savoir: 3, tresor: 4 }, quartiers: 4, families: ['ourk', 'sel', 'brume', 'troc'], unlock: 'atteindre le Moyen Âge' },
+  { id: 'heritiers', name: 'Les Héritiers', text: 'Vous bâtissez sur les ruines d’une civilisation morte. Elle avait laissé de l’or. Et une famille qui vous en veut déjà.', res: { vivres: 5, armee: 4, savoir: 5, tresor: 7 }, quartiers: 3, families: ['ourk', 'sel', 'brume', 'troc'], mem: ['heritiers'], unlock: 'laisser une première civilisation derrière soi' },
 ];
 
 export const rivals: RivalDef[] = [
@@ -126,10 +129,19 @@ export const engineCards = [
     options: [
       { label: 'Fouiller les ruines', cost: $('V2'), effect: { gain: $('S5 T3'), mem: ['ruines_fouillees'] },
         reply: 'Des outils, des tablettes, et une statue de quelqu’un qui vous ressemble beaucoup. Gênant.' },
-      { label: 'Bâtir par-dessus', effect: { gain: $('T5'), quartiers: 1, mem: ['ruines_baties'] },
+      { label: 'Bâtir par-dessus', cost: $('V3'), effect: { quartiers: 1, mem: ['ruines_baties'], sched: [{ card: 'ruines_caves', in: 5 }] },
         reply: 'Un nouveau quartier, sur des fondations solides. Les caves font des bruits, la nuit.' },
       { label: 'Honorer les morts', cost: $('T2'), effect: { loy: { sel: 2, ourk: 1 }, mem: ['ruines_honorees'] },
         reply: '{F:sel} officie. Elle dit que les morts sont contents. Elle dit ça de tous les morts.' },
+    ],
+  }),
+  card({
+    id: 'ruines_caves', kind: 'intrigue', scale: true, arc: 'caves', finale: true, title: 'Les Caves', art: { motif: 'skull', hue: 280 },
+    text: 'Sous le quartier bâti sur {ancienne}, les caves murmurent. Les habitants entendent des voix. Elles répètent : « {testament} » Les loyers baissent.',
+    options: [
+      { label: 'Exorciser', cost: $('T3'), effect: { loy: { sel: 1 } }, reply: '{F:sel} chasse les voix avec de l’encens et une facture. Les voix se taisent. La facture, non.' },
+      { label: 'Faire visiter', effect: { gain: $('T5'), loy: { sel: -1, troc: 1 } }, reply: '{F:troc} vend des billets pour « les Caves hantées de {ancienne} ». Les voix font salle comble.' },
+      { label: 'Écouter les voix', cost: $('S2'), effect: { gain: $('S4'), loy: { brume: 1 }, mem: ['caves_ecoutees'] }, reply: '{F:brume} enregistre les voix et les traduit. Elles se plaignent surtout des loyers.' },
     ],
   }),
   card({

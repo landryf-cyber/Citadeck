@@ -8,14 +8,14 @@ import { eraDate, fill, civName, capitalize, setCrisisK } from './text';
 import {
   FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
-  type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
+  type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 export const ERAS = 5;
 export const SAISON_CARDS = 4;
 /** Réglages d'équilibrage (balayés par src/v2/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.25 };
+export const TUNING = { crisisK: 1.2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.25, iron: 1.2 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -43,6 +43,13 @@ function scaleOption(o: Option, era: number, k = ERA_SCALE[era]): Option {
   return { ...o, cost: scaleBag(o.cost, era), req: o.req?.res ? { ...o.req, res: scaleBag(o.req.res, era) } : o.req, effect: se(o.effect)! };
 }
 
+/** Ce qui finit par emporter même une civilisation victorieuse. */
+export const VICTORY_CAUSE: Record<string, string> = {
+  etoiles: 'le départ : ils sont tous partis, en laissant la lumière allumée',
+  empire: 'la paix, qui les a ennuyés à mourir',
+  posterite: 'l’oubli, malgré tout, au bout de très longtemps',
+};
+
 export interface Setup {
   dessein: string;
   origin?: string;
@@ -50,6 +57,8 @@ export interface Setup {
   ruins?: RuinInfo[];
   name?: string;
   unlocked?: string[];
+  /** Âge de fer (débloqué) : crises plus dures */
+  iron?: boolean;
 }
 
 export type Ev =
@@ -150,6 +159,7 @@ export class Engine {
       spent: [],
       sched: [],
       turn: 0,
+      eraStart: 0,
       history: [],
       losses: [],
       shieldUsed: false,
@@ -158,10 +168,51 @@ export class Engine {
       ruins: setup.ruins ?? [],
       growth: 0,
       arcs: { open: [], done: [] },
+      unlocked: [...(setup.unlocked ?? [])],
+      jalonAlt: [],
+      iron: !!setup.iron,
     };
+    this.applyLegacy(s);
     this.buildPool(s, rng);
     s.rng = rng.getState();
     return s;
+  }
+
+  /** Le testament de la civilisation précédente : son héritage s'applique au départ. */
+  private applyLegacy(s: GameState): void {
+    const r = s.ruins[0];
+    if (!r) return;
+    const heirs = s.origin === 'heritiers';
+    const k = heirs ? 2 : 1;
+    const lg = r.legacy;
+    if (lg?.gain) for (const res of RES) s.res[res] = Math.max(0, s.res[res] + (lg.gain[res] ?? 0) * k);
+    if (lg?.quartiers) s.quartiers = Math.max(1, s.quartiers + lg.quartiers);
+    const loy: Partial<Record<FamilyId, number>> = { ...(lg?.loy ?? {}) };
+    // les Héritiers vivent dans les murs des morts : leurs amitiés et leurs haines aussi
+    if (heirs && r.ally) loy[r.ally] = (loy[r.ally] ?? 0) + 1;
+    if (heirs && r.enemy) loy[r.enemy] = (loy[r.enemy] ?? 0) - 1;
+    for (const f of FAMILIES) {
+      const d = loy[f] ?? 0;
+      if (d && s.fam[f].state === 'presente') s.fam[f].loy = Math.max(-2, Math.min(2, s.fam[f].loy + d));
+    }
+    if (lg) s.mem.push('heritage');
+  }
+
+  /** Contenu verrouillé par la méta-progression. */
+  available(s: GameState, c: CardDef | undefined): boolean {
+    return !!c && (!c.lock || s.unlocked.includes(c.lock));
+  }
+
+  /** Le jalon de l'ère tel qu'il a été (ou sera) bâti. */
+  jalonOf(s: GameState, era: number): Jalon {
+    const j = this.dessein(s).jalons[era];
+    return s.jalonAlt.includes(era) && j.alt ? j.alt : j;
+  }
+
+  /** La variante débloquée du jalon de l'ère, si elle est disponible. */
+  jalonAltOf(s: GameState, era: number): Jalon | undefined {
+    const a = this.dessein(s).jalons[era].alt;
+    return a && s.unlocked.includes(a.lock) ? a : undefined;
   }
 
   card(id: string): CardDef {
@@ -185,8 +236,10 @@ export class Engine {
     for (const id of s.deck) out.push(...(this.c.cards[id]?.passive ?? []));
     const d = this.dessein(s);
     s.jalons.forEach((b, i) => {
-      if (b && d.jalons[i].passive) out.push(d.jalons[i].passive!);
+      const j = b ? this.jalonOf(s, i) : undefined;
+      if (j?.passive) out.push(j.passive);
     });
+    void d;
     return out;
   }
 
@@ -230,7 +283,7 @@ export class Engine {
     }
     if (c.dessein && s.dessein !== c.dessein) return false;
     if (c.jalons !== undefined && s.jalons.filter(Boolean).length < c.jalons) return false;
-    if (c.ruins && s.ruins.length === 0) return false;
+    if (c.ruins !== undefined && s.ruins.length < c.ruins) return false;
     return true;
   }
 
@@ -271,7 +324,19 @@ export class Engine {
   // ======================================================================= vue
 
   /** Options effectives de l'invite (routes, procès, découvertes et cartes « qui ? » sont construites ici). */
+  /** Les options d'une carte ; si aucune n'est jouable, une issue de secours (jamais de blocage). */
   options(s: GameState, p: Prompt = s.prompt!): Option[] {
+    const opts = this.baseOptions(s, p);
+    if (opts.some((o) => this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req))) return opts;
+    const card = this.card(p.card);
+    if (card.kind === 'crise') {
+      const name = this.c.crises[s.era].name;
+      return [...opts, { label: 'Encaisser', effect: { quartiers: -1, cause: `${name.charAt(0).toLowerCase()}${name.slice(1)}, sans rien à lui opposer` }, reply: 'Rien à opposer. On serre les dents, on compte les ruines.' }];
+    }
+    return [...opts, { label: 'Ne rien faire', effect: {}, reply: 'Faute de moyens, on attend. Pour une fois, ça ne coûte rien.' }];
+  }
+
+  private baseOptions(s: GameState, p: Prompt): Option[] {
     const card = this.card(p.card);
     if (card.kind === 'carrefour') {
       return (p.routes ?? []).map((rid) => {
@@ -299,10 +364,11 @@ export class Engine {
     }
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
-      return [
-        { label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true } },
-        { label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' },
-      ];
+      const alt = this.jalonAltOf(s, s.era);
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true } }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' } });
+      opts.push({ label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' });
+      return opts;
     }
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
     return card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
@@ -319,8 +385,11 @@ export class Engine {
     let text = card.text;
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
-      title = j.name;
-      text = `${j.text} ${j.gift}`;
+      const alt = this.jalonAltOf(s, s.era);
+      title = alt ? 'Deux plans sur la table' : j.name;
+      text = alt
+        ? `Les architectes se disputent. ${j.name} : ${j.text} ${alt.name} : ${alt.text} On ne bâtira que l’un des deux.`
+        : `${j.text} ${j.gift}`;
       header = `Le Grand Dessein · ${this.dessein(s).name}`;
     }
     if (card.kind === 'proces' && p.plaintiff) {
@@ -338,7 +407,7 @@ export class Engine {
       extra.quand = h ? h.date : 'depuis toujours';
       header = 'L’Hommage';
     }
-    if (card.kind === 'ruines' || card.kind === 'revenant') {
+    if (s.ruins[0]) {
       const r = s.ruins[0];
       if (r) {
         extra.ancienne = r.name;
@@ -420,12 +489,19 @@ export class Engine {
       v.detail = fill(d.gift ?? '', s, this.c);
     }
     if (card.kind === 'proces' && p.qui?.[i]) v.families = [p.qui[i], p.plaintiff!];
+    if (card.kind === 'jalon' && o.effect.jalon) {
+      const j = o.effect.jalon === 'alt' ? this.jalonAltOf(s, s.era) : this.dessein(s).jalons[s.era];
+      if (j) {
+        v.detail = fill(j.gift, s, this.c);
+        v.ref = j.shape;
+      }
+    }
     return v;
   }
 
   /** Intensité des crises : vos merveilles attirent les prédateurs. */
   crisisK(s: GameState): number {
-    return TUNING.crisisK * (1 + TUNING.envy * s.jalons.filter(Boolean).length);
+    return TUNING.crisisK * (s.iron ? TUNING.iron : 1) * (1 + TUNING.envy * s.jalons.filter(Boolean).length);
   }
 
   /** Humeur et souvenir de la famille, en tête de sa carte. */
@@ -465,7 +541,7 @@ export class Engine {
     const loyBefore = Object.fromEntries(FAMILIES.map((f) => [f, s.fam[f].loy])) as Record<FamilyId, number>;
     let reply = o.reply;
     const memBefore = new Set(s.mem);
-    const date = eraDate(s.era, s.turn);
+    const date = eraDate(s.era, s.turn - (s.eraStart ?? 0));
     const titleNow = this.view(s)?.title ?? card.title;
     // payer
     for (const r of RES) s.res[r] -= view.cost[r] ?? 0;
@@ -572,7 +648,8 @@ export class Engine {
     }
     if (e.jalon && !s.jalons[s.era]) {
       s.jalons[s.era] = true;
-      ev.push({ type: 'jalon', era: s.era, name: this.dessein(s).jalons[s.era].name });
+      if (e.jalon === 'alt') s.jalonAlt.push(s.era);
+      ev.push({ type: 'jalon', era: s.era, name: this.jalonOf(s, s.era).name });
     }
     return reply;
   }
@@ -614,11 +691,11 @@ export class Engine {
     for (const id of s.deck) if (this.c.cards[id]?.options.length) pool.push(id);
     const events = (this.c.events[s.era] ?? []).filter((id) => {
       const c = this.c.cards[id];
-      return c && !s.spent.includes(id) && this.check(s, c.cond);
+      return this.available(s, c) && !s.spent.includes(id) && this.check(s, c.cond);
     });
     pool.push(...rng.sample(events, Math.min(2, events.length)));
     const bucket = s.rivalRel <= -1 ? this.c.rivalCards.hostile : s.rivalRel >= 1 ? this.c.rivalCards.friendly : this.c.rivalCards.neutral;
-    const rv = bucket.filter((id) => !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
+    const rv = bucket.filter((id) => this.available(s, this.c.cards[id]) && !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
     if (rv.length) pool.push(rng.pick(rv));
     // les revenants d'une civilisation morte arrivent à la troisième ère
     if (s.era === 2 && s.ruins[0]?.grudge && !s.spent.includes(this.c.revenantCard)) pool.push(this.c.revenantCard);
@@ -757,6 +834,7 @@ export class Engine {
           return;
         }
         s.era++;
+        s.eraStart = s.turn;
         s.saison = 0;
         s.shieldUsed = false;
         this.buildPool(s, rng);
@@ -869,7 +947,7 @@ export class Engine {
       const next = s.era + 1;
       const pool = this.c.discoveries.filter((id) => {
         const d = this.c.cards[id];
-        return d && !s.deck.includes(id) && (d.eras?.includes(next) || d.eras?.includes(s.era)) && this.check(s, d.cond);
+        return this.available(s, d) && !s.deck.includes(id) && (d.eras?.includes(next) || d.eras?.includes(s.era)) && this.check(s, d.cond);
       });
       if (!pool.length) return null;
       return { card: 'decouverte', recruits: rng.sample(pool, Math.min(3, pool.length)) };
@@ -935,7 +1013,8 @@ export class Engine {
   finish(s: GameState, ev: Ev[], type: 'victoire' | 'defaite'): void {
     const jalons = s.jalons.filter(Boolean).length;
     if (type === 'victoire') {
-      s.result = { type, ending: this.dessein(s).ending, jalons };
+      // le dessein n'est accompli qu'avec son cinquième jalon ; sinon, on a seulement survécu
+      s.result = { type, ending: s.jalons[4] ? this.dessein(s).ending : undefined, jalons };
     } else {
       const last = s.losses[s.losses.length - 1];
       s.result = { type, jalons, cause: last?.cause ?? 'l’usure' };
@@ -955,18 +1034,20 @@ export class Engine {
       dessein: s.dessein,
       era: s.era,
       jalons: s.jalons.filter(Boolean).length,
-      cause: s.result?.cause ?? (s.result?.type === 'victoire' ? 'le temps' : 'l’usure'),
+      cause: s.result?.type === 'victoire' ? (s.result.ending ? VICTORY_CAUSE[this.dessein(s).id] : undefined) ?? 'le temps, tout simplement' : s.result?.cause ?? 'l’usure',
       epitaph,
       testament,
+      victory: s.result?.type === 'victoire',
       ally: s.fam[ally]?.loy > 0 ? ally : undefined,
       enemy: s.fam[enemy]?.loy < 0 ? enemy : undefined,
     };
     const lastJ = s.jalons.lastIndexOf(true);
-    if (lastJ >= 0) r.shape = this.dessein(s).jalons[lastJ].shape;
-    if (r.enemy) {
-      const i = this.worstAct(s, r.enemy);
-      const h = s.history[i];
-      if (h) r.grudge = { family: r.enemy, house: this.c.families[r.enemy].house[s.era], quote: h.label, date: h.date };
+    if (lastJ >= 0) r.shape = this.jalonOf(s, lastJ).shape;
+    // le grief : la famille la moins bien traitée (même sans haine déclarée) et le pire de ce qu'on lui a fait
+    const sore = fams.filter((f) => s.fam[f].loy <= 0 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+    if (sore) {
+      const h = s.history[this.worstAct(s, sore)];
+      if (h) r.grudge = { family: sore, house: this.c.families[sore].house[s.era], quote: h.label, date: h.date };
     }
     return r;
   }

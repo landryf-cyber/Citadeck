@@ -44,7 +44,8 @@ export interface Cond {
   /** au moins N jalons bâtis */
   jalons?: number;
   /** au moins une civilisation passée dans la chronique */
-  ruins?: boolean;
+  /** nombre minimal de civilisations passées dans la chronique */
+  ruins?: number;
 }
 
 export interface Bet {
@@ -73,7 +74,8 @@ export interface Effect {
   /** la rivale bâtit (+1) ou perd (-1) un jalon */
   rivalJalon?: number;
   /** fait avancer le jalon de l'ère (bâtit le jalon) */
-  jalon?: boolean;
+  /** bâtir le jalon de l'ère (« alt » : la variante débloquée) */
+  jalon?: boolean | 'alt';
   bet?: Bet;
   if?: Cond;
   then?: Effect;
@@ -107,6 +109,8 @@ export type CardKind =
 export type Form = 'binaire' | 'qui' | 'pari' | 'dosage' | 'route' | 'seuil' | 'choix';
 
 export interface CardDef {
+  /** contenu verrouillé : n'apparaît qu'une fois débloqué (méta-progression) */
+  lock?: string;
   id: string;
   kind: CardKind;
   /** famille qui parle (son emblème illustre la carte) */
@@ -167,6 +171,8 @@ export interface Jalon {
   gift: string;
   /** silhouette dans la scène */
   shape: string;
+  /** variante débloquée par la méta-progression (proposée au chantier) */
+  alt?: Jalon & { lock: string };
 }
 
 export interface DesseinDef {
@@ -332,6 +338,8 @@ export interface GameState {
   spent: string[];
   sched: { card: string; at: number; from?: string }[];
   turn: number;
+  /** tour où l'ère en cours a commencé (dates) */
+  eraStart: number;
   history: HistoryEntry[];
   losses: LossEntry[];
   /** une perte de quartier déjà évitée cette ère (passif « shield ») */
@@ -345,8 +353,12 @@ export interface GameState {
   growth: number;
   /** arcs ouverts / dénoués (mesures, chronique) */
   arcs: { open: string[]; done: string[] };
-  /** ce que la partie a débloqué (rempli en fin de partie) */
-  unlocked?: string[];
+  /** contenus débloqués disponibles dans cette partie (méta-progression) */
+  unlocked: string[];
+  /** ères où la variante débloquée du jalon a été bâtie */
+  jalonAlt: number[];
+  /** Âge de fer : crises plus dures */
+  iron: boolean;
 }
 
 /** Ce qu'une civilisation morte laisse aux suivantes. */
@@ -366,12 +378,39 @@ export interface RuinInfo {
   testament?: string;
   /** le grief le plus lourd de la famille la plus furieuse, cité dans la partie suivante */
   grudge?: { family: FamilyId; house: string; quote: string; date: string };
+  /** ce que le testament lègue à la civilisation suivante */
+  legacy?: Legacy;
+  victory?: boolean;
+}
+
+/** Héritage d'un testament : appliqué au début de la partie suivante. */
+export interface Legacy {
+  label: string;
+  gain?: Bag;
+  loy?: Partial<Record<FamilyId, number>>;
+  quartiers?: number;
+}
+
+export interface ChronicleEntry extends RuinInfo {
+  seed: number;
+  origin: string;
+  rival: string;
+  /** dates de fondation et de chute */
+  from: string;
+  to: string;
+  result: 'victoire' | 'defaite';
+  ending?: string;
+  /** cinq lignes de chronique, partageables */
+  lines: string[];
+  turns: number;
+  iron?: boolean;
 }
 
 export interface MetaState {
   version: number;
   runs: number;
-  chronicle: (RuinInfo & { date: string; seed: number; result: 'victoire' | 'defaite'; ending?: string })[];
+  /** de la plus récente à la plus ancienne */
+  chronicle: ChronicleEntry[];
   unlocked: string[];
   /** faits accomplis (servent aux déblocages) */
   feats: string[];

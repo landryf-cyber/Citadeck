@@ -168,6 +168,7 @@ export const crisisCards = [
       { label: 'Répondre avec la science', cost: $('S12'), effect: { loy: { brume: 2 }, mem: ['signal_science'] }, reply: 'Vous envoyez les décimales de pi. Le signal répond : « Et ensuite ? »' },
       { label: 'Répondre avec une chanson', cost: $('T12'), effect: { loy: { sel: 1, troc: 1 }, mem: ['signal_culture'] }, reply: 'Vous envoyez votre hymne. Le silence qui suit est poli. Très poli.' },
       { label: 'Pointer les canons', cost: $('A12'), effect: { loy: { ourk: 2 }, mem: ['signal_guerre'] }, reply: 'Vous pointez les canons vers le ciel. Le signal se tait. Il prend des notes.' },
+      { label: 'Faire le mort', effect: { loy: { brume: -1, ourk: -1 }, mem: ['signal_silence'] }, reply: 'Vous ne répondez pas. Le signal répète la question, plus lentement, comme à un enfant.' },
     ],
   }),
   card({

@@ -28,6 +28,8 @@ export const trocCards = [
         lose: { loy: { troc: 1 }, reply: 'Les navires ne reviennent pas. Trokos dit que le monde a bien un bout.' } } } },
       { label: 'Un seul navire, petit', cost: $('T1'), effect: { gain: $('T3'), loy: { troc: -1 } },
         reply: 'Le petit navire revient avec un petit chargement. Trokos le décharge en soupirant.' },
+      { label: 'Le monde s’arrête au port', effect: { gain: $('V2'), loy: { troc: -1, sel: 1 } },
+        reply: '{F:sel} approuve : le bout du monde, c’est le bord du quai. Trokos regarde la mer en mâchant sa barbe.' },
     ],
   }),
   card({

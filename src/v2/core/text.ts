@@ -15,6 +15,8 @@
  *   {?loy:ourk>=2|oui|non}      selon une loyauté (opérateurs >= <= > <)
  *   {?card:x|oui|non}           selon une carte du deck
  *   {?rival>=1|oui|non}         selon la relation avec la rivale
+ *   {ruine:0}       nom d'une civilisation passée (0 = la plus récente)
+ *   {?ruins>=2|oui|non}         selon le nombre de civilisations passées
  */
 import type { FamilyId, GameState } from './types';
 import type { Content } from './content';
@@ -26,10 +28,19 @@ export function setCrisisK(k: number): void {
   CRISIS_K = k;
 }
 
+export const ERA_NAMES = ['L’Âge de pierre', 'L’Antiquité', 'Le Moyen Âge', 'L’Ère industrielle', 'L’Ère spatiale'];
+export const ERA_SUBTITLES = [
+  'Un feu, des huttes, et déjà des problèmes.',
+  'Le soleil, la poussière, et des gens qui écrivent.',
+  'Des bougies, des cloches, et des certitudes.',
+  'De la fumée. Beaucoup de fumée.',
+  'Le ciel n’est plus une limite. Le reste, si.',
+];
+
 export function eraDate(era: number, turn: number): string {
   const base = [-9200, -1400, 1080, 1810, 2150][era];
   const step = [140, 45, 22, 6, 3][era];
-  const year = base + (turn % 40) * step;
+  const year = base + Math.min(turn, 60) * step;
   const fmt = (n: number) => n.toLocaleString('fr-FR').replace(/ |\s/g, ' ');
   if (year < 0) return `an ${fmt(-year)} avant le Calendrier`;
   return `an ${fmt(year)}`;
@@ -54,7 +65,8 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
   let out = text;
   // clauses conditionnelles (on résout de l'intérieur vers l'extérieur)
   for (let guard = 0; guard < 8 && out.includes('{?'); guard++) {
-    out = out.replace(/\{\?([^{}|]+)\|([^{}|]*)(?:\|([^{}]*))?\}/g, (_m, test: string, yes: string, no = '') => {
+    // une branche peut contenir des gabarits simples ({F:ourk}), pas d'autre conditionnelle non résolue
+    out = out.replace(/\{\?([^{}|]+)\|((?:[^{}|]|\{[^?{}|][^{}|]*\})*)(?:\|((?:[^{}]|\{[^?{}][^{}]*\})*))?\}/g, (_m, test: string, yes: string, no = '') => {
       let ok = false;
       let m: RegExpMatchArray | null;
       if ((m = test.match(/^mem:(.+)$/))) ok = s.mem.includes(m[1]);
@@ -64,6 +76,8 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
       else if ((m = test.match(/^jalon:(\d)$/))) ok = !!s.jalons[Number(m[1])];
       else if ((m = test.match(/^dessein:(.+)$/))) ok = s.dessein === m[1];
       else if ((m = test.match(/^state:(\w+)=(\w+)$/))) ok = s.fam[m[1] as FamilyId]?.state === m[2];
+      else if ((m = test.match(/^ruins(>=|<=|>|<|=)(\d+)$/))) ok = compare(s.ruins.length, m[1], Number(m[2]));
+      else if ((m = test.match(/^legacy$/))) ok = !!s.ruins[0]?.legacy;
       else if (test === 'rivalshe') ok = !!(c.rivals.find((r) => r.id === s.rival) ?? c.rivals[0]).she;
       return ok ? yes : no;
     });
@@ -78,13 +92,15 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
     .replace(/\{peuple\}/g, demonym(s.name))
     .replace(/\{rival\}/g, rival.name)
     .replace(/\{Rival\}/g, capitalize(rival.name))
+    .replace(/\{RIVAL\}/g, rival.name.toUpperCase())
     .replace(/\{reine\}/g, rival.leader[s.era])
     .replace(/\{Reine\}/g, capitalize(rival.leader[s.era]))
     .replace(/\{s:(\d+)\}/g, (_m, n: string) => String(Math.max(1, Math.round(Number(n) * [1, 1.35, 1.75, 2.2, 2.7][s.era]))))
     .replace(/\{k:(\d+)\}/g, (_m, n: string) => String(Math.max(1, Math.round(Number(n) * crisisK()))))
-    .replace(/\{date\}/g, eraDate(s.era, s.turn))
+    .replace(/\{date\}/g, eraDate(s.era, s.turn - (s.eraStart ?? 0)))
     .replace(/\{Q:(\w+)\}/g, (_m, k: string) => (s.memo[k] ? `« ${s.memo[k].label} »` : '« … »'))
     .replace(/\{D:(\w+)\}/g, (_m, k: string) => s.memo[k]?.date ?? 'un jour')
+    .replace(/\{ruine:(\d)\}/g, (_m, i: string) => s.ruins[Number(i)]?.name ?? 'une cité sans nom')
     .replace(/\{elle\}/g, rival.she ? 'elle' : 'il')
     .replace(/\{Elle\}/g, rival.she ? 'Elle' : 'Il')
     .replace(/\{(\w+)\}/g, (m, k: string) => extra[k] ?? m);
