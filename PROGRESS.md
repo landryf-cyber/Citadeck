@@ -22,12 +22,14 @@
   répliques d'échec, sursis, plafond de 15 points par carte, rivale sans répétition)
 - Build en un seul fichier, publié : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom
 
-## En cours
-- Test joueur n°5 sur la dernière version (le n°4 a noté : clarté 6, tension 7, textes 8,5, beauté 9, envie de rejouer 7 ; ses remarques sont corrigées)
+- Test joueur n°4 complet (clarté 6, tension 7, textes 8,5, beauté 9, envie de rejouer 7) : remarques corrigées
+- Test joueur n°5 interrompu par quota après 13 décisions : aucune incompréhension ni blocage relevé sur ce début
+- Vérification finale : 42 tests, cibles de simulation, 60 fps profil mobile, parties complètes sur le fichier publié
 
-## Bloqué
-- `git push` refusé (403) et API GitHub en lecture seule : le déploiement Pages demande une action
-  du propriétaire du dépôt (voir le message final). Sauvegarde git envoyée.
+## Non terminé
+- Un test joueur complet sur la toute dernière version n'a pas pu aller au bout (quotas des agents épuisés).
+- `git push` refusé (403) : le déploiement GitHub Pages attend que le propriétaire rétablisse l'accès,
+  pousse la branche, la fusionne dans `main` et active Pages (Settings → Pages → Source : GitHub Actions).
 
-## Reste à faire
-- Corrections éventuelles du test n°5, message final
+## Publié
+- https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (build en un seul fichier)
