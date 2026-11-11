@@ -265,7 +265,8 @@ export class Game {
     this.cardView.show(shown, { tag: this.tagFor(card), crisis: s.phase === 'crisis', remaining });
     this.cardView.enabled = true;
     this.audio.cardIn();
-    this.hint.textContent = card.tutorial ?? '';
+    const fine = matchMedia('(pointer: fine)').matches;
+    this.hint.textContent = card.tutorial ? card.tutorial + (card.id === 't_feu' && fine ? ' Au clavier : ← ou → pour pencher, la même touche pour valider.' : '') : '';
     this.hint.classList.toggle('show', !!card.tutorial);
     if (card.tutorial) this.showReply('');
     this.updateFoot();

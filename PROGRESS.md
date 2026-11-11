@@ -10,15 +10,21 @@
 - Audio WebAudio, sauvegarde automatique, script de captures (`npm run shots`)
 - Simulation (`npm run sim`), bots, cibles automatiques, équilibreur d'options (`npm run autotune`)
 
+- Équilibrage : toutes les cibles de `npm run sim` atteintes (1500 parties par bot)
+- Vent de l'ère (moteur + interface), variantes d'ère des cartes de départ, plafond de 24 points par carte
+- Passes DA 1, 2 et 3 (la 3e sur pellicules d'animation), cité recomposée (merveilles sur butte, remparts)
+- Parties complètes jouées par l'interface (`npm run play`) : les 3 fins vues, aucune erreur console
+- Test de performance (`npm run perf`), README, typographie française, écran paysage, tablette
+- Workflow GitHub Pages écrit
+
 ## En cours
-- Équilibrage : répartition des défaites par jauge (savoir trop sûr, armée trop mortelle),
-  puis repasser l'autotune une fois les paramètres globaux figés
+- Test par un agent séparé n°1 (joueur qui découvre), puis corrections, puis agent n°2
+
+## Bloqué
+- `git push` refusé (403) et API GitHub en lecture seule : le déploiement Pages demande une action
+  du propriétaire du dépôt. Contournement prévu : publication du build comme page hébergée + archive git.
 
 ## Reste à faire
-- Interface : indicateur du vent de l'ère sur la jauge, annonce dans la bannière d'ère
-- Passes DA 2 et 3 (dont une sur animations/transitions), ère industrielle à enrichir
-- Test de performance 60 fps profil mobile
-- Parties complètes jouées à la main dans le navigateur, notes tour par tour
-- Tests par agents séparés (x2)
-- Déploiement GitHub Pages (workflow), vérification du build déployé
-- README, relecture des textes, cas limites
+- Corrections issues des tests d'agents
+- Passe de finition : relecture des textes, cas limites, dernière partie sur le build publié
+- Message final

@@ -136,7 +136,7 @@ export class CardView {
   // ------------------------------------------------------------------ gestes
 
   private threshold(): number {
-    return Math.min(105, this.zone.clientWidth * 0.3);
+    return Math.min(84, this.zone.clientWidth * 0.26);
   }
 
   private apply(dx: number, dy = 0): void {

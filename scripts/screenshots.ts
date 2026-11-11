@@ -327,6 +327,20 @@ const SHOTS: Shot[] = [
     },
   })),
   {
+    name: '71-merveilles',
+    run: async (p: Page) => {
+      await p.evaluate(() => {
+        const { game, engine } = (window as any).__citadeck;
+        const s = engine.newGame(99, false);
+        s.era = 1;
+        s.growth = 30;
+        s.wonders = engine.content.wonders.map((w: any) => w.id);
+        game.resume(s);
+      });
+      await settle(p, 2600);
+    },
+  },
+  {
     name: '60-tutorial',
     run: async (p) => {
       await p.evaluate(() => localStorage.setItem('citadeck.settings', JSON.stringify({ tutorialDone: false, sound: false })));
