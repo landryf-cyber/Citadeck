@@ -1,31 +1,29 @@
 # PROGRESS — Citadeck V2
 
 Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
-Documents de référence : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md` (journal des expériences), `DECISIONS.md`.
+Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md` (journal), `DECISIONS.md`, `README.md`.
 
 ## Fait
-- Diagnostic chiffré de la V1 (`src/sim/v1/diagnose.ts`) → DESIGN-V2 §1
-- 12 concepts explorés, 3 boucles prototypées sans interface (`src/proto/`), comparées à difficulté égale → P3 « Lignées + Carrefours » retenu (EXPERIENCES E1-E3)
-- Avocat du diable (agent séparé) sur le design → réponses DESIGN-V2 §6 (procès, reçus, 4 familles, fusions, ruines personnelles, testament)
-- Moteur V2 sans interface : `src/core/` (types, gabarits de texte avec citations datées, moteur, validation)
-- Squelette de contenu V2 : `src/data/` — 4 familles × 5 ères + intrigues + trahisons + hommages, 18 rencontres de route, 5 crises × 3, 16 découvertes, ~20 événements, 9 cartes de rivale, ruines et revenants
-- Test de cohérence du contenu V2 (`tests/v2.content.test.ts`)
-- Bots V2 (`src/sim/`: bots, sim, run avec `--transcript`, econ, sweep) et équilibrage (EXPERIENCES E4-E6) : `TUNING = { crisisK 1.2, envie 0.25 }`
-
-- Méta-progression (`src/core/meta.ts`, tests `tests/v2.meta.test.ts`) : chronique 5 lignes, épitaphe, testament à 3 choix avec héritage concret (×2 pour les Héritiers), grief → Revenants, déblocages (Héritiers, Fleuve, 3 merveilles alternatives, 4 découvertes, Musée, Âge de fer) ; campagne simulée `npx tsx src/sim/run.ts --campaign 10 [profil]`
-- Robustesse : issue de secours si aucune option jouable ; tests moteur (pas de blocage, déterminisme, sauvegarde JSON, aucun gabarit non résolu)
+- Diagnostic chiffré de la V1, 12 concepts, 3 boucles prototypées (`src/proto/`) → P3 « Lignées + Carrefours » (EXPERIENCES E1-E3)
+- Avocat du diable sur le design → DESIGN-V2 §6
+- Moteur (`src/core/`), contenu (`src/data/`), bots et mesures (`src/sim/`), équilibrage (E4-E6 : `TUNING crisisK 1.2, envie 0.25`)
+- Méta-progression (`src/core/meta.ts`) : chronique, épitaphe, testament + héritage, grief → Revenants, déblocages ; campagne simulée
+- Interface (`src/ui/`, `src/scene/`) : titre (ruines des civilisations passées), fondation (dessein, origine, Âge de fer), HUD (quartiers, réserves, 4 familles en médaillons, course aux merveilles contre la rivale), carte compacte (illustration avec orateur, options coûtées, pastilles de familles, sablier, seuils, paris), présage, bilan d'ère, bannières (merveille, crise, ère), fin (pertes expliquées), rejeu en accéléré, testament, chronique, réglages, conseils de première partie
+- Effets rétablis : palier 2 partout, dégradation sous 30 i/s ; rafraîchissement continu en crise
+- V1 retirée (historique git), arborescence aplatie, README et DECISIONS à jour
+- Tests : contenu, moteur (pas de blocage, déterminisme, gabarits résolus), méta, rejeu — `npm test`
+- Captures : `npm run shots` (mobile + bureau, ~19 écrans) ; perf : `npm run perf -- 2`
 
 ## En cours
-- Étape 4 : interface V2 (`src/ui/`), en réutilisant scène/palette/audio V1
+- Relecture éditoriale des transcriptions, enrichissement du contenu (humour, voix, variété), puis agents joueurs
 
 ## Reste à faire (dans l'ordre)
-1. ~~Bots V2, mesures, équilibrage~~ (fait ; annoncer l'envie dans le présage)
-2. ~~Méta-progression~~ (fait)
-3. Enrichir le contenu là où les transcriptions montrent des répétitions ; relecture des textes
-4. Interface V2 : scène ~40 % de hauteur, carte compacte, HUD (ressources, quartiers, familles), carrefour, procès, jalon, découverte, présage, chronique, fin, testament ; ruines et merveilles dans la scène ; portraits de famille qui vieillissent
-5. Effets visuels rétablis (cible 30 i/s), son, animations ; tutoriel intégré
-6. Retirer la V1 (code, tests) une fois la V2 jouable
-7. Mesures finales, tests par agents (joueurs), juges (3, notes ≥ 8), captures ×3 passes, déploiement (page hébergée : le push GitHub est refusé en 403)
+1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
+2. Agents « joueurs qui découvrent » (sur captures + transcriptions) et lecteurs de transcriptions ; corriger ce qui ennuie
+3. Avocat du diable sur le jeu fini ; mesures finales (`npm run sim -- 200`, `npm run campaign -- 10`)
+4. 3 passes DA captures (mobile/bureau, dont animations), relecture de tous les textes, cas limites, perf
+5. Trois juges indépendants (notes ≥ 8 sur 7 critères, 5 tours max)
+6. Déploiement : `npm run single` → page hébergée claude.ai (URL précédente : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom) ; message final
 
 ## Bloqué
-- `git push` refusé (403, l'app GitHub n'a pas l'accès en écriture). Publication par page hébergée claude.ai : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom
+- `git push` refusé (403). Publication par page hébergée.
