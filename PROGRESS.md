@@ -12,12 +12,15 @@ Documents de référence : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `
 - Test de cohérence du contenu V2 (`tests/v2.content.test.ts`)
 - Bots V2 (`src/v2/sim/`: bots, sim, run avec `--transcript`, econ, sweep) et équilibrage (EXPERIENCES E4-E6) : `TUNING = { crisisK 1.2, envie 0.25 }`
 
+- Méta-progression (`src/v2/core/meta.ts`, tests `tests/v2.meta.test.ts`) : chronique 5 lignes, épitaphe, testament à 3 choix avec héritage concret (×2 pour les Héritiers), grief → Revenants, déblocages (Héritiers, Fleuve, 3 merveilles alternatives, 4 découvertes, Musée, Âge de fer) ; campagne simulée `npx tsx src/v2/sim/run.ts --campaign 10 [profil]`
+- Robustesse : issue de secours si aucune option jouable ; tests moteur (pas de blocage, déterminisme, sauvegarde JSON, aucun gabarit non résolu)
+
 ## En cours
-- Étape 2 : méta-progression (module pur `src/v2/core/meta.ts`)
+- Étape 4 : interface V2 (`src/v2/ui/`), en réutilisant scène/palette/audio V1
 
 ## Reste à faire (dans l'ordre)
 1. ~~Bots V2, mesures, équilibrage~~ (fait ; annoncer l'envie dans le présage)
-2. Méta-progression (chronique, ruines, revenants, testament, déblocages) en module pur + tests
+2. ~~Méta-progression~~ (fait)
 3. Enrichir le contenu là où les transcriptions montrent des répétitions ; relecture des textes
 4. Interface V2 : scène ~40 % de hauteur, carte compacte, HUD (ressources, quartiers, familles), carrefour, procès, jalon, découverte, présage, chronique, fin, testament ; ruines et merveilles dans la scène ; portraits de famille qui vieillissent
 5. Effets visuels rétablis (cible 30 i/s), son, animations ; tutoriel intégré

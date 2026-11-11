@@ -4,7 +4,7 @@
  */
 import { Rng } from '../../core/rng';
 import type { Content } from './content';
-import { eraDate, fill, civName, capitalize, setCrisisK } from './text';
+import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLES } from './text';
 import {
   FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
@@ -41,6 +41,45 @@ function scaleOption(o: Option, era: number, k = ERA_SCALE[era]): Option {
     return out;
   };
   return { ...o, cost: scaleBag(o.cost, era), req: o.req?.res ? { ...o.req, res: scaleBag(o.req.res, era) } : o.req, effect: se(o.effect)! };
+}
+
+export interface JalonView { name: string; text: string; gift: string; cost: Bag; req?: string; shape: string }
+
+export interface PresageInfo {
+  era: number;
+  name: string;
+  subtitle: string;
+  date: string;
+  dessein: string;
+  jalon: JalonView | null;
+  alt: JalonView | null;
+  built: number;
+  crisis: { name: string; intro: string; protects: string };
+  /** surcroît d'intensité de la crise dû aux merveilles, en % */
+  envy: number;
+  rival: { name: string; leader: string; count: number; next: string; rel: number };
+  legacy?: { from: string; label?: string; testament?: string; heirs: boolean };
+  /** vivres consommés en fin d'ère */
+  upkeep: number;
+}
+
+export interface FamilyInfo {
+  id: FamilyId;
+  head: string;
+  house: string;
+  trade: string;
+  tag: Tag;
+  res: Res;
+  hue: number;
+  motif: string;
+  loy: number;
+  state: string;
+  mood: string;
+  scars: number;
+  grudge?: { label: string; date: string };
+  favor?: { label: string; date: string };
+  rivalOf: FamilyId;
+  neglected: boolean;
 }
 
 /** Ce qui finit par emporter même une civilisation victorieuse. */
@@ -82,6 +121,7 @@ export type Ev =
   | { type: 'defect'; family: FamilyId }
   | { type: 'neglect'; family: FamilyId }
   | { type: 'famine' }
+  | { type: 'upkeep'; amount: number }
   | { type: 'decay'; armee: number; tresor: number }
   | { type: 'income'; bag: Bag }
   | { type: 'end'; result: NonNullable<GameState['result']> };
@@ -399,7 +439,7 @@ export class Engine {
       extra.objet = h ? h.title : 'votre règne';
       extra.plaignant = this.c.families[p.plaintiff].head[s.era];
       extra.maison = capitalize(this.c.families[p.plaintiff].house[s.era]);
-      header = 'Le Procès de l’ère';
+      header = 'Le Procès';
     }
     if (card.kind === 'hommage') {
       const h = s.history[p.quote ?? -1];
@@ -516,6 +556,66 @@ export class Engine {
 
   rival(s: GameState) {
     return this.c.rivals.find((r) => r.id === s.rival) ?? this.c.rivals[0];
+  }
+
+  /** Ce que le présage annonce au début d'une ère : le jalon, la crise, l'envie, l'héritage. */
+  presageInfo(s: GameState): PresageInfo {
+    const d = this.dessein(s);
+    const j = d.jalons[s.era];
+    const alt = this.jalonAltOf(s, s.era);
+    const cr = this.c.crises[s.era];
+    const built = s.jalons.filter(Boolean).length;
+    const k = this.crisisK(s) / (TUNING.crisisK * (s.iron ? TUNING.iron : 1));
+    const rv = this.rival(s);
+    const r0 = s.ruins[0];
+    const jv = (x: Jalon) => ({ name: fill(x.name, s, this.c), text: fill(x.text, s, this.c), gift: fill(x.gift, s, this.c), cost: x.cost, req: this.condLabel(s, x.req), shape: x.shape });
+    return {
+      era: s.era,
+      name: ERA_NAMES[s.era],
+      subtitle: ERA_SUBTITLES[s.era],
+      date: eraDate(s.era, 0),
+      dessein: d.name,
+      jalon: s.jalons[s.era] ? null : jv(j),
+      alt: alt && !s.jalons[s.era] ? jv(alt) : null,
+      built,
+      crisis: { name: cr.name, intro: fill(cr.intro, s, this.c), protects: fill(cr.protects, s, this.c) },
+      envy: built > 0 ? Math.round((k - 1) * 100) : 0,
+      rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
+      legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
+      upkeep: Math.ceil(s.quartiers * 1.5),
+    };
+  }
+
+  /** L'état d'une famille, pour l'interface : humeur, cicatrices, dernier souvenir. */
+  familyInfo(s: GameState, f: FamilyId): FamilyInfo {
+    const st = s.fam[f];
+    const def = this.c.families[f];
+    const loy = st.loy;
+    const mood = st.state === 'eteinte' ? 'partis' : loy <= -3 ? 'en révolte' : loy <= -2 ? 'hostiles' : loy === -1 ? 'froissés' : loy === 0 ? 'neutres' : loy === 1 ? 'amicaux' : loy === 2 ? 'dévoués' : 'fanatiques';
+    let scars = 0;
+    for (const h of s.history) if ((h.loy?.[f] ?? 0) < 0) scars++;
+    const wi = this.worstAct(s, f);
+    const bi = this.bestAct(s, f);
+    const w = s.history[wi];
+    const b = s.history[bi];
+    return {
+      id: f,
+      head: capitalize(def.head[s.era]),
+      house: capitalize(def.house[s.era]),
+      trade: def.trade[s.era],
+      tag: def.tag,
+      res: def.res,
+      hue: def.hue,
+      motif: def.motif,
+      loy,
+      state: st.state,
+      mood,
+      scars: Math.min(3, Math.floor(scars / 2)),
+      grudge: w && loy <= 0 ? { label: w.label, date: w.date } : undefined,
+      favor: b && loy >= 1 ? { label: b.label, date: b.date } : undefined,
+      rivalOf: this.c.rivalries[f],
+      neglected: st.state === 'presente' && s.era - Math.max(s.visits[f], -1) >= 2,
+    };
   }
 
   betChance(s: GameState, b: NonNullable<Effect['bet']>): number {
@@ -906,7 +1006,10 @@ export class Engine {
     }
     // la cité mange
     const upkeep = Math.ceil(s.quartiers * 1.5);
-    if (s.res.vivres >= upkeep) s.res.vivres -= upkeep;
+    if (s.res.vivres >= upkeep) {
+      s.res.vivres -= upkeep;
+      ev.push({ type: 'upkeep', amount: upkeep });
+    }
     else {
       s.res.vivres = 0;
       ev.push({ type: 'famine' });
