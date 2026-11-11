@@ -116,3 +116,42 @@ La mort aux deux bouts, l'aperçu des gains, le vent de l'ère, la montée des e
 3. Interface : scène à 40 %, carte compacte, HUD ressources + quartiers + familles, carrefours, crises, fin d'ère, chronique, fin.
 4. Effets visuels rétablis (cible 30 images/s), son, animations.
 5. Mesures finales, tests par agents, avocat du diable, juges.
+
+## 6. Avocat du diable : objections et réponses
+
+Un agent séparé, chargé de démolir ce design, a rendu huit risques et trois idées. Ce qui change :
+
+| Objection | Réponse |
+|---|---|
+| La rancune persistante existe (Crusader Kings, King of Dragon Pass). Seul le nom qui change à chaque ère est neuf. | La signature devient **le reçu** : la famille cite votre décision mot pour mot, avec la date, dix mille ans plus tard. Voir « Le Procès ». |
+| Cinq familles écrites en gabarits s'effondreront à la troisième partie. | **Quatre familles**, écrites à la main ère par ère, chacune avec 3 à 5 actes marquants qui ont leur propre réplique. Une famille est écrite de bout en bout avant les autres, pour tester la voix. |
+| Validé sur contenu synthétique. | Les mesures sont refaites sur le vrai contenu ; des transcriptions sont relues par des agents avant l'interface. |
+| Sans aperçu des gains, on devine. | Les options montrent ce qui est en jeu sans dire le sens : le coût chiffré, l'emblème de la famille touchée, un sablier si l'acte aura une suite. Textes de deux lignes. |
+| Trop de systèmes. | **Fusions** : technologies et recrues deviennent une seule récompense de fin d'ère, la *découverte* (une carte avec un passif et un dilemme). Les merveilles *sont* les jalons du dessein. Un seul moyen de retirer une carte. Origines et déblocages viennent après le cœur. |
+| Les extrêmes punissent : on recentre encore. | Les extrêmes offrent des cartes désirables : l'armée énorme rend le coup d'État *possible*, et c'est une option. |
+| Le carrefour est un dilemme de plus, réglé par le calcul. | La route **choisit qui vous parle** : chaque famille a son domaine (le camp des Ourk, l'observatoire de Brume…) ; y aller, c'est affronter ses cartes. Une famille qu'on ne visite pas deux ères de suite le prend mal. |
+| Crise annoncée = liste de courses. | On annonce la **nature** de la crise et ce qui protège, pas les seuils. Et une famille ulcérée peut **trahir pendant la crise** : c'est attribuable, mais pas annoncé. |
+| Les déblocages diluent la signature ; les ruines seront ignorées. | Les ruines sont **obligatoires et personnelles** : la famille la plus furieuse de la civilisation morte revient dans la suivante, et cite ce que vous lui aviez fait. |
+| Pas de méchant. | La rivale a une reine qui écrit des lettres, et une dynastie, comme vos familles. Elle poursuit son propre dessein, visible sur son horizon : c'est une course. |
+| Les familles ne parlent qu'à vous. | Rivalités croisées : Ourk méprise Brume (la force contre le savoir), Sel méprise Troc (la foi contre l'argent). Favoriser l'une froisse l'autre. |
+| Pas de moment à raconter. | **Le Procès** à chaque fin d'ère et **le testament** à la mort ; l'écran de fin est une chronique en cinq lignes, faite pour la capture. |
+
+### Le Procès de l'ère (idée retenue)
+À chaque fin d'ère, la famille la plus lésée vous traduit en justice. Elle cite la décision qui l'a le plus blessée, mot pour mot, avec sa date (« An 3 de l'âge de pierre : vous avez dit "Qu'il mange le louveteau" »). Vous choisissez votre avocat parmi vos autres familles : c'est leur loyauté qui plaide. Si aucune famille n'est lésée, la plus dévouée vous rend hommage, et cite elle aussi.
+
+### Le portrait qui vieillit (idée retenue)
+L'emblème de chaque famille change avec les ères (les crocs des Ourk prennent un casque, puis des rouages) et porte une cicatrice quand la famille vous en veut.
+
+### Le testament (idée retenue)
+À la chute, vous choisissez vos derniers mots parmi trois. La civilisation suivante les trouve gravés dans vos ruines, lus à voix haute par la famille qui vous haïssait.
+
+### Les quatre familles
+| Famille | Mot-clé | Ressource | Méprise | Noms au fil des ères |
+|---|---|---|---|---|
+| Ourk | Guerre | Armée | Brume | Ourk, Ourkos, Sire Ourquin, Colonel Ourkov, Amirale Ourk-7 |
+| Sel | Foi | Vivres | Troc | Mère Sel, Sélènè la Pythie, Abbesse Salière, Monseigneur Salin, Révérende Sel |
+| Brume | Science | Savoir | Ourk | Le vieux Brume, Brumos le Mesureur, Frère Brumaire, Docteur Brumel, BRUME |
+| Troc | Commerce | Trésor | Sel | Troc, Trokos l'Armateur, Maître Troquet, Troc et Fils, TrocCorp |
+
+### Une ère, révisée
+Ouverture (jalon, nature de la crise) → deux saisons (carrefour : quel domaine visiter ; puis quatre cartes) → crise en trois scènes → fin d'ère : le Procès, le jalon, une découverte. Environ 15 décisions par ère, 75 par partie, de sept formes différentes.
