@@ -1,617 +1,1157 @@
-import { Rng } from './rng';
+/**
+ * Citadeck V2 — moteur de jeu, pur et déterministe (graine).
+ * Le joueur répond à des « invites » (prompt) ; chaque invite est une carte à 1..4 options.
+ */
+import { Rng } from '../core/rng';
 import type { Content } from './content';
+import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLES } from './text';
 import {
-  GAUGES,
-  KEYWORDS,
-  TUNING,
-  type CardDef,
-  type Condition,
-  type Delta,
-  type Effect,
-  type EndingId,
-  type GameState,
-  type GaugeId,
-  type Gauges,
-  type Keyword,
-  type Side,
-  type WonderDef,
+  FAMILIES, RES, RES_LABEL, TAGS,
+  type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
+  type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 3;
-export const ERA_COUNT = 5;
-export const START_GAUGE = 50;
+export const SAVE_VERSION = 21;
+export const ERAS = 5;
+export const SAISON_CARDS = 4;
+/** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
+export const TUNING = { crisisK: 1.2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.25, iron: 1.2 };
+/** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
+export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
+const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
+const scaleBag = (b: Bag | undefined, era: number): Bag | undefined => {
+  if (!b) return b;
+  const o: Bag = {};
+  for (const k of Object.keys(b) as Res[]) o[k] = scaleN(b[k]!, era);
+  return o;
+};
+/** Une option d'une carte « à l'échelle », ramenée à l'ère en cours. */
+function scaleOption(o: Option, era: number, k = ERA_SCALE[era]): Option {
+  const scaleBag = (b: Bag | undefined, _e: number): Bag | undefined => {
+    if (!b) return b;
+    const out: Bag = {};
+    for (const r of Object.keys(b) as Res[]) out[r] = b[r] === 0 ? 0 : Math.sign(b[r]!) * Math.max(1, Math.round(Math.abs(b[r]!) * k));
+    return out;
+  };
+  const se = (e: Effect | undefined): Effect | undefined => {
+    if (!e) return e;
+    const out: Effect = { ...e, gain: scaleBag(e.gain, era), then: se(e.then), else: se(e.else) };
+    if (e.if?.res) out.if = { ...e.if, res: scaleBag(e.if.res, era) };
+    if (e.bet) out.bet = { ...e.bet, win: se(e.bet.win)!, lose: se(e.bet.lose)! };
+    return out;
+  };
+  return { ...o, cost: scaleBag(o.cost, era), req: o.req?.res ? { ...o.req, res: scaleBag(o.req.res, era) } : o.req, effect: se(o.effect)! };
+}
 
-export type GameEvent =
-  | { type: 'gauges'; delta: Delta; before: Gauges; after: Gauges }
-  | { type: 'cardAdded'; card: string; delay: number; persistent: boolean }
-  | { type: 'cardRemoved'; card: string }
-  | { type: 'wonder'; id: string }
-  | { type: 'flag'; flag: string }
-  | { type: 'rival'; delta: number; relation: number }
-  | { type: 'rivalCard'; card: string }
-  | { type: 'crisisStart'; id: string }
-  | { type: 'crisisEnd'; id: string }
-  | { type: 'reward' }
-  | { type: 'eraStart'; era: number }
-  | { type: 'defeat'; gauge: GaugeId; bound: 'low' | 'high'; card: string }
-  | { type: 'victory'; ending: EndingId }
-  | { type: 'reprieve' }
-  | { type: 'draw'; card: string };
+export interface JalonView { name: string; text: string; gift: string; cost: Bag; req?: string; shape: string }
+
+export interface PresageInfo {
+  era: number;
+  name: string;
+  subtitle: string;
+  date: string;
+  dessein: string;
+  jalon: JalonView | null;
+  alt: JalonView | null;
+  built: number;
+  crisis: { name: string; intro: string; protects: string };
+  /** surcroît d'intensité de la crise dû aux merveilles, en % */
+  envy: number;
+  rival: { name: string; leader: string; count: number; next: string; rel: number };
+  legacy?: { from: string; label?: string; testament?: string; heirs: boolean };
+  /** vivres consommés en fin d'ère */
+  upkeep: number;
+}
+
+export interface FamilyInfo {
+  id: FamilyId;
+  head: string;
+  house: string;
+  trade: string;
+  tag: Tag;
+  res: Res;
+  hue: number;
+  motif: string;
+  loy: number;
+  state: string;
+  mood: string;
+  scars: number;
+  grudge?: { label: string; date: string };
+  favor?: { label: string; date: string };
+  rivalOf: FamilyId;
+  neglected: boolean;
+}
+
+/** Ce qui finit par emporter même une civilisation victorieuse. */
+export const VICTORY_CAUSE: Record<string, string> = {
+  etoiles: 'le départ : ils sont tous partis, en laissant la lumière allumée',
+  empire: 'la paix, qui les a ennuyés à mourir',
+  posterite: 'l’oubli, malgré tout, au bout de très longtemps',
+};
+
+export interface Setup {
+  dessein: string;
+  origin?: string;
+  tutorial?: boolean;
+  ruins?: RuinInfo[];
+  name?: string;
+  unlocked?: string[];
+  /** Âge de fer (débloqué) : crises plus dures */
+  iron?: boolean;
+}
+
+export type Ev =
+  | { type: 'res'; before: Resources; after: Resources }
+  | { type: 'quartiers'; delta: number; cause: string; shielded?: boolean }
+  | { type: 'loy'; family: FamilyId; delta: number; value: number }
+  | { type: 'famState'; family: FamilyId; state: string }
+  | { type: 'card+'; id: string }
+  | { type: 'card-'; id: string }
+  | { type: 'sched'; card: string }
+  | { type: 'jalon'; era: number; name: string }
+  | { type: 'jalonMissed'; era: number; name: string }
+  | { type: 'rival'; delta: number; value: number }
+  | { type: 'rivalJalon'; count: number; name: string }
+  | { type: 'bet'; win: boolean; chance: number }
+  | { type: 'reply'; text: string }
+  | { type: 'saison'; saison: number; route: string }
+  | { type: 'crisis'; era: number; name: string }
+  | { type: 'era'; era: number }
+  | { type: 'revolt'; family: FamilyId }
+  | { type: 'defect'; family: FamilyId }
+  | { type: 'neglect'; family: FamilyId }
+  | { type: 'famine' }
+  | { type: 'upkeep'; amount: number }
+  | { type: 'decay'; armee: number; tresor: number }
+  | { type: 'income'; bag: Bag }
+  | { type: 'end'; result: NonNullable<GameState['result']> };
+
+export interface OptionView {
+  label: string;
+  cost: Bag;
+  affordable: boolean;
+  /** exigence affichée, et si elle est remplie */
+  req?: string;
+  reqOk: boolean;
+  enabled: boolean;
+  /** familles touchées (emblèmes affichés sans le sens) */
+  families: FamilyId[];
+  /** l'acte aura une suite (sablier) */
+  later: boolean;
+  warn?: string;
+  /** pari : chance affichée */
+  odds?: number;
+  /** route, découverte : identifiant et promesse */
+  ref?: string;
+  detail?: string;
+  risk?: string;
+}
+
+export interface View {
+  card: CardDef;
+  kind: CardDef['kind'];
+  title: string;
+  text: string;
+  speaker?: string;
+  family?: FamilyId;
+  header?: string;
+  options: OptionView[];
+}
+
+const clampLoy = (v: number) => Math.max(-3, Math.min(3, v));
 
 export class Engine {
-  constructor(public readonly content: Content) {}
+  constructor(public readonly c: Content) {}
 
-  // ---------------------------------------------------------------- création
+  // ======================================================================= création
 
-  newGame(seed: number, tutorial: boolean): GameState {
+  newGame(seed: number, setup: Setup): GameState {
     const rng = new Rng(seed);
-    const state: GameState = {
+    const origin = this.c.origins.find((o) => o.id === setup.origin) ?? this.c.origins[0];
+    const rival = rng.pick(this.c.rivals);
+    const fam = {} as GameState['fam'];
+    for (const f of FAMILIES) fam[f] = { loy: 0, state: origin.families.includes(f) ? 'presente' : 'eteinte', seen: -1 };
+    const s: GameState = {
       version: SAVE_VERSION,
       seed,
       rng: rng.getState(),
+      name: setup.name ?? civName(seed),
+      origin: origin.id,
+      dessein: setup.dessein,
+      rival: rival.id,
       era: 0,
+      saison: 0,
+      phase: 'presage',
+      prompt: { card: 'presage' },
+      pile: [],
+      steps: [],
+      res: { ...origin.res },
+      quartiers: origin.quartiers,
+      fam,
+      mem: [...(origin.mem ?? [])],
+      memo: {},
+      deck: [...(origin.deck ?? [])],
+      jalons: [false, false, false, false, false],
+      rivalRel: 0,
+      rivalJalons: 0,
+      pool: [],
+      visits: { ourk: -1, sel: -1, brume: -1, troc: -1 },
+      spent: [],
+      sched: [],
       turn: 0,
-      eraTurn: 0,
-      // chaque partie démarre déséquilibrée : une jauge inquiète dès les premières cartes
-      gauges: tutorial
-        ? { food: 42, army: 50, knowledge: 50, treasure: 50 }
-        : (() => {
-            const g = { food: START_GAUGE, army: START_GAUGE, knowledge: START_GAUGE, treasure: START_GAUGE };
-            const order = rng.shuffle(GAUGES.slice());
-            g[order[0]] = rng.int(34, 38);
-            g[order[1]] = rng.int(60, 64);
-            g[order[2]] = rng.int(44, 56);
-            return g;
-          })(),
-      deck: this.content.starters.slice(),
-      drawPile: [],
-      scheduled: [],
-      phase: 'card',
-      current: null,
-      crisis: null,
-      reward: null,
-      wonders: [],
-      flags: [],
-      rival: {
-        name: rng.pick(this.content.rival.names),
-        progress: 0,
-        relation: 0,
-        alive: true,
-        lastTrigger: 0,
-      },
+      eraStart: 0,
       history: [],
-      dangerTurns: 0,
-      seen: [],
-      offered: [],
+      losses: [],
+      shieldUsed: false,
       result: null,
-      tutorial,
+      tutorial: !!setup.tutorial,
+      ruins: setup.ruins ?? [],
       growth: 0,
+      arcs: { open: [], done: [] },
+      unlocked: [...(setup.unlocked ?? [])],
+      jalonAlt: [],
+      iron: !!setup.iron,
     };
-    state.rng = rng.getState();
-    this.buildEraPile(state, rng);
-    state.rng = rng.getState();
-    this.drawNext(state, rng);
-    state.rng = rng.getState();
-    return state;
+    this.applyLegacy(s);
+    this.buildPool(s, rng);
+    s.rng = rng.getState();
+    return s;
+  }
+
+  /** Le testament de la civilisation précédente : son héritage s'applique au départ. */
+  private applyLegacy(s: GameState): void {
+    const r = s.ruins[0];
+    if (!r) return;
+    const heirs = s.origin === 'heritiers';
+    const k = heirs ? 2 : 1;
+    const lg = r.legacy;
+    if (lg?.gain) for (const res of RES) s.res[res] = Math.max(0, s.res[res] + (lg.gain[res] ?? 0) * k);
+    if (lg?.quartiers) s.quartiers = Math.max(1, s.quartiers + lg.quartiers);
+    const loy: Partial<Record<FamilyId, number>> = { ...(lg?.loy ?? {}) };
+    // les Héritiers vivent dans les murs des morts : leurs amitiés et leurs haines aussi
+    if (heirs && r.ally) loy[r.ally] = (loy[r.ally] ?? 0) + 1;
+    if (heirs && r.enemy) loy[r.enemy] = (loy[r.enemy] ?? 0) - 1;
+    for (const f of FAMILIES) {
+      const d = loy[f] ?? 0;
+      if (d && s.fam[f].state === 'presente') s.fam[f].loy = Math.max(-2, Math.min(2, s.fam[f].loy + d));
+    }
+    if (lg) s.mem.push('heritage');
+  }
+
+  /** Contenu verrouillé par la méta-progression. */
+  available(s: GameState, c: CardDef | undefined): boolean {
+    return !!c && (!c.lock || s.unlocked.includes(c.lock));
+  }
+
+  /** Le jalon de l'ère tel qu'il a été (ou sera) bâti. */
+  jalonOf(s: GameState, era: number): Jalon {
+    const j = this.dessein(s).jalons[era];
+    return s.jalonAlt.includes(era) && j.alt ? j.alt : j;
+  }
+
+  /** La variante débloquée du jalon de l'ère, si elle est disponible. */
+  jalonAltOf(s: GameState, era: number): Jalon | undefined {
+    const a = this.dessein(s).jalons[era].alt;
+    return a && s.unlocked.includes(a.lock) ? a : undefined;
   }
 
   card(id: string): CardDef {
-    const c = this.content.cards[id];
+    const c = this.c.cards[id];
     if (!c) throw new Error(`Carte inconnue : ${id}`);
     return c;
   }
 
-  currentCard(state: GameState): CardDef | null {
-    return state.current ? this.card(state.current) : null;
+  dessein(s: GameState) {
+    return this.c.desseins.find((d) => d.id === s.dessein) ?? this.c.desseins[0];
   }
 
-  wonder(id: string): WonderDef {
-    const w = this.content.wonders.find((x) => x.id === id);
-    if (!w) throw new Error(`Merveille inconnue : ${id}`);
-    return w;
+  // ======================================================================= requêtes
+
+  present(s: GameState): FamilyId[] {
+    return FAMILIES.filter((f) => s.fam[f].state === 'presente');
   }
 
-  // ---------------------------------------------------------------- deck
-
-  private buildEraPile(state: GameState, rng: Rng): void {
-    const era = state.era;
-    const pool = this.content.eraPools[era] ?? [];
-    const packSize = this.content.eras[era]?.packSize ?? 6;
-    const pack = rng.sample(pool, Math.min(packSize, pool.length));
-    const pile = state.deck.slice().concat(pack);
-    rng.shuffle(pile);
-    if (era === 0 && state.tutorial) {
-      pile.unshift(...this.content.tutorial);
-    }
-    // Les cartes planifiées pour "au cours de l'ère" (delay 0) sont mélangées.
-    state.drawPile = pile;
-    state.eraTurn = 0;
-  }
-
-  keywordCount(state: GameState, keyword: Keyword, excluding?: string): number {
-    let n = 0;
-    for (const id of state.deck) {
-      if (id === excluding) continue;
-      const c = this.content.cards[id];
-      if (c?.keywords?.includes(keyword)) n++;
-    }
-    for (const w of state.wonders) {
-      const wd = this.content.wonders.find((x) => x.id === w);
-      if (wd?.keywords?.includes(keyword)) n++;
-    }
-    return n;
-  }
-
-  keywordCounts(state: GameState): Record<Keyword, number> {
-    const out = { Foi: 0, Guerre: 0, Commerce: 0, Science: 0, Culture: 0, Nature: 0 };
-    for (const k of Object.keys(out) as Keyword[]) out[k] = this.keywordCount(state, k);
+  passives(s: GameState): Passive[] {
+    const out: Passive[] = [];
+    for (const id of s.deck) out.push(...(this.c.cards[id]?.passive ?? []));
+    const d = this.dessein(s);
+    s.jalons.forEach((b, i) => {
+      const j = b ? this.jalonOf(s, i) : undefined;
+      if (j?.passive) out.push(j.passive);
+    });
+    void d;
     return out;
   }
 
-  // ---------------------------------------------------------------- conditions & effets
+  tagCount(s: GameState, tag: Tag): number {
+    let n = 0;
+    for (const id of s.deck) if (this.c.cards[id]?.tags?.includes(tag)) n++;
+    for (const f of this.present(s)) if (this.c.families[f].tag === tag && s.fam[f].loy >= 1) n++;
+    if (this.dessein(s).tag === tag) n += s.jalons.filter(Boolean).length;
+    // être chanté, c'est être aimé : chaque famille dévouée compte pour la Culture
+    if (tag === 'Culture') n += this.present(s).filter((f) => s.fam[f].loy >= 2).length;
+    for (const p of this.passives(s)) if (p.type === 'tagBonus' && p.tag === tag) n += p.amount;
+    return n;
+  }
 
-  checkCondition(state: GameState, cond: Condition | undefined): boolean {
-    if (!cond) return true;
-    if (cond.gauge) {
-      const v = state.gauges[cond.gauge];
-      if (cond.gte !== undefined && v < cond.gte) return false;
-      if (cond.lte !== undefined && v > cond.lte) return false;
+  check(s: GameState, c: Cond | undefined): boolean {
+    if (!c) return true;
+    if (c.res) for (const r of RES) if ((c.res[r] ?? -Infinity) > s.res[r]) return false;
+    if (c.resMax) for (const r of RES) if (c.resMax[r] !== undefined && s.res[r] > c.resMax[r]!) return false;
+    if (c.tags) for (const t of TAGS) if ((c.tags[t] ?? 0) > this.tagCount(s, t)) return false;
+    if (c.fam) {
+      const f = s.fam[c.fam.id];
+      if (c.fam.state ? f.state !== c.fam.state : f.state !== 'presente') return false;
+      if (c.fam.min !== undefined && f.loy < c.fam.min) return false;
+      if (c.fam.max !== undefined && f.loy > c.fam.max) return false;
     }
-    if (cond.keyword) {
-      if (this.keywordCount(state, cond.keyword) < (cond.min ?? 1)) return false;
+    if (c.mem && !s.mem.includes(c.mem)) return false;
+    if (c.notMem && s.mem.includes(c.notMem)) return false;
+    if (c.card && !s.deck.includes(c.card)) return false;
+    if (c.notCard && s.deck.includes(c.notCard)) return false;
+    if (c.rival) {
+      if (c.rival.min !== undefined && s.rivalRel < c.rival.min) return false;
+      if (c.rival.max !== undefined && s.rivalRel > c.rival.max) return false;
     }
-    if (cond.wonder && !state.wonders.includes(cond.wonder)) return false;
-    if (cond.flag && !state.flags.includes(cond.flag)) return false;
-    if (cond.notFlag && state.flags.includes(cond.notFlag)) return false;
-    if (cond.rivalGte !== undefined && state.rival.relation < cond.rivalGte) return false;
-    if (cond.rivalLte !== undefined && state.rival.relation > cond.rivalLte) return false;
+    if (c.quartiers) {
+      if (c.quartiers.min !== undefined && s.quartiers < c.quartiers.min) return false;
+      if (c.quartiers.max !== undefined && s.quartiers > c.quartiers.max) return false;
+    }
+    if (c.era) {
+      if (c.era.min !== undefined && s.era < c.era.min) return false;
+      if (c.era.max !== undefined && s.era > c.era.max) return false;
+    }
+    if (c.dessein && s.dessein !== c.dessein) return false;
+    if (c.jalons !== undefined && s.jalons.filter(Boolean).length < c.jalons) return false;
+    if (c.ruins !== undefined && s.ruins.length < c.ruins) return false;
     return true;
   }
 
-  /** Résout les branches conditionnelles d'un effet. */
-  resolveEffect(state: GameState, effect: Effect): Effect {
-    if (effect.when) {
-      if (this.checkCondition(state, effect.when)) return effect.then ? this.resolveEffect(state, effect.then) : effect;
-      return effect.else ? this.resolveEffect(state, effect.else) : {};
+  condLabel(s: GameState, c: Cond | undefined): string | undefined {
+    if (!c) return undefined;
+    const parts: string[] = [];
+    if (c.res) for (const r of RES) if (c.res[r] !== undefined) parts.push(`${c.res[r]} ${RES_LABEL[r]}`);
+    if (c.tags) for (const t of TAGS) if (c.tags[t]) parts.push(`${c.tags[t]} ${t}`);
+    if (c.fam) {
+      const h = capitalize(this.c.families[c.fam.id].house[s.era]);
+      if (c.fam.min !== undefined) parts.push(c.fam.min >= 2 ? `${h} dévoués` : `${h} loyaux`);
+      else if (c.fam.max !== undefined) parts.push(`${h} hostiles`);
+      else parts.push(h);
     }
-    return effect;
+    if (c.card) parts.push(this.c.cards[c.card]?.title ?? c.card);
+    if (c.quartiers?.min) parts.push(`${c.quartiers.min} quartiers`);
+    if (c.jalons) parts.push(`${c.jalons} jalons bâtis`);
+    return parts.length ? parts.join(', ') : undefined;
   }
 
-  /** Calcule le delta final (synergies, merveilles, crise) sans l'appliquer. */
-  computeDelta(state: GameState, card: CardDef, effect: Effect): Delta {
-    const resolved = this.resolveEffect(state, effect);
-    const delta: Delta = { ...(resolved.delta ?? {}) };
-    for (const s of resolved.scale ?? []) {
-      const n = Math.min(this.keywordCount(state, s.keyword, card.id), s.cap ?? 4);
-      for (const g of GAUGES) {
-        const v = s.delta[g];
-        if (v) delta[g] = (delta[g] ?? 0) + v * n;
-      }
-    }
-    const inCrisis = state.phase === 'crisis';
-    // les enjeux montent avec les ères
-    const eraDef = this.content.eras[state.era];
-    const stakes = (eraDef?.stakes ?? 1) * (inCrisis ? eraDef?.crisisStakes ?? 1 : 1);
-    if (stakes !== 1) for (const g of GAUGES) if (delta[g]) delta[g] = delta[g]! * stakes;
-    for (const wid of state.wonders) {
-      const p = this.wonder(wid).passive;
-      for (const g of GAUGES) {
-        const v = delta[g];
-        if (!v) continue;
-        if (p.type === 'dampen' && p.gauge === g && v < 0) delta[g] = v * p.factor;
-        if (p.type === 'amplify' && p.gauge === g && v > 0) delta[g] = v * p.factor;
-        if (p.type === 'keywordBonus' && v > 0 && card.keywords?.includes(p.keyword)) delta[g] = v + p.bonus;
-        if (p.type === 'crisisShield' && inCrisis && v < 0) delta[g] = Math.min(0, v + p.amount);
-      }
-    }
-    for (const g of GAUGES) {
-      // aucune carte ne déplace une jauge de plus d'un quart d'un coup
-      if (delta[g] !== undefined) delta[g] = Math.max(-TUNING.maxSwing, Math.min(TUNING.maxSwing, Math.round(delta[g]!)));
-      if (delta[g] === 0) delete delta[g];
-    }
-    return delta;
-  }
-
-  /** Le vent de l'ère : dérive appliquée à chaque décision hors crise. */
-  wind(state: GameState): Delta {
-    if (state.phase !== 'card') return {};
-    return this.content.eras[state.era]?.wind ?? {};
-  }
-
-  /** Effet total d'une option : la carte plus le vent de l'ère. */
-  totalDelta(state: GameState, card: CardDef, effect: Effect): Delta {
-    const d = this.computeDelta(state, card, effect);
-    const w = this.wind(state);
-    for (const g of GAUGES) {
-      if (w[g]) d[g] = (d[g] ?? 0) + w[g]!;
-      if (d[g] === 0) delete d[g];
-    }
-    return d;
-  }
-
-  /** Effet de la carte seule (sans le vent de l'ère) : c'est ce que montrent les flèches d'aperçu. */
-  previewCard(state: GameState, side: Side): Delta {
-    const card = this.currentCard(state);
-    if (!card) return {};
-    return this.computeDelta(state, card, card[side].effect);
-  }
-
-  /** Effet total d'une option, vent compris : c'est exactement ce qui sera appliqué. */
-  preview(state: GameState, side: Side): Delta {
-    const card = this.currentCard(state);
-    if (!card) return {};
-    return this.totalDelta(state, card, card[side].effect);
-  }
-
-  private applyDelta(state: GameState, delta: Delta, events: GameEvent[]): void {
-    const before = { ...state.gauges };
-    const after = { ...state.gauges };
-    for (const g of GAUGES) {
-      const v = delta[g];
+  costOf(s: GameState, bag: Bag | undefined): Bag {
+    const out: Bag = {};
+    if (!bag) return out;
+    const disc = this.passives(s).filter((p) => p.type === 'discount') as Extract<Passive, { type: 'discount' }>[];
+    for (const r of RES) {
+      const v = bag[r];
       if (!v) continue;
-      after[g] = after[g] + v;
+      const d = disc.filter((p) => p.res === r).reduce((a, p) => a + p.amount, 0);
+      out[r] = Math.max(1, v - d);
     }
-    // Merveilles : débordement et plancher
-    for (const wid of state.wonders.slice()) {
-      const p = this.wonder(wid).passive;
-      if (p.type === 'overflow' && after[p.from] > p.threshold) {
-        const excess = after[p.from] - p.threshold;
-        after[p.from] = p.threshold;
-        after[p.to] += Math.ceil(excess / 2);
-      }
-      if (p.type === 'floor') {
-        if (after[p.gauge] <= 0) {
-          after[p.gauge] = p.value;
-          state.wonders = state.wonders.filter((x) => x !== wid);
-          events.push({ type: 'flag', flag: `wonderSpent:${wid}` });
-        }
-      }
-    }
-    for (const g of GAUGES) after[g] = Math.max(0, Math.min(100, after[g]));
-    state.gauges = after;
-    const realDelta: Delta = {};
-    for (const g of GAUGES) if (after[g] !== before[g]) realDelta[g] = after[g] - before[g];
-    events.push({ type: 'gauges', delta: realDelta, before, after });
+    return out;
   }
 
-  private applyEffect(state: GameState, card: CardDef, effect: Effect, rng: Rng, events: GameEvent[]): void {
-    const resolved = this.resolveEffect(state, effect);
-    const delta = this.totalDelta(state, card, effect);
-    this.applyDelta(state, delta, events);
-    for (const f of resolved.flags ?? []) {
-      if (!state.flags.includes(f)) {
-        state.flags.push(f);
-        events.push({ type: 'flag', flag: f });
-      }
-    }
-    for (const f of resolved.unflags ?? []) state.flags = state.flags.filter((x) => x !== f);
-    for (const id of resolved.remove ?? []) this.removeFromDeck(state, id, events);
-    for (const a of resolved.add ?? []) {
-      this.addCard(state, a.card, a.delay ?? -1, !!a.persistent, rng, events);
-    }
-    if (resolved.rival) {
-      let d = resolved.rival;
-      if (d < 0) {
-        for (const wid of state.wonders) {
-          const p = this.wonder(wid).passive;
-          if (p.type === 'rivalCalm') d = Math.min(0, d + p.amount);
-        }
-      }
-      state.rival.relation = Math.max(-100, Math.min(100, state.rival.relation + d));
-      events.push({ type: 'rival', delta: d, relation: state.rival.relation });
-    }
-    if (resolved.wonder && !state.wonders.includes(resolved.wonder)) {
-      state.wonders.push(resolved.wonder);
-      events.push({ type: 'wonder', id: resolved.wonder });
-    }
+  affordable(s: GameState, bag: Bag): boolean {
+    return RES.every((r) => (bag[r] ?? 0) <= s.res[r]);
   }
 
-  addCard(state: GameState, id: string, delay: number, persistent: boolean, rng: Rng, events: GameEvent[]): void {
-    if (persistent && !state.deck.includes(id)) state.deck.push(id);
-    if (delay >= 0) {
-      state.scheduled.push({ card: id, turns: delay, persistent });
-    } else {
-      // mélangée dans le reste de la pioche
-      const pos = rng.int(0, state.drawPile.length);
-      state.drawPile.splice(pos, 0, id);
+  // ======================================================================= vue
+
+  /** Options effectives de l'invite (routes, procès, découvertes et cartes « qui ? » sont construites ici). */
+  /** Les options d'une carte ; si aucune n'est jouable, une issue de secours (jamais de blocage). */
+  options(s: GameState, p: Prompt = s.prompt!): Option[] {
+    const opts = this.baseOptions(s, p);
+    if (opts.some((o) => this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req))) return opts;
+    const card = this.card(p.card);
+    if (card.kind === 'crise') {
+      const name = this.c.crises[s.era].name;
+      return [...opts, { label: 'Encaisser', effect: { quartiers: -1, cause: `${name.charAt(0).toLowerCase()}${name.slice(1)}, sans rien à lui opposer` }, reply: 'Rien à opposer. On serre les dents, on compte les ruines.' }];
     }
-    events.push({ type: 'cardAdded', card: id, delay, persistent });
+    return [...opts, { label: 'Ne rien faire', effect: {}, reply: 'Faute de moyens, on attend. Pour une fois, ça ne coûte rien.' }];
   }
 
-  removeFromDeck(state: GameState, id: string, events: GameEvent[]): boolean {
-    const i = state.deck.indexOf(id);
-    if (i < 0) return false;
-    state.deck.splice(i, 1);
-    state.drawPile = state.drawPile.filter((x) => x !== id);
-    state.scheduled = state.scheduled.filter((x) => x.card !== id);
-    events.push({ type: 'cardRemoved', card: id });
-    return true;
-  }
-
-  // ---------------------------------------------------------------- tour de jeu
-
-  inDanger(g: Gauges): GaugeId[] {
-    return GAUGES.filter((k) => g[k] <= TUNING.dangerLow || g[k] >= TUNING.dangerHigh);
-  }
-
-  private checkDefeat(state: GameState, card: CardDef, events: GameEvent[]): boolean {
-    for (const g of GAUGES) {
-      const v = state.gauges[g];
-      if (v <= 0 || v >= 100) {
-        const bound = v <= 0 ? 'low' : 'high';
-        state.result = { type: 'defeat', gauge: g, bound, card: card.id };
-        state.phase = 'end';
-        events.push({ type: 'defeat', gauge: g, bound, card: card.id });
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /** Vrai si cette option, jouée maintenant, mettrait une jauge à 0 ou à 100. */
-  isLethal(state: GameState, card: CardDef, side: Side): boolean {
-    const d = this.totalDelta(state, card, card[side].effect);
-    return GAUGES.some((g) => {
-      const v = state.gauges[g] + (d[g] ?? 0);
-      return v <= 0 || v >= 100;
-    });
-  }
-
-  /** Le joueur tranche la carte courante. */
-  choose(state: GameState, side: Side): GameEvent[] {
-    const events: GameEvent[] = [];
-    if (state.phase !== 'card' && state.phase !== 'crisis') return events;
-    const card = this.currentCard(state);
-    if (!card) return events;
-    const rng = Rng.fromState(state.rng);
-
-    // Sursis : si les deux options de la carte sont mortelles, le joueur n'a pas eu de choix.
-    // Une fois par ère, la carte le laisse au bord du gouffre au lieu de le tuer.
-    const reprieveFlag = `sursis:${state.era}`;
-    const reprieve = !state.flags.includes(reprieveFlag) && this.isLethal(state, card, 'left') && this.isLethal(state, card, 'right');
-
-    this.applyEffect(state, card, card[side].effect, rng, events);
-    if (reprieve) {
-      for (const g of GAUGES) state.gauges[g] = Math.max(4, Math.min(96, state.gauges[g]));
-      state.flags.push(reprieveFlag);
-      events.push({ type: 'reprieve' });
-    }
-    state.turn++;
-    state.eraTurn++;
-    state.growth++;
-    if (!state.seen.includes(card.id)) state.seen.push(card.id);
-    const kwc = this.keywordCounts(state);
-    state.history.push({
-      turn: state.turn,
-      era: state.era,
-      card: card.id,
-      side,
-      gauges: { ...state.gauges },
-      kw: KEYWORDS.map((k) => kwc[k]),
-      wonders: state.wonders.slice(),
-    });
-    if (this.inDanger(state.gauges).length > 0) state.dangerTurns++;
-    if (card.oneShot) this.removeFromDeck(state, card.id, events);
-
-    if (this.checkDefeat(state, card, events)) {
-      state.rng = rng.getState();
-      return events;
-    }
-
-    // cartes planifiées
-    for (const s of state.scheduled) s.turns--;
-    const due = state.scheduled.filter((s) => s.turns <= 0);
-    state.scheduled = state.scheduled.filter((s) => s.turns > 0);
-    for (const d of due.reverse()) state.drawPile.unshift(d.card);
-
-    if (state.phase === 'card') {
-      this.tickRival(state, rng, events);
-      if (state.drawPile.length === 0) {
-        this.startCrisis(state, rng, events);
-      } else {
-        this.drawNext(state, rng);
-        events.push({ type: 'draw', card: state.current! });
-      }
-    } else {
-      // crise
-      const cr = state.crisis!;
-      cr.index++;
-      if (cr.index >= cr.cards.length) {
-        events.push({ type: 'crisisEnd', id: cr.id });
-        state.crisis = null;
-        this.endEra(state, rng, events);
-      } else {
-        state.current = cr.cards[cr.index];
-        events.push({ type: 'draw', card: state.current });
-      }
-    }
-    state.rng = rng.getState();
-    return events;
-  }
-
-  private drawNext(state: GameState, _rng: Rng): void {
-    state.current = state.drawPile.shift() ?? null;
-  }
-
-  // ---------------------------------------------------------------- rivale
-
-  private tickRival(state: GameState, rng: Rng, events: GameEvent[]): void {
-    const r = state.rival;
-    if (!r.alive) return;
-    r.progress += rng.int(1, 3) + (state.era >= 3 ? 1 : 0);
-    const interval = 11 + rng.int(0, 4);
-    if (r.progress - r.lastTrigger >= interval && state.drawPile.length > 0) {
-      r.lastTrigger = r.progress;
-      const pool = r.relation <= -20 ? this.content.rival.hostile : r.relation >= 20 ? this.content.rival.friendly : this.content.rival.neutral;
-      const eligible = pool.filter((id) => {
-        const c = this.content.cards[id];
-        return c && (c.era === undefined || c.era <= state.era) && this.checkCondition(state, c.requires);
+  private baseOptions(s: GameState, p: Prompt): Option[] {
+    const card = this.card(p.card);
+    if (card.kind === 'carrefour') {
+      return (p.routes ?? []).map((rid) => {
+        const r = this.c.routes.find((x) => x.id === rid)!;
+        const name = Array.isArray(r.name) ? r.name[s.era] : r.name;
+        return { label: name, effect: {} };
       });
-      if (eligible.length === 0) return;
-      // pas deux fois la même carte tant qu'il en reste de nouvelles
-      const fresh = eligible.filter((id) => !state.seen.includes(id) && !state.drawPile.includes(id));
-      const id = rng.pick(fresh.length ? fresh : eligible);
-      const pos = rng.int(0, Math.min(3, state.drawPile.length));
-      state.drawPile.splice(pos, 0, id);
-      events.push({ type: 'rivalCard', card: id });
     }
-    // la relation glisse lentement vers la neutralité
-    if (state.turn % 5 === 0 && r.relation !== 0) r.relation += r.relation > 0 ? -1 : 1;
+    if (card.kind === 'decouverte') {
+      const opts: Option[] = (p.recruits ?? []).map((id) => {
+        const d = this.card(id);
+        return { label: d.title, cost: { savoir: d.price ?? 0 }, effect: { addCard: [id] } };
+      });
+      opts.push({ label: 'Rien de nouveau', effect: {}, reply: 'Les savants rangent leurs croquis. Ils boudent.' });
+      return opts;
+    }
+    if (card.kind === 'proces') return this.trialOptions(s, p);
+    if (card.qui && p.qui) return p.qui.map((f) => (card.scale ? scaleOption(card.qui!.option(f), s.era) : card.qui!.option(f)));
+    if (card.kind === 'croissance') {
+      const extra = this.passives(s).filter((x) => x.type === 'growth').reduce((a, x) => a + (x as { amount: number }).amount, 0);
+      return [
+        { label: 'Fonder un quartier', cost: { vivres: this.growthCost(s) }, effect: { quartiers: 1 + extra }, reply: 'Un nouveau quartier sort de terre. Il a déjà ses habitudes, et un nom que personne n’a choisi.' },
+        { label: 'Garder les réserves', effect: {}, reply: 'Les greniers restent pleins. Les rats approuvent.' },
+      ];
+    }
+    if (card.kind === 'jalon') {
+      const j = this.dessein(s).jalons[s.era];
+      const alt = this.jalonAltOf(s, s.era);
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true } }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' } });
+      opts.push({ label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' });
+      return opts;
+    }
+    if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
+    return card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
   }
 
-  // ---------------------------------------------------------------- crises
-
-  private startCrisis(state: GameState, rng: Rng, events: GameEvent[]): void {
-    const def = this.content.crises.find((c) => c.era === state.era) ?? this.content.crises[state.era];
-    const cards = def.cards.slice();
-    if (def.extra && def.extraCount) {
-      const eligible = def.extra.filter((id) => this.checkCondition(state, this.content.cards[id]?.requires));
-      cards.push(...rng.sample(eligible, Math.min(def.extraCount, eligible.length)));
+  view(s: GameState): View | null {
+    setCrisisK(this.crisisK(s));
+    const p = s.prompt;
+    if (!p) return null;
+    const card = this.card(p.card);
+    const extra: Record<string, string> = {};
+    let header: string | undefined;
+    let title = card.title;
+    let text = card.text;
+    if (card.kind === 'jalon') {
+      const j = this.dessein(s).jalons[s.era];
+      const alt = this.jalonAltOf(s, s.era);
+      title = alt ? 'Deux plans sur la table' : j.name;
+      text = alt
+        ? `Les architectes se disputent. ${j.name} : ${j.text} ${alt.name} : ${alt.text} On ne bâtira que l’un des deux.`
+        : `${j.text} ${j.gift}`;
+      header = `Le Grand Dessein · ${this.dessein(s).name}`;
     }
-    state.crisis = { id: def.id, index: 0, cards };
-    state.phase = 'crisis';
-    state.current = cards[0];
-    events.push({ type: 'crisisStart', id: def.id });
-    events.push({ type: 'draw', card: cards[0] });
-  }
-
-  private endEra(state: GameState, rng: Rng, events: GameEvent[]): void {
-    if (state.era >= ERA_COUNT - 1) {
-      const ending = this.computeEnding(state);
-      state.result = { type: 'victory', ending };
-      state.phase = 'end';
-      state.current = null;
-      events.push({ type: 'victory', ending });
-      return;
+    if (card.kind === 'proces' && p.plaintiff) {
+      const h = s.history[p.quote ?? -1];
+      extra.citation = h ? `« ${h.label} »` : '« rien de précis, mais tout »';
+      extra.quand = h ? h.date : 'depuis toujours';
+      extra.objet = h ? h.title : 'votre règne';
+      extra.plaignant = this.c.families[p.plaintiff].head[s.era];
+      extra.maison = capitalize(this.c.families[p.plaintiff].house[s.era]);
+      header = 'Le Procès';
     }
-    state.reward = this.makeRewardOffer(state, rng);
-    state.phase = 'reward';
-    state.current = null;
-    events.push({ type: 'reward' });
-  }
-
-  // ---------------------------------------------------------------- récompenses
-
-  private makeRewardOffer(state: GameState, rng: Rng): { cards: string[]; wonder?: string } {
-    const nextEra = state.era + 1;
-    const eligible = this.content.rewards.filter((id) => {
-      const c = this.content.cards[id];
-      if (!c) return false;
-      if (state.deck.includes(id) || state.offered.includes(id)) return false;
-      if (c.era !== undefined && c.era > nextEra) return false;
-      if (c.era !== undefined && c.era < nextEra - 1) return false;
-      return this.checkCondition(state, c.requires);
-    });
-    const ofEra = eligible.filter((id) => this.content.cards[id].era === nextEra);
-    const older = eligible.filter((id) => this.content.cards[id].era !== nextEra);
-    const picks: string[] = [];
-    const a = rng.shuffle(ofEra.slice());
-    const b = rng.shuffle(older.slice());
-    // 2 cartes de l'ère qui commence, 1 plus ancienne, puis on complète.
-    while (picks.length < 2 && a.length) picks.push(a.shift()!);
-    while (picks.length < 3 && b.length) picks.push(b.shift()!);
-    while (picks.length < 3 && a.length) picks.push(a.shift()!);
-    // diversité : au plus 2 cartes partageant le même premier mot-clé
-    rng.shuffle(picks);
-    state.offered.push(...picks);
-
-    let wonder: string | undefined;
-    // Une merveille est proposée aux ères 1, 3 (fin d'ère 0 et 2), et avec une chance ailleurs.
-    const wonderChance = state.era === 0 || state.era === 2 ? 1 : 0.5;
-    if (rng.chance(wonderChance)) {
-      const ws = this.content.wonders.filter(
-        (w) => !state.wonders.includes(w.id) && w.era <= nextEra && this.checkCondition(state, w.requires),
-      );
-      if (ws.length) {
-        // préférer une merveille dont les mots-clés sont dans le deck
-        const counts = this.keywordCounts(state);
-        const scored = ws.map((w) => ({ w, s: (w.keywords ?? []).reduce((acc, k) => acc + counts[k], 0) + rng.next() * 1.5 }));
-        scored.sort((x, y) => y.s - x.s);
-        wonder = scored[0].w.id;
+    if (card.kind === 'hommage') {
+      const h = s.history[p.quote ?? -1];
+      extra.citation = h ? `« ${h.label} »` : '« tout »';
+      extra.quand = h ? h.date : 'depuis toujours';
+      header = 'L’Hommage';
+    }
+    if (s.ruins[0]) {
+      const r = s.ruins[0];
+      if (r) {
+        extra.ancienne = r.name;
+        extra.testament = r.testament ?? 'rien, ils n’ont pas eu le temps';
+        extra.cause = r.cause;
+        extra.grief = r.grudge?.quote ?? '';
+        extra.griefdate = r.grudge?.date ?? '';
+        extra.griefmaison = r.grudge ? capitalize(r.grudge.house) : '';
       }
     }
-    return { cards: picks, wonder };
-  }
-
-  /** Le joueur choisit une carte de récompense (ou aucune). */
-  pickReward(state: GameState, cardId: string | null): GameEvent[] {
-    const events: GameEvent[] = [];
-    if (state.phase !== 'reward' || !state.reward) return events;
-    if (cardId && state.reward.cards.includes(cardId) && !state.deck.includes(cardId)) {
-      state.deck.push(cardId);
-      events.push({ type: 'cardAdded', card: cardId, delay: -1, persistent: true });
+    if (card.kind === 'famille' && card.family) {
+      const lead = this.familyLead(s, card.family);
+      if (lead) text = `${lead} ${text}`;
     }
-    if (state.reward.wonder && !state.wonders.includes(state.reward.wonder)) {
-      state.wonders.push(state.reward.wonder);
-      events.push({ type: 'wonder', id: state.reward.wonder });
+    if (p.from) header = `Suite de · ${p.from}`;
+    if (card.kind === 'crise') {
+      const cr = this.c.crises[s.era];
+      header = `Crise · ${cr.name} · ${cr.cards.indexOf(card.id) + 1}/${cr.cards.length}`;
     }
-    state.reward = { cards: [], wonder: undefined };
-    return events;
-  }
-
-  /** Le joueur retire une carte de son deck (facultatif). */
-  removeCard(state: GameState, cardId: string): GameEvent[] {
-    const events: GameEvent[] = [];
-    if (state.phase !== 'reward') return events;
-    const c = this.content.cards[cardId];
-    if (!c || c.locked) return events;
-    this.removeFromDeck(state, cardId, events);
-    return events;
-  }
-
-  /** Cartes du deck que le joueur peut retirer. */
-  removableCards(state: GameState): string[] {
-    return state.deck.filter((id) => !this.content.cards[id]?.locked);
-  }
-
-  /** Passe à l'ère suivante. */
-  nextEra(state: GameState): GameEvent[] {
-    const events: GameEvent[] = [];
-    if (state.phase !== 'reward') return events;
-    const rng = Rng.fromState(state.rng);
-    state.era++;
-    state.reward = null;
-    state.phase = 'card';
-    for (const wid of state.wonders) {
-      const p = this.wonder(wid).passive;
-      if (p.type === 'eraDrift') this.applyDelta(state, p.delta, events);
-    }
-    // Les jauges extrêmes se détendent légèrement au changement d'ère (nouveau départ, pas gratuit).
-    this.buildEraPile(state, rng);
-    this.drawNext(state, rng);
-    events.push({ type: 'eraStart', era: state.era });
-    events.push({ type: 'draw', card: state.current! });
-    state.rng = rng.getState();
-    return events;
-  }
-
-  // ---------------------------------------------------------------- fins
-
-  endingScores(state: GameState): Record<EndingId, number> {
-    const counts = this.keywordCounts(state);
-    const g = state.gauges;
-    const flag = (f: string) => (state.flags.includes(f) ? 1 : 0);
+    if (card.kind === 'trahison') header = 'Trahison';
+    if (card.kind === 'rivale') header = `Rivale · ${capitalize(this.rival(s).name)}`;
+    if (card.kind === 'decouverte') header = 'Découverte';
+    if (card.kind === 'carrefour') header = s.saison === 0 ? 'Première saison' : 'Seconde saison';
+    const options = this.options(s, p).map((o, i) => this.optionView(s, card, o, p, i));
+    const fam = card.family;
     return {
-      science: counts.Science * 2 + g.knowledge / 10 + flag('endingScience') * 6 + flag('rocket') * 3,
-      military: counts.Guerre * 2 + g.army / 12 + flag('endingMilitary') * 5 + flag('rivalDefeated') * 2,
-      culture: (counts.Foi + counts.Culture + counts.Commerce) * 1.2 + (g.treasure + g.food) / 20 + flag('endingCulture') * 6 + flag('rivalAllied') * 2,
+      card,
+      kind: card.kind,
+      title: fill(title, s, this.c, extra),
+      text: fill(text, s, this.c, extra),
+      speaker: card.speaker ? fill(card.speaker, s, this.c, extra) : fam ? this.c.families[fam].head[s.era] : undefined,
+      family: fam ?? (card.kind === 'proces' ? p.plaintiff : undefined),
+      header,
+      options,
     };
   }
 
-  computeEnding(state: GameState): EndingId {
-    const s = this.endingScores(state);
-    let best: EndingId = 'culture';
-    for (const k of ['science', 'military', 'culture'] as EndingId[]) if (s[k] > s[best]) best = k;
+  private optionView(s: GameState, card: CardDef, o: Option, p: Prompt, i: number): OptionView {
+    const cost = this.costOf(s, o.cost);
+    const affordable = this.affordable(s, cost);
+    const reqOk = this.check(s, o.req);
+    const fams = new Set<FamilyId>();
+    let later = false;
+    const walk = (e: Effect | undefined) => {
+      if (!e) return;
+      for (const f of Object.keys(e.loy ?? {}) as FamilyId[]) if (e.loy![f]) fams.add(f);
+      if (e.sched?.length) later = true;
+      if (e.famState) fams.add(e.famState.id);
+      walk(e.then);
+      walk(e.else);
+      if (e.bet) {
+        walk(e.bet.win);
+        walk(e.bet.lose);
+      }
+    };
+    walk(o.effect);
+    const v: OptionView = {
+      label: fill(o.label, s, this.c),
+      cost,
+      affordable,
+      req: o.reqLabel ?? this.condLabel(s, o.req),
+      reqOk,
+      enabled: affordable && reqOk,
+      families: [...fams],
+      later,
+      warn: o.warn ? fill(o.warn, s, this.c) : undefined,
+    };
+    if (o.effect.bet) v.odds = this.betChance(s, o.effect.bet);
+    if (card.kind === 'carrefour') {
+      const r = this.c.routes.find((x) => x.id === p.routes![i])!;
+      v.ref = r.id;
+      v.detail = fill(r.promise, s, this.c);
+      v.risk = r.risk ? fill(r.risk, s, this.c) : undefined;
+      if (r.family) v.families = [r.family];
+    }
+    if (card.kind === 'decouverte' && p.recruits?.[i]) {
+      const d = this.card(p.recruits[i]);
+      v.ref = d.id;
+      v.detail = fill(d.gift ?? '', s, this.c);
+    }
+    if (card.kind === 'proces' && p.qui?.[i]) v.families = [p.qui[i], p.plaintiff!];
+    if (card.kind === 'jalon' && o.effect.jalon) {
+      const j = o.effect.jalon === 'alt' ? this.jalonAltOf(s, s.era) : this.dessein(s).jalons[s.era];
+      if (j) {
+        v.detail = fill(j.gift, s, this.c);
+        v.ref = j.shape;
+      }
+    }
+    return v;
+  }
+
+  /** Intensité des crises : vos merveilles attirent les prédateurs. */
+  crisisK(s: GameState): number {
+    return TUNING.crisisK * (s.iron ? TUNING.iron : 1) * (1 + TUNING.envy * s.jalons.filter(Boolean).length);
+  }
+
+  /** Humeur et souvenir de la famille, en tête de sa carte. */
+  familyLead(s: GameState, f: FamilyId): string {
+    const loy = s.fam[f].loy;
+    const m = this.c.moods[f];
+    const mood = loy <= -2 ? m.hostile : loy === -1 ? m.cold : loy === 1 ? m.warm : loy >= 2 ? m.devoted : '';
+    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era);
+    const recall = rec.length ? rec[(s.era + rec.length) % rec.length].line : '';
+    return [mood, recall].filter(Boolean).join(' ');
+  }
+
+  rival(s: GameState) {
+    return this.c.rivals.find((r) => r.id === s.rival) ?? this.c.rivals[0];
+  }
+
+  /** Ce que le présage annonce au début d'une ère : le jalon, la crise, l'envie, l'héritage. */
+  presageInfo(s: GameState): PresageInfo {
+    const d = this.dessein(s);
+    const j = d.jalons[s.era];
+    const alt = this.jalonAltOf(s, s.era);
+    const cr = this.c.crises[s.era];
+    const built = s.jalons.filter(Boolean).length;
+    const k = this.crisisK(s) / (TUNING.crisisK * (s.iron ? TUNING.iron : 1));
+    const rv = this.rival(s);
+    const r0 = s.ruins[0];
+    const jv = (x: Jalon) => ({ name: fill(x.name, s, this.c), text: fill(x.text, s, this.c), gift: fill(x.gift, s, this.c), cost: x.cost, req: this.condLabel(s, x.req), shape: x.shape });
+    return {
+      era: s.era,
+      name: ERA_NAMES[s.era],
+      subtitle: ERA_SUBTITLES[s.era],
+      date: eraDate(s.era, 0),
+      dessein: d.name,
+      jalon: s.jalons[s.era] ? null : jv(j),
+      alt: alt && !s.jalons[s.era] ? jv(alt) : null,
+      built,
+      crisis: { name: cr.name, intro: fill(cr.intro, s, this.c), protects: fill(cr.protects, s, this.c) },
+      envy: built > 0 ? Math.round((k - 1) * 100) : 0,
+      rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
+      legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
+      upkeep: Math.ceil(s.quartiers * 1.5),
+    };
+  }
+
+  /** L'état d'une famille, pour l'interface : humeur, cicatrices, dernier souvenir. */
+  familyInfo(s: GameState, f: FamilyId): FamilyInfo {
+    const st = s.fam[f];
+    const def = this.c.families[f];
+    const loy = st.loy;
+    const mood = st.state === 'eteinte' ? 'partis' : loy <= -3 ? 'en révolte' : loy <= -2 ? 'hostiles' : loy === -1 ? 'froissés' : loy === 0 ? 'neutres' : loy === 1 ? 'amicaux' : loy === 2 ? 'dévoués' : 'fanatiques';
+    let scars = 0;
+    for (const h of s.history) if ((h.loy?.[f] ?? 0) < 0) scars++;
+    const wi = this.worstAct(s, f);
+    const bi = this.bestAct(s, f);
+    const w = s.history[wi];
+    const b = s.history[bi];
+    return {
+      id: f,
+      head: capitalize(def.head[s.era]),
+      house: capitalize(def.house[s.era]),
+      trade: def.trade[s.era],
+      tag: def.tag,
+      res: def.res,
+      hue: def.hue,
+      motif: def.motif,
+      loy,
+      state: st.state,
+      mood,
+      scars: Math.min(3, Math.floor(scars / 2)),
+      grudge: w && loy <= 0 ? { label: w.label, date: w.date } : undefined,
+      favor: b && loy >= 1 ? { label: b.label, date: b.date } : undefined,
+      rivalOf: this.c.rivalries[f],
+      neglected: st.state === 'presente' && s.era - Math.max(s.visits[f], -1) >= 2,
+    };
+  }
+
+  betChance(s: GameState, b: NonNullable<Effect['bet']>): number {
+    let c = b.chance;
+    if (b.per) c += b.per.bonus * this.tagCount(s, b.per.tag);
+    return Math.max(0.05, Math.min(0.95, c));
+  }
+
+  // ======================================================================= action
+
+  act(s: GameState, index: number): Ev[] {
+    const ev: Ev[] = [];
+    const p = s.prompt;
+    if (!p || s.phase === 'fin') return ev;
+    const card = this.card(p.card);
+    const opts = this.options(s, p);
+    const o = opts[index];
+    if (!o) return ev;
+    const view = this.optionView(s, card, o, p, index);
+    if (!view.enabled) return ev;
+    const rng = Rng.fromState(s.rng);
+    const before = { ...s.res };
+    const loyBefore = Object.fromEntries(FAMILIES.map((f) => [f, s.fam[f].loy])) as Record<FamilyId, number>;
+    let reply = o.reply;
+    const memBefore = new Set(s.mem);
+    const date = eraDate(s.era, s.turn - (s.eraStart ?? 0));
+    const titleNow = this.view(s)?.title ?? card.title;
+    // payer
+    for (const r of RES) s.res[r] -= view.cost[r] ?? 0;
+
+    if (card.kind === 'carrefour') {
+      this.startSaison(s, p.routes![index], rng, ev);
+    } else if (card.kind === 'proces') {
+      reply = this.applyEffect(s, card, o.effect, rng, ev) ?? reply;
+    } else {
+      const r = this.applyEffect(s, card, o.effect, rng, ev);
+      if (r) reply = r;
+    }
+    if (card.oneShot && !s.spent.includes(card.id)) s.spent.push(card.id);
+    if (card.arc) {
+      if (!s.arcs.open.includes(card.arc)) s.arcs.open.push(card.arc);
+      if (card.finale && !s.arcs.done.includes(card.arc)) s.arcs.done.push(card.arc);
+    }
+    if (card.family && s.fam[card.family]) s.fam[card.family].seen = s.era;
+
+    // les souvenirs gardent la décision mot pour mot, avec sa date : les familles s'en serviront
+    for (const m of s.mem) if (!memBefore.has(m)) s.memo[m] = { label: view.label, date, title: titleNow, era: s.era };
+    const loy: Partial<Record<FamilyId, number>> = {};
+    for (const f of FAMILIES) if (s.fam[f].loy !== loyBefore[f]) loy[f] = s.fam[f].loy - loyBefore[f];
+    const v = this.view(s);
+    s.history.push({
+      turn: s.turn,
+      era: s.era,
+      date,
+      card: card.id,
+      title: v?.title ?? card.title,
+      choice: index,
+      label: view.label,
+      reply: reply ? fill(reply, s, this.c) : undefined,
+      loy,
+      from: p.from,
+      res: { ...s.res },
+      quartiers: s.quartiers,
+    });
+    if (reply) ev.unshift({ type: 'reply', text: fill(reply, s, this.c) });
+    if (RES.some((r) => s.res[r] !== before[r])) ev.push({ type: 'res', before, after: { ...s.res } });
+    s.turn++;
+    s.growth++;
+
+    if (s.quartiers <= 0) {
+      this.finish(s, ev, 'defaite');
+    } else {
+      this.advance(s, rng, ev);
+    }
+    s.rng = rng.getState();
+    return ev;
+  }
+
+  /** Applique un effet ; renvoie la réplique de la branche choisie, s'il y en a une. */
+  applyEffect(s: GameState, card: CardDef, e: Effect, rng: Rng, ev: Ev[]): string | undefined {
+    let reply = e.reply;
+    if (e.if) {
+      const branch = this.check(s, e.if) ? e.then : e.else;
+      if (branch) {
+        const r = this.applyEffect(s, card, branch, rng, ev);
+        if (r) reply = r;
+      }
+    }
+    if (e.bet) {
+      const chance = this.betChance(s, e.bet);
+      const win = rng.next() < chance;
+      ev.push({ type: 'bet', win, chance });
+      const r = this.applyEffect(s, card, win ? e.bet.win : e.bet.lose, rng, ev);
+      if (r) reply = r;
+    }
+    if (e.gain) for (const r of RES) if (e.gain[r]) s.res[r] = Math.max(0, s.res[r] + e.gain[r]!);
+    if (e.loy) for (const f of Object.keys(e.loy) as FamilyId[]) this.changeLoy(s, f, e.loy[f]!, ev);
+    if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev);
+    for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
+    for (const m of e.unmem ?? []) s.mem = s.mem.filter((x) => x !== m);
+    for (const sc of e.sched ?? []) {
+      const v = this.view(s);
+      s.sched.push({ card: sc.card, at: s.turn + 1 + sc.in, from: v?.title ?? card.title });
+      ev.push({ type: 'sched', card: sc.card });
+    }
+    for (const id of e.addCard ?? []) {
+      if (!s.deck.includes(id)) {
+        s.deck.push(id);
+        ev.push({ type: 'card+', id });
+      }
+    }
+    for (const id of e.removeCard ?? []) {
+      if (s.deck.includes(id)) {
+        s.deck = s.deck.filter((x) => x !== id);
+        s.pool = s.pool.filter((x) => x !== id);
+        ev.push({ type: 'card-', id });
+      }
+    }
+    if (e.rival) {
+      s.rivalRel = Math.max(-3, Math.min(3, s.rivalRel + e.rival));
+      ev.push({ type: 'rival', delta: e.rival, value: s.rivalRel });
+    }
+    if (e.rivalJalon) {
+      s.rivalJalons = Math.max(0, Math.min(5, s.rivalJalons + e.rivalJalon));
+      ev.push({ type: 'rivalJalon', count: s.rivalJalons, name: this.rival(s).jalons[Math.max(0, s.rivalJalons - 1)] });
+    }
+    if (e.famState) {
+      s.fam[e.famState.id].state = e.famState.state;
+      ev.push({ type: 'famState', family: e.famState.id, state: e.famState.state });
+    }
+    if (e.jalon && !s.jalons[s.era]) {
+      s.jalons[s.era] = true;
+      if (e.jalon === 'alt') s.jalonAlt.push(s.era);
+      ev.push({ type: 'jalon', era: s.era, name: this.jalonOf(s, s.era).name });
+    }
+    return reply;
+  }
+
+  changeLoy(s: GameState, f: FamilyId, d: number, ev: Ev[], cascade = true): void {
+    const st = s.fam[f];
+    if (!st || st.state !== 'presente' || !d) return;
+    let floor = -3;
+    for (const p of this.passives(s)) if (p.type === 'loyalty' && (p.family === 'all' || p.family === f)) floor = Math.max(floor, p.floor);
+    const v = Math.max(floor, clampLoy(st.loy + d));
+    if (v === st.loy) return;
+    const delta = v - st.loy;
+    st.loy = v;
+    ev.push({ type: 'loy', family: f, delta, value: v });
+    // favoriser une famille froisse celle qui la méprise
+    if (cascade && delta >= 2) this.changeLoy(s, this.c.rivalries[f], -1, ev, false);
+  }
+
+  changeQuartiers(s: GameState, d: number, cause: string, cardId: string, ev: Ev[]): void {
+    if (d < 0 && !s.shieldUsed && this.passives(s).some((p) => p.type === 'shield')) {
+      s.shieldUsed = true;
+      d += 1;
+      ev.push({ type: 'quartiers', delta: 0, cause, shielded: true });
+      if (d === 0) return;
+    }
+    s.quartiers = Math.max(0, Math.min(12, s.quartiers + d));
+    if (d < 0) s.losses.push({ turn: s.turn, era: s.era, card: cardId, amount: -d, cause });
+    ev.push({ type: 'quartiers', delta: d, cause });
+  }
+
+  // ======================================================================= déroulé
+
+  private buildPool(s: GameState, rng: Rng): void {
+    const pool: string[] = [];
+    for (const f of this.present(s)) {
+      const id = this.familyCard(s, f);
+      if (id) pool.push(id);
+    }
+    for (const id of s.deck) if (this.c.cards[id]?.options.length) pool.push(id);
+    const events = (this.c.events[s.era] ?? []).filter((id) => {
+      const c = this.c.cards[id];
+      return this.available(s, c) && !s.spent.includes(id) && this.check(s, c.cond);
+    });
+    pool.push(...rng.sample(events, Math.min(2, events.length)));
+    const bucket = s.rivalRel <= -1 ? this.c.rivalCards.hostile : s.rivalRel >= 1 ? this.c.rivalCards.friendly : this.c.rivalCards.neutral;
+    const rv = bucket.filter((id) => this.available(s, this.c.cards[id]) && !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
+    if (rv.length) pool.push(rng.pick(rv));
+    // les revenants d'une civilisation morte arrivent à la troisième ère
+    if (s.era === 2 && s.ruins[0]?.grudge && !s.spent.includes(this.c.revenantCard)) pool.push(this.c.revenantCard);
+    s.pool = rng.shuffle(pool);
+  }
+
+  familyCard(s: GameState, f: FamilyId): string | undefined {
+    for (const id of this.c.familyCards[f]?.[s.era] ?? []) {
+      const c = this.c.cards[id];
+      if (c && !s.spent.includes(id) && this.check(s, c.cond)) return id;
+    }
+    return undefined;
+  }
+
+  private routesFor(s: GameState, rng: Rng): string[] {
+    const ok = this.c.routes.filter((r) => {
+      if (r.family && s.fam[r.family].state !== 'presente') return false;
+      return this.check(s, r.cond);
+    });
+    const picks: string[] = [];
+    // les ruines d'une civilisation passée attendent à la deuxième ère : la route de l'inconnu y mène
+    const unknown = ok.find((r) => r.id === 'inconnu');
+    if (s.era === 1 && s.saison === 0 && s.ruins.length && unknown && !s.spent.includes(this.c.ruinsCard)) picks.push(unknown.id);
+    const fams = rng.shuffle(ok.filter((r) => r.family && !picks.includes(r.id)));
+    // une famille délaissée depuis longtemps réclame sa visite
+    fams.sort((a, b) => s.visits[a.family!] - s.visits[b.family!]);
+    const others = rng.shuffle(ok.filter((r) => !r.family && !picks.includes(r.id)));
+    while (picks.length < 3 && fams.length) {
+      picks.push(fams.shift()!.id);
+      if (picks.length < 3 && others.length && rng.chance(0.55)) picks.push(others.shift()!.id);
+    }
+    while (picks.length < 3 && others.length) picks.push(others.shift()!.id);
+    return rng.shuffle(picks.slice(0, 3));
+  }
+
+  private startSaison(s: GameState, routeId: string, rng: Rng, ev: Ev[]): void {
+    const r = this.c.routes.find((x) => x.id === routeId)!;
+    const pile: string[] = [];
+    let enc = r.encounters.filter((id) => !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
+    if (routeId === 'inconnu' && s.ruins.length && !s.spent.includes(this.c.ruinsCard) && s.era >= 1) enc = [this.c.ruinsCard];
+    if (enc.length) pile.push(rng.pick(enc));
+    if (r.family) {
+      s.visits[r.family] = s.era;
+      const fc = s.pool.find((id) => this.c.cards[id]?.family === r.family && this.c.cards[id].kind === 'famille');
+      if (fc) {
+        pile.push(fc);
+        s.pool = s.pool.filter((x) => x !== fc);
+      }
+    }
+    while (pile.length < SAISON_CARDS && s.pool.length) pile.push(s.pool.shift()!);
+    s.pile = pile;
+    ev.push({ type: 'saison', saison: s.saison, route: routeId });
+    // revenu des découvertes et merveilles, à chaque saison
+    const inc: Bag = {};
+    for (const p of this.passives(s)) if (p.type === 'income') inc[p.res] = (inc[p.res] ?? 0) + p.amount;
+    if (Object.keys(inc).length) {
+      for (const k of Object.keys(inc) as Res[]) s.res[k] += inc[k]!;
+      ev.push({ type: 'income', bag: inc });
+    }
+  }
+
+  /** Passe à l'invite suivante. */
+  advance(s: GameState, rng: Rng, ev: Ev[]): void {
+    for (let guard = 0; guard < 40; guard++) {
+      // une suite programmée passe avant tout (sauf pendant le présage et les carrefours)
+      const due = s.sched.findIndex((x) => x.at <= s.turn);
+      if (due >= 0 && (s.phase === 'saison' || s.phase === 'crise') && s.prompt && this.c.cards[s.prompt.card]?.kind !== 'carrefour') {
+        const d = s.sched.splice(due, 1)[0];
+        const c = this.c.cards[d.card];
+        if (c && this.check(s, c.cond)) {
+          s.prompt = this.makePrompt(s, d.card, rng, d.from);
+          return;
+        }
+        continue;
+      }
+      if (s.phase === 'presage') {
+        s.phase = 'saison';
+        s.saison = 0;
+        s.prompt = { card: 'carrefour', routes: this.routesFor(s, rng) };
+        if (s.tutorial && s.era === 0 && s.saison === 0 && s.turn === 1) {
+          // première partie : les cartes du tutoriel ouvrent la première saison
+        }
+        return;
+      }
+      if (s.phase === 'saison') {
+        if (s.pile.length) {
+          const id = s.pile.shift()!;
+          if (s.spent.includes(id) && this.c.cards[id]?.oneShot) continue;
+          s.prompt = this.makePrompt(s, id, rng);
+          return;
+        }
+        if (s.saison === 0) {
+          s.saison = 1;
+          s.prompt = { card: 'carrefour', routes: this.routesFor(s, rng) };
+          return;
+        }
+        // le chantier du jalon, avant la crise : bâtir, c'est affronter la crise plus pauvre
+        s.phase = 'chantier';
+        s.prompt = { card: 'jalon' };
+        return;
+      }
+      if (s.phase === 'chantier') {
+        // la crise
+        s.phase = 'crise';
+        const cr = this.c.crises[s.era];
+        const pile = cr.cards.slice();
+        // une famille qui vous hait choisit ce moment pour trahir
+        const traitor = this.present(s).filter((f) => s.fam[f].loy <= -2).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+        if (traitor) pile.splice(1, 0, this.c.betrayal[traitor]);
+        s.pile = pile;
+        ev.push({ type: 'crisis', era: s.era, name: cr.name });
+        continue;
+      }
+      if (s.phase === 'crise') {
+        if (s.pile.length) {
+          s.prompt = this.makePrompt(s, s.pile.shift()!, rng);
+          return;
+        }
+        this.startEraEnd(s, rng, ev);
+        if ((s.phase as string) === 'fin') return;
+        continue;
+      }
+      if (s.phase === 'finere') {
+        if (s.steps.length) {
+          const step = s.steps.shift()!;
+          const p = this.stepPrompt(s, step, rng);
+          if (p) {
+            s.prompt = p;
+            return;
+          }
+          continue;
+        }
+        // ère suivante ou fin
+        if (s.era >= ERAS - 1) {
+          this.finish(s, ev, 'victoire');
+          return;
+        }
+        s.era++;
+        s.eraStart = s.turn;
+        s.saison = 0;
+        s.shieldUsed = false;
+        this.buildPool(s, rng);
+        s.phase = 'presage';
+        s.prompt = { card: 'presage' };
+        ev.push({ type: 'era', era: s.era });
+        return;
+      }
+      return;
+    }
+  }
+
+  private makePrompt(s: GameState, id: string, rng: Rng, from?: string): Prompt {
+    const c = this.card(id);
+    const p: Prompt = { card: id };
+    if (from) p.from = from;
+    if (c.qui) {
+      const fams = this.present(s).filter((f) => !c.qui!.exclude?.includes(f));
+      p.qui = rng.sample(fams, Math.min(c.qui.count, fams.length));
+    }
+    return p;
+  }
+
+  private startEraEnd(s: GameState, rng: Rng, ev: Ev[]): void {
+    s.phase = 'finere';
+    // révoltes des familles ulcérées
+    for (const f of this.present(s)) {
+      if (s.fam[f].loy <= -3) {
+        const name = capitalize(this.c.families[f].house[s.era]);
+        if (s.mem.includes(`revolte_${f}`)) {
+          s.fam[f].state = 'rivale';
+          s.rivalRel = Math.max(-3, s.rivalRel - 1);
+          ev.push({ type: 'defect', family: f });
+          this.changeQuartiers(s, -1, `${name} sont passés chez ${this.rival(s).name}`, `defection_${f}`, ev);
+        } else {
+          s.mem.push(`revolte_${f}`);
+          s.fam[f].loy = -1;
+          ev.push({ type: 'revolt', family: f });
+          this.changeQuartiers(s, -1, `la révolte des ${this.c.families[f].house[s.era].replace(/^les /, '')}`, `revolte_${f}`, ev);
+        }
+        if (s.quartiers <= 0) {
+          this.finish(s, ev, 'defaite');
+          return;
+        }
+      }
+    }
+    // familles délaissées
+    for (const f of this.present(s)) {
+      if (s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era) {
+        this.changeLoy(s, f, -1, ev, false);
+        ev.push({ type: 'neglect', family: f });
+      }
+    }
+    // dévouement : la famille dévouée apporte sa part
+    for (const f of this.present(s)) {
+      if (s.fam[f].loy >= 3) {
+        const r = this.c.families[f].res;
+        s.res[r] += 3;
+        ev.push({ type: 'income', bag: { [r]: 3 } });
+      }
+    }
+    // les vétérans rentrent chez eux, les comptables se servent
+    const da = Math.floor(s.res.armee * TUNING.armyDecay);
+    const dt = Math.floor(s.res.tresor * TUNING.treasureDecay);
+    if (da || dt) {
+      s.res.armee -= da;
+      s.res.tresor -= dt;
+      ev.push({ type: 'decay', armee: da, tresor: dt });
+    }
+    // la cité mange
+    const upkeep = Math.ceil(s.quartiers * 1.5);
+    if (s.res.vivres >= upkeep) {
+      s.res.vivres -= upkeep;
+      ev.push({ type: 'upkeep', amount: upkeep });
+    }
+    else {
+      s.res.vivres = 0;
+      ev.push({ type: 'famine' });
+      this.changeQuartiers(s, -1, 'la famine', 'famine', ev);
+      if (s.quartiers <= 0) {
+        this.finish(s, ev, 'defaite');
+        return;
+      }
+    }
+    // la rivale avance son propre dessein, sauf si on l'en a empêchée
+    if (!s.mem.includes(`rival_freine_${s.era}`) && s.fam && this.c.rivals.length) {
+      s.rivalJalons = Math.min(5, s.rivalJalons + 1);
+      ev.push({ type: 'rivalJalon', count: s.rivalJalons, name: this.rival(s).jalons[s.rivalJalons - 1] });
+    }
+    const steps = ['croissance', 'proces'];
+    if (s.era < ERAS - 1) steps.push('decouverte');
+    s.steps = steps;
+  }
+
+  private stepPrompt(s: GameState, step: string, rng: Rng): Prompt | null {
+    if (step === 'croissance') {
+      return s.res.vivres >= this.growthCost(s) ? { card: 'croissance' } : null;
+    }
+    if (step === 'proces') {
+      const fams = this.present(s);
+      // la famille la plus lésée : loyauté basse et un grief précis dans le journal
+      const angry = fams.filter((f) => s.fam[f].loy <= 0 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+      if (angry) {
+        const others = fams.filter((f) => f !== angry).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
+        return { card: 'proces', plaintiff: angry, quote: this.worstAct(s, angry), qui: others };
+      }
+      const fond = fams.filter((f) => s.fam[f].loy >= 1 && this.bestAct(s, f) >= 0).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
+      if (fond) return { card: `hommage_${fond}`, quote: this.bestAct(s, fond) };
+      return null;
+    }
+    if (step === 'jalon') return { card: 'jalon' };
+    if (step === 'decouverte') {
+      const next = s.era + 1;
+      const pool = this.c.discoveries.filter((id) => {
+        const d = this.c.cards[id];
+        return this.available(s, d) && !s.deck.includes(id) && (d.eras?.includes(next) || d.eras?.includes(s.era)) && this.check(s, d.cond);
+      });
+      if (!pool.length) return null;
+      return { card: 'decouverte', recruits: rng.sample(pool, Math.min(3, pool.length)) };
+    }
+    return null;
+  }
+
+  growthCost(s: GameState): number {
+    return TUNING.growthBase + s.quartiers;
+  }
+
+  /** La décision qui a le plus blessé une famille (index dans l'historique). */
+  worstAct(s: GameState, f: FamilyId): number {
+    let best = -1;
+    let worst = 0;
+    s.history.forEach((h, i) => {
+      const d = h.loy?.[f] ?? 0;
+      if (d < 0 && (d < worst || d === worst)) {
+        worst = d;
+        best = i;
+      }
+    });
     return best;
   }
 
-  /** Archétype dominant du deck (pour le résumé et la scène). */
-  dominantKeyword(state: GameState): Keyword | null {
-    const counts = this.keywordCounts(state);
-    let best: Keyword | null = null;
-    for (const k of Object.keys(counts) as Keyword[]) {
-      if (counts[k] > 0 && (best === null || counts[k] > counts[best])) best = k;
-    }
+  bestAct(s: GameState, f: FamilyId): number {
+    let best = -1;
+    let top = 0;
+    s.history.forEach((h, i) => {
+      const d = h.loy?.[f] ?? 0;
+      if (d >= top && d > 0) {
+        top = d;
+        best = i;
+      }
+    });
     return best;
+  }
+
+  private trialOptions(s: GameState, p: Prompt): Option[] {
+    const pl = p.plaintiff!;
+    const opts: Option[] = (p.qui ?? []).map((adv) => {
+      const loy = s.fam[adv].loy;
+      const name = `{F:${adv}}`;
+      const plead: Effect =
+        loy >= 1
+          ? { loy: { [pl]: 2, [adv]: -1 }, reply: `${name} plaide avec talent. ${'{H:' + pl + '}'} repartent apaisés, en grommelant.` }
+          : loy === 0
+            ? { loy: { [pl]: 1 }, gain: { tresor: -3 }, reply: `${name} plaide sans conviction. Un arrangement est trouvé. Il coûte.` }
+            : { loy: { [pl]: -1, [adv]: -1 }, reply: `${name} plaide… contre vous. Personne n’avait vérifié.` };
+      return { label: `Défendu par {F:${adv}}`, effect: plead };
+    });
+    const r = this.c.families[pl].res;
+    opts.push({
+      label: 'Plaider coupable',
+      cost: { [r]: 3 + s.era },
+      effect: { loy: { [pl]: 2 }, reply: `Vous payez réparation. ${'{H:' + pl + '}'} encadrent le reçu.` },
+    });
+    return opts;
+  }
+
+  // ======================================================================= fin
+
+  finish(s: GameState, ev: Ev[], type: 'victoire' | 'defaite'): void {
+    const jalons = s.jalons.filter(Boolean).length;
+    if (type === 'victoire') {
+      // le dessein n'est accompli qu'avec son cinquième jalon ; sinon, on a seulement survécu
+      s.result = { type, ending: s.jalons[4] ? this.dessein(s).ending : undefined, jalons };
+    } else {
+      const last = s.losses[s.losses.length - 1];
+      s.result = { type, jalons, cause: last?.cause ?? 'l’usure' };
+    }
+    s.phase = 'fin';
+    s.prompt = null;
+    ev.push({ type: 'end', result: s.result });
+  }
+
+  /** Ce que la civilisation laisse aux suivantes. */
+  ruinOf(s: GameState, epitaph: string, testament?: string): RuinInfo {
+    const fams = FAMILIES.filter((f) => s.fam[f].state !== 'eteinte');
+    const enemy = fams.slice().sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+    const ally = fams.slice().sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
+    const r: RuinInfo = {
+      name: s.name,
+      dessein: s.dessein,
+      era: s.era,
+      jalons: s.jalons.filter(Boolean).length,
+      cause: s.result?.type === 'victoire' ? (s.result.ending ? VICTORY_CAUSE[this.dessein(s).id] : undefined) ?? 'le temps, tout simplement' : s.result?.cause ?? 'l’usure',
+      epitaph,
+      testament,
+      victory: s.result?.type === 'victoire',
+      ally: s.fam[ally]?.loy > 0 ? ally : undefined,
+      enemy: s.fam[enemy]?.loy < 0 ? enemy : undefined,
+    };
+    const lastJ = s.jalons.lastIndexOf(true);
+    if (lastJ >= 0) r.shape = this.jalonOf(s, lastJ).shape;
+    // le grief : la famille la moins bien traitée (même sans haine déclarée) et le pire de ce qu'on lui a fait
+    const sore = fams.filter((f) => s.fam[f].loy <= 0 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+    if (sore) {
+      const h = s.history[this.worstAct(s, sore)];
+      if (h) r.grudge = { family: sore, house: this.c.families[sore].house[s.era], quote: h.label, date: h.date };
+    }
+    return r;
   }
 }

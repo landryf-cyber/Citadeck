@@ -11,7 +11,7 @@ import { mkdirSync } from 'node:fs';
 const args = process.argv.slice(2);
 const filters = args.filter((a) => !a.startsWith('--'));
 const hd = args.includes('--hd');
-const OUT = 'shots/v2';
+const OUT = 'shots';
 const VIEWPORTS = [
   { name: 'mobile', width: 390, height: 844, mobile: true },
   { name: 'desktop', width: 1440, height: 900, mobile: false },

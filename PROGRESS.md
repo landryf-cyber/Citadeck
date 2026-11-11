@@ -7,16 +7,16 @@ Documents de référence : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `
 - Diagnostic chiffré de la V1 (`src/sim/v1/diagnose.ts`) → DESIGN-V2 §1
 - 12 concepts explorés, 3 boucles prototypées sans interface (`src/proto/`), comparées à difficulté égale → P3 « Lignées + Carrefours » retenu (EXPERIENCES E1-E3)
 - Avocat du diable (agent séparé) sur le design → réponses DESIGN-V2 §6 (procès, reçus, 4 familles, fusions, ruines personnelles, testament)
-- Moteur V2 sans interface : `src/v2/core/` (types, gabarits de texte avec citations datées, moteur, validation)
-- Squelette de contenu V2 : `src/v2/data/` — 4 familles × 5 ères + intrigues + trahisons + hommages, 18 rencontres de route, 5 crises × 3, 16 découvertes, ~20 événements, 9 cartes de rivale, ruines et revenants
+- Moteur V2 sans interface : `src/core/` (types, gabarits de texte avec citations datées, moteur, validation)
+- Squelette de contenu V2 : `src/data/` — 4 familles × 5 ères + intrigues + trahisons + hommages, 18 rencontres de route, 5 crises × 3, 16 découvertes, ~20 événements, 9 cartes de rivale, ruines et revenants
 - Test de cohérence du contenu V2 (`tests/v2.content.test.ts`)
-- Bots V2 (`src/v2/sim/`: bots, sim, run avec `--transcript`, econ, sweep) et équilibrage (EXPERIENCES E4-E6) : `TUNING = { crisisK 1.2, envie 0.25 }`
+- Bots V2 (`src/sim/`: bots, sim, run avec `--transcript`, econ, sweep) et équilibrage (EXPERIENCES E4-E6) : `TUNING = { crisisK 1.2, envie 0.25 }`
 
-- Méta-progression (`src/v2/core/meta.ts`, tests `tests/v2.meta.test.ts`) : chronique 5 lignes, épitaphe, testament à 3 choix avec héritage concret (×2 pour les Héritiers), grief → Revenants, déblocages (Héritiers, Fleuve, 3 merveilles alternatives, 4 découvertes, Musée, Âge de fer) ; campagne simulée `npx tsx src/v2/sim/run.ts --campaign 10 [profil]`
+- Méta-progression (`src/core/meta.ts`, tests `tests/v2.meta.test.ts`) : chronique 5 lignes, épitaphe, testament à 3 choix avec héritage concret (×2 pour les Héritiers), grief → Revenants, déblocages (Héritiers, Fleuve, 3 merveilles alternatives, 4 découvertes, Musée, Âge de fer) ; campagne simulée `npx tsx src/sim/run.ts --campaign 10 [profil]`
 - Robustesse : issue de secours si aucune option jouable ; tests moteur (pas de blocage, déterminisme, sauvegarde JSON, aucun gabarit non résolu)
 
 ## En cours
-- Étape 4 : interface V2 (`src/v2/ui/`), en réutilisant scène/palette/audio V1
+- Étape 4 : interface V2 (`src/ui/`), en réutilisant scène/palette/audio V1
 
 ## Reste à faire (dans l'ordre)
 1. ~~Bots V2, mesures, équilibrage~~ (fait ; annoncer l'envie dans le présage)

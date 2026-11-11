@@ -1,29 +1,11 @@
 /**
  * Illustrations génératives des cartes : un seul langage visuel (cercles, arcs, lignes,
- * triangles, lumière) décliné en vingt motifs. Tout est du SVG produit par code.
+ * triangles, lumière) décliné en une trentaine de motifs. Tout est du SVG produit par code.
+ * Une carte montre son sujet (le motif) et, quand quelqu'un parle, son orateur (un médaillon de famille).
  */
 import { Rng, hashString } from '../core/rng';
-import type { CardDef, Keyword } from '../core/types';
-
-export const KEYWORD_HUE: Record<Keyword, number> = {
-  Foi: 44,
-  Guerre: 4,
-  Commerce: 168,
-  Science: 208,
-  Culture: 300,
-  Nature: 112,
-};
 
 let uid = 0;
-
-export function cardHue(card: CardDef): number {
-  if (card.art?.hue !== undefined) return card.art.hue;
-  if (card.kind === 'crisis') return 8;
-  if (card.kind === 'rival') return 262;
-  const k = card.keywords?.[0];
-  if (k) return KEYWORD_HUE[k];
-  return 30;
-}
 
 const f = (n: number) => n.toFixed(1);
 
@@ -36,9 +18,7 @@ function ring(cx: number, cy: number, r: number, n: number, fn: (a: number, i: n
   return s;
 }
 
-function motif(name: string, rng: Rng, st: string, fl: string, dim: string): string {
-  const cx = 150;
-  const cy = 98;
+export function motif(name: string, rng: Rng, st: string, fl: string, dim: string, cx = 150, cy = 98): string {
   const S = `fill="none" stroke="${st}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"`;
   const Sd = `fill="none" stroke="${dim}" stroke-width="1" stroke-linecap="round"`;
   const F = `fill="${fl}" stroke="${st}" stroke-width="1.2" stroke-linejoin="round"`;
@@ -210,6 +190,65 @@ function motif(name: string, rng: Rng, st: string, fl: string, dim: string): str
       return `<line x1="${cx}" y1="${cy + 62}" x2="${cx}" y2="${cy - 52}" ${S}/>${grains}<ellipse cx="${cx}" cy="${cy - 60}" rx="6" ry="11" ${F}/>` +
         `<path d="M${cx - 60} ${cy + 62} H${cx + 60}" ${Sd}/>`;
     }
+    case 'fang': {
+      return `<path d="M${cx - 52} ${cy - 40} Q${cx} ${cy - 58} ${cx + 52} ${cy - 40} Q${cx + 30} ${cy - 30} ${cx + 18} ${cy - 22} L${cx + 8} ${cy + 56} L${cx - 4} ${cy - 20} Q${cx - 30} ${cy - 26} ${cx - 52} ${cy - 40} Z" ${F}/>` +
+        `<path d="M${cx - 34} ${cy - 34} L${cx - 26} ${cy + 6} L${cx - 18} ${cy - 30} M${cx + 26} ${cy - 30} L${cx + 32} ${cy - 2} L${cx + 38} ${cy - 34}" ${S}/>` +
+        `<path d="M${cx - 66} ${cy + 60} H${cx + 66}" ${Sd}/><circle cx="${cx + 6}" cy="${cy + 20}" r="3" fill="${st}"/>`;
+    }
+    case 'hand': {
+      let fingers = '';
+      const xs = [-30, -12, 6, 24];
+      const hs = [44, 58, 54, 40];
+      xs.forEach((x, i) => { fingers += `<rect x="${cx + x - 7}" y="${cy - hs[i]}" width="14" height="${hs[i] + 8}" rx="7" ${F}/>`; });
+      return `${fingers}<path d="M${cx - 38} ${cy} H${cx + 32} V${cy + 32} Q${cx + 30} ${cy + 58} ${cx - 2} ${cy + 58} Q${cx - 34} ${cy + 58} ${cx - 38} ${cy + 30} Z" ${F}/>` +
+        `<path d="M${cx + 32} ${cy + 8} Q${cx + 56} ${cy - 4} ${cx + 58} ${cy + 16} Q${cx + 50} ${cy + 26} ${cx + 32} ${cy + 34}" ${F}/>` +
+        `<circle cx="${cx - 3}" cy="${cy + 28}" r="10" ${Sd}/>`;
+    }
+    case 'skull': {
+      return `<path d="M${cx - 44} ${cy - 4} C${cx - 48} ${cy - 56} ${cx + 48} ${cy - 56} ${cx + 44} ${cy - 4} C${cx + 42} ${cy + 16} ${cx + 30} ${cy + 22} ${cx + 26} ${cy + 34} V${cy + 52} H${cx - 26} V${cy + 34} C${cx - 30} ${cy + 22} ${cx - 42} ${cy + 16} ${cx - 44} ${cy - 4} Z" ${F}/>` +
+        `<circle cx="${cx - 18}" cy="${cy - 2}" r="11" fill="rgba(6,5,10,.8)" stroke="${st}" stroke-width="1.2"/><circle cx="${cx + 18}" cy="${cy - 2}" r="11" fill="rgba(6,5,10,.8)" stroke="${st}" stroke-width="1.2"/>` +
+        `<path d="M${cx} ${cy + 12} l-6 10 h12 Z" fill="rgba(6,5,10,.8)"/><path d="M${cx - 14} ${cy + 40} V${cy + 52} M${cx} ${cy + 40} V${cy + 52} M${cx + 14} ${cy + 40} V${cy + 52}" ${Sd}/>` +
+        `<path d="M${cx - 70} ${cy + 60} H${cx + 70}" ${Sd}/>`;
+    }
+    case 'house': {
+      return `<path d="M${cx - 48} ${cy + 50} V${cy - 6} L${cx} ${cy - 50} L${cx + 48} ${cy - 6} V${cy + 50} Z" ${F}/>` +
+        `<rect x="${cx - 12}" y="${cy + 18}" width="24" height="32" fill="rgba(6,5,10,.75)" stroke="${st}" stroke-width="1.2"/>` +
+        `<rect x="${cx - 34}" y="${cy + 2}" width="14" height="14" fill="${st}" opacity=".85"/><rect x="${cx + 20}" y="${cy + 2}" width="14" height="14" fill="${st}" opacity=".5"/>` +
+        `<path d="M${cx + 24} ${cy - 30} V${cy - 50} H${cx + 34} V${cy - 20}" ${S}/><path d="M${cx - 76} ${cy + 50} H${cx + 76}" ${Sd}/>`;
+    }
+    case 'ship': {
+      return `<path d="M${cx - 62} ${cy + 20} H${cx + 62} L${cx + 44} ${cy + 46} H${cx - 44} Z" ${F}/>` +
+        `<line x1="${cx}" y1="${cy + 20}" x2="${cx}" y2="${cy - 62}" ${S}/>` +
+        `<path d="M${cx + 4} ${cy - 56} Q${cx + 50} ${cy - 22} ${cx + 4} ${cy + 12} Z" ${F}/><path d="M${cx - 4} ${cy - 44} Q${cx - 38} ${cy - 16} ${cx - 4} ${cy + 10} Z" ${F}/>` +
+        `<path d="M${cx} ${cy - 62} l14 6 l-14 6" ${S}/>` +
+        `<path d="M${cx - 84} ${cy + 54} q14 -6 28 0 t28 0 t28 0 t28 0 t28 0 t28 0" ${Sd}/>`;
+    }
+    case 'bird': {
+      return `<path d="M${cx - 76} ${cy - 18} Q${cx - 36} ${cy - 26} ${cx - 8} ${cy + 4} Q${cx + 20} ${cy - 40} ${cx + 76} ${cy - 30} Q${cx + 32} ${cy - 6} ${cx + 10} ${cy + 22} Q${cx} ${cy + 30} ${cx - 10} ${cy + 22} Q${cx - 30} ${cy - 2} ${cx - 76} ${cy - 18} Z" ${F}/>` +
+        `<path d="M${cx - 6} ${cy + 22} l-8 24 M${cx + 4} ${cy + 22} l6 22" ${S}/><circle cx="${cx + 4}" cy="${cy + 2}" r="3" fill="${st}"/>` +
+        `<circle cx="${cx + 52}" cy="${cy - 56}" r="12" ${Sd}/>`;
+    }
+    case 'key': {
+      return `<circle cx="${cx - 34}" cy="${cy}" r="30" ${F}/><circle cx="${cx - 34}" cy="${cy}" r="12" fill="rgba(6,5,10,.8)" stroke="${st}" stroke-width="1.2"/>` +
+        `<path d="M${cx - 4} ${cy - 6} H${cx + 70} V${cy + 6} H${cx - 4} Z" ${F}/><path d="M${cx + 42} ${cy + 6} v18 h10 v-18 M${cx + 60} ${cy + 6} v12 h8 v-12" ${F}/>` +
+        `<circle cx="${cx - 34}" cy="${cy}" r="44" ${Sd} stroke-dasharray="2 6"/>`;
+    }
+    case 'road': {
+      return `<path d="M${cx - 20} ${cy - 50} L${cx - 90} ${cy + 62} H${cx + 90} L${cx + 20} ${cy - 50} Z" ${F}/>` +
+        `<path d="M${cx} ${cy - 44} V${cy - 30} M${cx} ${cy - 16} V${cy + 4} M${cx} ${cy + 20} V${cy + 46}" fill="none" stroke="rgba(6,5,10,.8)" stroke-width="4" stroke-linecap="round"/>` +
+        `<circle cx="${cx}" cy="${cy - 62}" r="10" ${Sd}/><path d="M${cx - 110} ${cy - 50} H${cx - 40} M${cx + 40} ${cy - 50} H${cx + 110}" ${Sd}/>`;
+    }
+    case 'scales': {
+      return `<line x1="${cx}" y1="${cy - 56}" x2="${cx}" y2="${cy + 50}" ${S}/><path d="M${cx - 30} ${cy + 50} H${cx + 30}" ${S}/>` +
+        `<path d="M${cx - 62} ${cy - 40} L${cx + 62} ${cy - 50}" ${S}/><circle cx="${cx}" cy="${cy - 46}" r="5" fill="${st}"/>` +
+        `<path d="M${cx - 62} ${cy - 40} L${cx - 82} ${cy + 4} M${cx - 62} ${cy - 40} L${cx - 42} ${cy + 4} M${cx + 62} ${cy - 50} L${cx + 42} ${cy - 8} M${cx + 62} ${cy - 50} L${cx + 82} ${cy - 8}" ${Sd}/>` +
+        `<path d="M${cx - 86} ${cy + 4} Q${cx - 62} ${cy + 24} ${cx - 38} ${cy + 4} Z" ${F}/><path d="M${cx + 38} ${cy - 8} Q${cx + 62} ${cy + 12} ${cx + 86} ${cy - 8} Z" ${F}/>`;
+    }
+    case 'bell': {
+      return `<path d="M${cx - 46} ${cy + 36} C${cx - 40} ${cy + 20} ${cx - 34} ${cy - 50} ${cx} ${cy - 52} C${cx + 34} ${cy - 50} ${cx + 40} ${cy + 20} ${cx + 46} ${cy + 36} Z" ${F}/>` +
+        `<rect x="${cx - 52}" y="${cy + 36}" width="104" height="8" rx="3" ${F}/><circle cx="${cx}" cy="${cy + 52}" r="7" fill="${st}"/>` +
+        `<path d="M${cx} ${cy - 52} V${cy - 64}" ${S}/><path d="M${cx - 68} ${cy - 20} q-10 14 0 28 M${cx + 68} ${cy - 20} q10 14 0 28" ${Sd}/>`;
+    }
     case 'mask':
     default: {
       return `<path d="M${cx - 40} ${cy - 44} Q${cx} ${cy - 62} ${cx + 40} ${cy - 44} V${cy + 6} C${cx + 40} ${cy + 40} ${cx + 14} ${cy + 58} ${cx} ${cy + 60} C${cx - 14} ${cy + 58} ${cx - 40} ${cy + 40} ${cx - 40} ${cy + 6} Z" ${F}/>` +
@@ -221,85 +260,78 @@ function motif(name: string, rng: Rng, st: string, fl: string, dim: string): str
   void ring;
 }
 
-/** SVG de l'illustration d'une carte (viewBox 300×200). */
-export function cardArt(card: CardDef): string {
+export interface ArtSpec {
+  /** graine visuelle (id de carte) */
+  key: string;
+  motif: string;
+  hue: number;
+  /** teinte d'alerte (crise, trahison) */
+  alarm?: boolean;
+  /** l'orateur : un médaillon de famille, de rivale ou d'ancêtre */
+  speaker?: { motif: string; hue: number; mood: number; era: number; scars: number };
+}
+
+/** Médaillon d'un orateur : même langage, cadre selon l'ère, anneau selon l'humeur, cicatrices des griefs. */
+export function medallion(sp: NonNullable<ArtSpec['speaker']>, cx: number, cy: number, r: number, id: string): string {
+  const h = sp.hue;
+  const moodCol = sp.mood <= -2 ? '#ff6a4d' : sp.mood <= -1 ? '#ffa070' : sp.mood >= 2 ? '#ffe08a' : sp.mood >= 1 ? '#cfe8a0' : `hsla(${h},40%,80%,.6)`;
+  const st = `hsl(${h} 85% 82%)`;
+  const dim = `hsla(${h},70%,78%,.4)`;
+  const k = r / 64;
+  const rng = new Rng(hashString(id));
+  let frame = '';
+  // cadre de l'ère : pierre, laurier, ogive, engrenage, orbite
+  if (sp.era === 0) for (let i = 0; i < 9; i++) { const a = (i / 9) * 6.283; frame += `<circle cx="${(cx + Math.cos(a) * r * 1.08).toFixed(1)}" cy="${(cy + Math.sin(a) * r * 1.08).toFixed(1)}" r="${(r * 0.07).toFixed(1)}" fill="${dim}"/>`; }
+  if (sp.era === 1) for (let i = 0; i < 7; i++) { const a = 2.2 + (i / 6) * 1.9; for (const sgn of [-1, 1]) { const x = cx + sgn * Math.cos(a) * r * 1.1; const y = cy + Math.sin(a) * r * 1.1; frame += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(r * 0.06).toFixed(1)}" ry="${(r * 0.14).toFixed(1)}" transform="rotate(${((a * 57.3) + sgn * 30).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="${dim}"/>`; } }
+  if (sp.era === 2) frame = `<path d="M${cx - r * 1.1} ${cy + r * 0.2} V${cy - r * 0.3} Q${cx - r * 1.1} ${cy - r * 1.2} ${cx} ${cy - r * 1.45} Q${cx + r * 1.1} ${cy - r * 1.2} ${cx + r * 1.1} ${cy - r * 0.3} V${cy + r * 0.2}" fill="none" stroke="${dim}" stroke-width="1.4"/>`;
+  if (sp.era === 3) for (let i = 0; i < 16; i++) { const a = (i / 16) * 6.283; frame += `<rect x="${(cx + Math.cos(a) * r * 1.1 - r * 0.05).toFixed(1)}" y="${(cy + Math.sin(a) * r * 1.1 - r * 0.05).toFixed(1)}" width="${(r * 0.1).toFixed(1)}" height="${(r * 0.1).toFixed(1)}" fill="${dim}"/>`; }
+  if (sp.era === 4) frame = `<ellipse cx="${cx}" cy="${cy}" rx="${(r * 1.35).toFixed(1)}" ry="${(r * 0.38).toFixed(1)}" fill="none" stroke="${dim}" stroke-width="1.2" transform="rotate(-16 ${cx} ${cy})"/><circle cx="${(cx + r * 1.25).toFixed(1)}" cy="${(cy - r * 0.38).toFixed(1)}" r="${(r * 0.07).toFixed(1)}" fill="${st}"/>`;
+  let scars = '';
+  for (let i = 0; i < Math.min(3, sp.scars); i++) {
+    const x = cx - r * 0.45 + i * r * 0.32 + rng.range(-4, 4) * k;
+    scars += `<path d="M${(x - r * 0.12).toFixed(1)} ${(cy - r * 0.72).toFixed(1)} L${(x + r * 0.14).toFixed(1)} ${(cy - r * 0.38).toFixed(1)}" stroke="#ff7a5c" stroke-width="${(2.2 * k + 0.6).toFixed(1)}" stroke-linecap="round" opacity=".9"/>`;
+  }
+  return `<g>${frame}<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}p)" stroke="${moodCol}" stroke-width="${(2.4 * k + 0.6).toFixed(1)}"/>` +
+    `<g transform="translate(${cx} ${cy}) scale(${(k * 0.62).toFixed(3)}) translate(-150 -98)">${motif(sp.motif, rng, st, `hsla(${h},80%,60%,.35)`, dim)}</g>${scars}</g>`;
+}
+
+/** Illustration d'une carte, en bandeau (viewBox 300×130) : le sujet, et l'orateur s'il y en a un. */
+export function cardArt(a: ArtSpec): string {
   const id = `a${uid++}`;
-  const rng = new Rng(hashString(card.id));
-  const h = cardHue(card);
-  const crisis = card.kind === 'crisis';
-  const st = `hsl(${h} 88% ${crisis ? 80 : 82}%)`;
+  const rng = new Rng(hashString(a.key));
+  const h = a.hue;
+  const alarm = !!a.alarm;
+  const st = `hsl(${h} 88% ${alarm ? 80 : 82}%)`;
   const dim = `hsla(${h}, 70%, 78%, .38)`;
-  const name = card.art?.motif ?? 'star';
-  const gx = 150 + rng.range(-18, 18);
+  const sx = a.speaker ? 196 : 150;
+  const cy = 66;
   let rays = '';
   const n = 18 + rng.int(0, 10);
   const off = rng.range(0, 6.28);
   for (let i = 0; i < n; i++) {
-    const a = off + (i / n) * Math.PI * 2;
-    const r1 = 70 + rng.range(0, 14);
-    const r2 = 150 + rng.range(0, 60);
-    rays += `<line x1="${f(150 + Math.cos(a) * r1)}" y1="${f(98 + Math.sin(a) * r1)}" x2="${f(150 + Math.cos(a) * r2)}" y2="${f(98 + Math.sin(a) * r2)}" stroke="hsla(${h},80%,76%,${(0.05 + rng.next() * 0.09).toFixed(2)})" stroke-width="${rng.chance(0.3) ? 2 : 1}"/>`;
+    const ang = off + (i / n) * Math.PI * 2;
+    const r1 = 52 + rng.range(0, 10);
+    const r2 = 120 + rng.range(0, 60);
+    rays += `<line x1="${f(sx + Math.cos(ang) * r1)}" y1="${f(cy + Math.sin(ang) * r1)}" x2="${f(sx + Math.cos(ang) * r2)}" y2="${f(cy + Math.sin(ang) * r2)}" stroke="hsla(${h},80%,76%,${(0.05 + rng.next() * 0.09).toFixed(2)})" stroke-width="${rng.chance(0.3) ? 2 : 1}"/>`;
   }
   let dots = '';
-  for (let i = 0; i < 14; i++) {
-    dots += `<circle cx="${f(rng.range(8, 292))}" cy="${f(rng.range(8, 150))}" r="${f(rng.range(0.5, 1.5))}" fill="hsla(${h},90%,88%,${(0.25 + rng.next() * 0.5).toFixed(2)})"/>`;
-  }
-  return `<svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  for (let i = 0; i < 12; i++) dots += `<circle cx="${f(rng.range(8, 292))}" cy="${f(rng.range(6, 110))}" r="${f(rng.range(0.5, 1.5))}" fill="hsla(${h},90%,88%,${(0.25 + rng.next() * 0.5).toFixed(2)})"/>`;
+  const sp = a.speaker;
+  const spDefs = sp ? `<radialGradient id="${id}p" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="hsl(${sp.hue} 55% 30%)"/><stop offset="1" stop-color="hsl(${sp.hue} 45% 9%)"/></radialGradient>` : '';
+  return `<svg viewBox="0 0 300 130" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <defs>
-<radialGradient id="${id}g" cx="${f(gx / 3)}%" cy="49%" r="72%"><stop offset="0" stop-color="hsl(${h} ${crisis ? 78 : 62}% ${crisis ? 30 : 27}%)"/><stop offset=".45" stop-color="hsl(${h} 55% 12%)"/><stop offset="1" stop-color="#07060b"/></radialGradient>
+<radialGradient id="${id}g" cx="${f(sx / 3)}%" cy="50%" r="72%"><stop offset="0" stop-color="hsl(${h} ${alarm ? 78 : 62}% ${alarm ? 30 : 26}%)"/><stop offset=".5" stop-color="hsl(${h} 55% 11%)"/><stop offset="1" stop-color="#07060b"/></radialGradient>
 <linearGradient id="${id}m" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="hsla(${h},95%,84%,.95)"/><stop offset="1" stop-color="hsla(${(h + 340) % 360},80%,46%,.5)"/></linearGradient>
-<radialGradient id="${id}h" cx="50%" cy="49%" r="36%"><stop offset="0" stop-color="hsla(${h},100%,74%,.5)"/><stop offset="1" stop-color="hsla(${h},100%,70%,0)"/></radialGradient>
-<linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset=".7" stop-color="rgba(13,11,18,0)"/><stop offset="1" stop-color="rgba(13,11,18,1)"/></linearGradient>
+<radialGradient id="${id}h" cx="${f(sx / 3)}%" cy="50%" r="34%"><stop offset="0" stop-color="hsla(${h},100%,74%,.45)"/><stop offset="1" stop-color="hsla(${h},100%,70%,0)"/></radialGradient>
+<linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset=".62" stop-color="rgba(13,11,18,0)"/><stop offset="1" stop-color="rgba(13,11,18,1)"/></linearGradient>
+${spDefs}
 </defs>
-<rect width="300" height="200" fill="url(#${id}g)"/>
+<rect width="300" height="130" fill="url(#${id}g)"/>
 ${rays}${dots}
-<circle cx="150" cy="98" r="84" fill="none" stroke="hsla(${h},70%,78%,.16)" stroke-width="1"/>
-<circle cx="150" cy="98" r="70" fill="none" stroke="hsla(${h},70%,78%,.24)" stroke-width="1" stroke-dasharray="1 5"/>
-<rect width="300" height="200" fill="url(#${id}h)"/>
-${motif(name, rng, st, `url(#${id}m)`, dim)}
-<rect width="300" height="200" fill="url(#${id}f)"/>
+<circle cx="${sx}" cy="${cy}" r="58" fill="none" stroke="hsla(${h},70%,78%,.16)" stroke-width="1"/>
+<rect width="300" height="130" fill="url(#${id}h)"/>
+<g transform="translate(${sx} ${cy}) scale(.62) translate(-150 -98)">${motif(a.motif, rng, st, `url(#${id}m)`, dim)}</g>
+${sp ? medallion(sp, 62, 78, 34, id) : ''}
+<rect width="300" height="130" fill="url(#${id}f)"/>
 </svg>`;
-}
-
-// ---------------------------------------------------------------------- icônes de jauge
-
-export const GAUGE_PATH: Record<string, string> = {
-  // grain
-  food: 'M20 2 C33 11 36 25 20 38 C4 25 7 11 20 2 Z',
-  // bouclier
-  army: 'M6 5 H34 V19 C34 28.5 27.5 34 20 37.5 C12.5 34 6 28.5 6 19 Z',
-  // hexagone (la lanterne du savoir)
-  knowledge: 'M20 2 L35.6 11 V29 L20 38 L4.4 29 V11 Z',
-  // pièce
-  treasure: 'M20 3 A17 17 0 1 1 19.99 3 Z',
-};
-
-export const GAUGE_DETAIL: Record<string, string> = {
-  food: '<path d="M20 9 V31" /><path d="M20 17 l5 -4 M20 23 l5 -4 M20 17 l-5 -4 M20 23 l-5 -4"/>',
-  army: '<path d="M20 5 V37 M6 17 H34"/>',
-  knowledge: '<path d="M20 12 L22 18 L28 20 L22 22 L20 28 L18 22 L12 20 L18 18 Z"/>',
-  treasure: '<rect x="15.5" y="15.5" width="9" height="9"/>',
-};
-
-export function gaugeSvg(id: string): string {
-  const path = GAUGE_PATH[id];
-  return `<svg viewBox="0 0 40 40" aria-hidden="true">
-<defs><clipPath id="gc-${id}"><path d="${path}"/></clipPath></defs>
-<path class="g-bg" d="${path}"/>
-<g class="g-detail">${GAUGE_DETAIL[id]}</g>
-<path class="g-line" d="${path}"/>
-</svg>`;
-}
-
-export function keywordGlyph(k: Keyword): string {
-  // petite forme distincte par mot-clé (jamais la couleur seule)
-  const g: Record<Keyword, string> = {
-    Foi: '<path d="M6 1 V11 M2.5 4.5 H9.5"/>',
-    Guerre: '<path d="M2 10 L10 2 M7 2 H10 V5"/>',
-    Commerce: '<circle cx="6" cy="6" r="4"/><path d="M6 4 V8"/>',
-    Science: '<path d="M6 1 L7.5 4.5 L11 6 L7.5 7.5 L6 11 L4.5 7.5 L1 6 L4.5 4.5 Z"/>',
-    Culture: '<path d="M2 3 Q6 0 10 3 V6 Q10 10 6 11 Q2 10 2 6 Z"/>',
-    Nature: '<path d="M6 1 C10 4 10 8 6 11 C2 8 2 4 6 1 Z"/>',
-  };
-  return `<svg class="kw-glyph" viewBox="0 0 12 12" aria-hidden="true">${g[k]}</svg>`;
 }

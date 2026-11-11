@@ -1,37 +1,46 @@
 /**
- * La civilisation visible : un agencement déterministe (fonction de la graine et de l'état)
- * et des silhouettes dessinées par code. Aucune mécanique : tout est décor.
+ * La civilisation visible (V2) : un agencement déterministe, fonction de la graine et de l'état.
+ * Quartiers (et leurs ruines), maisons des quatre familles (selon leur humeur), merveilles du dessein,
+ * horizon de la rivale, ruines des civilisations passées. Aucune mécanique : tout est décor.
  */
 import { Rng, hashString } from '../core/rng';
-import { KEYWORDS, TUNING, type Gauges } from '../core/types';
 
 export interface CivSnapshot {
   seed: number;
   era: number;
+  /** décisions jouées : la cité s'étoffe avec le temps */
   growth: number;
-  gauges: Gauges;
-  /** cartes par mot-clé, dans l'ordre de KEYWORDS */
-  kw: number[];
-  wonders: string[];
+  quartiers: number;
+  /** quartiers perdus : des ruines restent au bord de la ville */
+  lost: number;
+  /** familles dans l'ordre ourk, sel, brume, troc */
+  fam: { tag: string; loy: number; gone: boolean }[];
+  /** silhouettes des jalons bâtis, dans l'ordre des ères */
+  jalons: string[];
+  rival: { count: number; hue: number };
+  /** silhouettes des civilisations passées (la plus récente d'abord) */
+  ruins: string[];
+  /** réserves normalisées 0..1 */
+  res: { vivres: number; armee: number; savoir: number; tresor: number };
 }
 
-export type ElemKind = 'dwelling' | 'sig' | 'wonder' | 'wall' | 'field' | 'stall' | 'granary' | 'heart';
+export type ElemKind = 'dwelling' | 'sig' | 'wonder' | 'wall' | 'field' | 'stall' | 'granary' | 'heart' | 'rival' | 'relic';
 
 export interface Elem {
   key: string;
   kind: ElemKind;
-  /** sous-type : mot-clé pour 'sig', id pour 'wonder' */
+  /** sous-type : mot-clé pour 'sig', silhouette pour 'wonder' / 'relic', rang pour 'rival' */
   sub: string;
   /** position horizontale 0..1 */
   x: number;
-  /** 0 = lointain, 1 = milieu, 2 = proche, 3 = premier plan (champs) */
+  /** -2 horizon lointain, -1.5 ruines anciennes, -1 merveilles, 0 lointain, 1 milieu, 2 proche, 3 premier plan */
   layer: number;
   size: number;
   r: number;
   r2: number;
   /** indice d'ancienneté (0 = plus ancien) */
   age: number;
-  /** état visuel dépendant des jauges */
+  /** 0 normal, 1 hostile (fenêtres éteintes, fumée), 2 fier (dorures), 3 en ruine */
   state: number;
 }
 
@@ -39,6 +48,8 @@ interface Slots {
   dwell: { x: number; layer: number; r: number; r2: number }[];
   special: { x: number; layer: number; r: number; r2: number }[];
   wonder: { x: number; r: number }[];
+  relic: { x: number; r: number }[];
+  rivalSide: number;
   wallOrder: number[];
   fieldOrder: number[];
   stallOrder: number[];
@@ -50,7 +61,7 @@ function slotsFor(seed: number): Slots {
   const cached = slotCache.get(seed);
   if (cached) return cached;
   const rng = new Rng((seed ^ 0x5eed1e) >>> 0);
-  const N = 44;
+  const N = 48;
   const dwell: Slots['dwell'] = [];
   for (let i = 0; i < N; i++) {
     const x = 0.02 + ((i + 0.5 + rng.range(-0.35, 0.35)) / N) * 0.96;
@@ -61,88 +72,98 @@ function slotsFor(seed: number): Slots {
   const order = dwell.map((_, i) => i).sort((a, b) => Math.abs(dwell[a].x - 0.5) + noise[a] - (Math.abs(dwell[b].x - 0.5) + noise[b]));
   const dwellSorted = order.map((i) => dwell[i]);
 
-  const S = 24;
+  // quatre quartiers de famille, chacun sur son flanc
   const special: Slots['special'] = [];
-  for (let i = 0; i < S; i++) {
-    const x = 0.04 + ((i + 0.5 + rng.range(-0.3, 0.3)) / S) * 0.92;
-    special.push({ x, layer: i % 2 === 0 ? 0 : 1, r: rng.next(), r2: rng.next() });
+  const famCenters = rng.shuffle([0.16, 0.38, 0.62, 0.84]);
+  for (let f = 0; f < 4; f++) {
+    for (let i = 0; i < 4; i++) {
+      const x = famCenters[f] + (i - 1.5) * 0.045 + rng.range(-0.012, 0.012);
+      special.push({ x, layer: i % 2 === 0 ? 1 : 0, r: rng.next(), r2: rng.next() });
+    }
   }
-  rng.shuffle(special);
-
   const wonder: Slots['wonder'] = [];
-  for (let i = 0; i < 12; i++) {
-    wonder.push({ x: 0.07 + ((i + 0.5 + rng.range(-0.25, 0.25)) / 12) * 0.86, r: rng.next() });
-  }
-  rng.shuffle(wonder);
+  const wx = rng.shuffle([0.2, 0.36, 0.5, 0.64, 0.8]);
+  for (let i = 0; i < 5; i++) wonder.push({ x: wx[i] + rng.range(-0.025, 0.025), r: rng.next() });
+  const rivalSide = rng.chance(0.5) ? 0 : 1;
+  const relic: Slots['relic'] = [];
+  for (let i = 0; i < 3; i++) relic.push({ x: rivalSide ? 0.08 + i * 0.13 + rng.range(-0.02, 0.02) : 0.92 - i * 0.13 + rng.range(-0.02, 0.02), r: rng.next() });
 
   const seq = (n: number) => rng.shuffle(Array.from({ length: n }, (_, i) => i));
-  const s: Slots = { dwell: dwellSorted, special, wonder, wallOrder: seq(12), fieldOrder: seq(8), stallOrder: seq(6) };
+  const s: Slots = { dwell: dwellSorted, special, wonder, relic, rivalSide, wallOrder: seq(12), fieldOrder: seq(8), stallOrder: seq(6) };
   slotCache.set(seed, s);
   return s;
 }
 
-/** Ordre stable des merveilles, pour leur attribuer un emplacement fixe. */
-export const WONDER_ORDER = [
-  'w_pierres', 'w_pyramide', 'w_phare', 'w_bibliotheque', 'w_muraille', 'w_jardins',
-  'w_colisee', 'w_cathedrale', 'w_universite', 'w_horloge', 'w_barrage', 'w_ascenseur',
-];
+const FAM_SIG = ['Guerre', 'Foi', 'Science', 'Commerce'];
 
 export function layoutCity(s: CivSnapshot): Elem[] {
   const slots = slotsFor(s.seed);
   const out: Elem[] = [];
-  const g = s.gauges;
+  const g = s.res;
 
   // cœur de la cité : feu de camp, puis place
   out.push({ key: 'heart', kind: 'heart', sub: '', x: 0.5, layer: 2, size: 1, r: 0.5, r2: 0.5, age: 0, state: 0 });
 
-  // habitations
-  // la population suit l'ère, le temps passé et la nourriture
-  const nDwell = Math.min(30, slots.dwell.length, Math.floor((4 + s.era * 4 + s.growth * 0.13) * (0.7 + 0.6 * (g.food / 100))));
-  for (let i = 0; i < nDwell; i++) {
+  // habitations : chaque quartier est une grappe de maisons ; elles se densifient avec les ères
+  const per = 2 + Math.min(4, s.era) * 0.75;
+  const nDwell = Math.min(slots.dwell.length, Math.round(s.quartiers * per + Math.min(4, s.growth * 0.04)));
+  const nLost = Math.min(slots.dwell.length - nDwell, Math.round(s.lost * per * 0.7));
+  for (let i = 0; i < nDwell + nLost; i++) {
     const d = slots.dwell[i];
-    out.push({ key: `d${i}`, kind: 'dwelling', sub: '', x: d.x, layer: d.layer, size: 1, r: d.r, r2: d.r2, age: i / slots.dwell.length, state: 0 });
+    out.push({ key: `d${i}`, kind: 'dwelling', sub: '', x: d.x, layer: d.layer, size: 1, r: d.r, r2: d.r2, age: i / slots.dwell.length, state: i >= nDwell ? 3 : 0 });
   }
 
-  // bâtiments-signatures par mot-clé
-  KEYWORDS.forEach((k, ki) => {
-    const n = Math.min(4, s.kw[ki] ?? 0);
+  // maisons des familles : plus une famille vous aime, plus elle bâtit
+  s.fam.forEach((f, fi) => {
+    const n = f.gone ? 1 : 1 + (f.loy >= 1 ? 1 : 0) + (f.loy >= 2 ? 1 : 0) + (f.loy >= 3 ? 1 : 0);
+    const state = f.gone ? 3 : f.loy <= -2 ? 1 : f.loy >= 2 ? 2 : 0;
     for (let i = 0; i < n; i++) {
-      const sp = slots.special[ki * 4 + i];
-      out.push({ key: `s${k}${i}`, kind: 'sig', sub: k, x: sp.x, layer: 1, size: 1.3 + i * 0.1, r: sp.r, r2: sp.r2, age: i / 4, state: 0 });
+      const sp = slots.special[fi * 4 + i];
+      out.push({ key: `f${fi}_${i}`, kind: 'sig', sub: FAM_SIG[fi], x: sp.x, layer: 1, size: 1.25 + i * 0.08, r: sp.r, r2: sp.r2, age: i / 4, state });
     }
   });
 
-  // merveilles
-  for (const w of s.wonders) {
-    const wi = WONDER_ORDER.indexOf(w);
-    if (wi < 0) continue;
-    const ws = slots.wonder[wi];
-    out.push({ key: w, kind: 'wonder', sub: w, x: ws.x, layer: -1, size: 1, r: ws.r, r2: 0, age: 0, state: 0 });
+  // merveilles du dessein
+  s.jalons.forEach((shape, i) => {
+    const ws = slots.wonder[i];
+    out.push({ key: `j${i}`, kind: 'wonder', sub: shape, x: ws.x, layer: -1, size: 1, r: ws.r, r2: 0, age: 0, state: 0 });
+  });
+
+  // la rivale, sur la crête lointaine
+  for (let i = 0; i < Math.min(5, s.rival.count); i++) {
+    const x = slots.rivalSide ? 0.66 + i * 0.065 : 0.34 - i * 0.065;
+    out.push({ key: `r${i}`, kind: 'rival', sub: String(i), x, layer: -2, size: 1, r: (i * 0.37) % 1, r2: s.rival.hue, age: 0, state: 0 });
   }
+
+  // ruines des civilisations passées
+  s.ruins.slice(0, 3).forEach((shape, i) => {
+    const rs = slots.relic[i];
+    out.push({ key: `old${i}_${shape}`, kind: 'relic', sub: shape || 'cercle', x: rs.x, layer: -1.5, size: 0.8 - i * 0.1, r: rs.r, r2: i, age: i, state: 3 });
+  });
 
   // remparts (armée)
-  const nWall = Math.round((g.army / 100) * 12);
+  const nWall = Math.round(g.armee * 12);
   for (let i = 0; i < nWall; i++) {
     const idx = slots.wallOrder[i];
-    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 2.2, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.army <= TUNING.dangerLow ? 1 : g.army >= TUNING.dangerHigh ? 2 : 0 });
+    out.push({ key: `w${idx}`, kind: 'wall', sub: '', x: (idx + 0.5) / 12, layer: 2.2, size: 1, r: (idx * 0.37) % 1, r2: 0, age: i / 12, state: g.armee < 0.12 ? 1 : g.armee > 0.75 ? 2 : 0 });
   }
 
-  // champs (nourriture)
-  const nField = Math.max(1, Math.round((g.food / 100) * 8));
+  // champs (vivres)
+  const nField = Math.max(1, Math.round(g.vivres * 8));
   for (let i = 0; i < nField; i++) {
     const idx = slots.fieldOrder[i];
-    out.push({ key: `f${idx}`, kind: 'field', sub: '', x: (idx + 0.5) / 8, layer: 3, size: 1, r: (idx * 0.61) % 1, r2: 0, age: 0, state: g.food <= TUNING.dangerLow ? 1 : g.food >= TUNING.dangerHigh ? 2 : 0 });
+    out.push({ key: `c${idx}`, kind: 'field', sub: '', x: (idx + 0.5) / 8, layer: 3, size: 1, r: (idx * 0.61) % 1, r2: 0, age: 0, state: g.vivres < 0.12 ? 1 : g.vivres > 0.75 ? 2 : 0 });
   }
-  const nGran = g.food >= 70 ? 2 : g.food >= 40 ? 1 : 0;
+  const nGran = g.vivres >= 0.7 ? 2 : g.vivres >= 0.4 ? 1 : 0;
   for (let i = 0; i < nGran; i++) {
     out.push({ key: `g${i}`, kind: 'granary', sub: '', x: i === 0 ? 0.36 : 0.67, layer: 2, size: 1, r: 0.3 + i * 0.4, r2: 0, age: 0, state: 0 });
   }
 
   // étals (trésor)
-  const nStall = Math.round((g.treasure / 100) * 6);
+  const nStall = Math.round(g.tresor * 6);
   for (let i = 0; i < nStall; i++) {
     const idx = slots.stallOrder[i];
-    out.push({ key: `m${idx}`, kind: 'stall', sub: '', x: 0.1 + (idx / 5) * 0.8 + 0.03 * Math.sin(idx * 9.1), layer: 2.5, size: 1, r: (idx * 0.43) % 1, r2: 0, age: 0, state: g.treasure >= TUNING.dangerHigh ? 2 : 0 });
+    out.push({ key: `m${idx}`, kind: 'stall', sub: '', x: 0.1 + (idx / 5) * 0.8 + 0.03 * Math.sin(idx * 9.1), layer: 2.5, size: 1, r: (idx * 0.43) % 1, r2: 0, age: 0, state: g.tresor > 0.75 ? 2 : 0 });
   }
 
   return out;
@@ -654,9 +675,221 @@ function sigNature(env: DrawEnv, e: Elem): void {
 
 // ---------------------------------------------------------------------- merveilles
 
+/** silhouettes du jeu V2 qui réutilisent un dessin existant */
+const ALIAS: Record<string, string> = {
+  cercle: 'w_pierres', bibliotheque: 'w_bibliotheque', forteresse: 'w_muraille', theatre: 'w_colisee', cathedrale: 'w_cathedrale',
+};
+
+/** Merveilles propres à la V2 (jalons des trois desseins et variantes). Renvoie faux si inconnue. */
+function wonderV2(env: DrawEnv, shape: string): boolean {
+  const { ctx, t } = env;
+  switch (shape) {
+    case 'tour': {
+      poly(ctx, [-1.5, 0, -1.0, 1.3, 1.0, 1.3, 1.5, 0]);
+      ctx.rect(-0.8, 1.3, 1.6, 6.1);
+      ctx.rect(-1.25, 7.4, 2.5, 0.25);
+      ctx.rect(-0.7, 7.65, 1.4, 1.0);
+      dome(ctx, 0, 8.65, 0.75, 1);
+      poly(ctx, [0.3, 9.0, 1.7, 9.9, 1.8, 9.72, 0.42, 8.85]);
+      for (let i = 0; i < 4; i++) W(-0.13, 2.0 + i * 1.35, 0.26, 0.55, i === 3 ? 3 : 0);
+      W(-0.35, 7.8, 0.7, 0.6, 3);
+      return true;
+    }
+    case 'dome': {
+      ctx.rect(-3.8, 0, 7.6, 2.4);
+      ctx.rect(-4.0, 2.4, 8.0, 0.25);
+      ctx.rect(-2.3, 2.65, 4.6, 0.8);
+      dome(ctx, 0, 3.45, 2.4, 1.0);
+      poly(ctx, [0.15, 5.0, 1.6, 6.4, 1.78, 6.24, 0.32, 4.8]);
+      grid(-3.4, 0.4, 6.8, 1.6, 7, 1, 0.42, 1.1);
+      W(-0.2, 3.6, 0.4, 2.1, 3);
+      return true;
+    }
+    case 'fusee': {
+      ctx.rect(-3.8, 0, 7.6, 0.6);
+      ctx.rect(2.0, 0.6, 0.9, 9.2);
+      for (let i = 0; i < 4; i++) ctx.rect(0.8, 2.2 + i * 2, 1.25, 0.14);
+      ctx.rect(-0.7, 1.2, 1.4, 7.4);
+      poly(ctx, [-0.7, 8.6, 0, 10.9, 0.7, 8.6]);
+      poly(ctx, [-0.7, 1.2, -1.55, 0.6, -0.7, 2.8]);
+      poly(ctx, [0.7, 1.2, 1.55, 0.6, 0.7, 2.8]);
+      W(-0.16, 6.6, 0.32, 0.32, 3, 1);
+      W(-0.16, 5.4, 0.32, 0.32, 0, 1);
+      for (let i = 0; i < 5; i++) W(2.3, 1.2 + i * 1.8, 0.3, 0.3, 1, 1);
+      env.emit(2.45, 9.9, 'blink');
+      env.emit(0, 0.7, 'smoke');
+      return true;
+    }
+    case 'arche': {
+      const bob = Math.sin(t * 0.6) * 0.15;
+      ctx.rect(-4.8, 0, 0.55, 6.2);
+      ctx.rect(4.25, 0, 0.55, 6.2);
+      ctx.rect(-4.8, 5.9, 9.6, 0.25);
+      ctx.moveTo(6.4, 8.0 + bob);
+      ctx.ellipse(0, 8.0 + bob, 6.4, 1.55, 0, 0, Math.PI * 2);
+      poly(ctx, [-2.2, 9.3 + bob, -1.2, 10.7 + bob, 1.6, 10.7 + bob, 2.6, 9.3 + bob]);
+      for (let i = 0; i < 10; i++) W(-5.1 + i * 1.13, 7.75 + bob, 0.5, 0.32, i % 3 === 0 ? 3 : 0);
+      W(-0.9, 9.6 + bob, 1.8, 0.4, 1);
+      env.emit(-3.5, 6.5 + bob, 'smoke');
+      env.emit(3.5, 6.5 + bob, 'smoke');
+      return true;
+    }
+    case 'palissade': {
+      for (let i = 0; i < 14; i++) {
+        const x = -6.6 + i * 1.0;
+        if (Math.abs(x + 0.1) < 1.1) continue;
+        const h = 2.1 + ((i * 5) % 3) * 0.25;
+        poly(ctx, [x - 0.42, 0, x - 0.42, h, x, h + 0.55, x + 0.42, h, x + 0.42, 0]);
+      }
+      for (const x of [-1.5, 1.5]) {
+        ctx.rect(x - 0.45, 0, 0.9, 3.8);
+        poly(ctx, [x - 0.7, 3.8, x, 4.9, x + 0.7, 3.8]);
+        W(x - 0.15, 2.8, 0.3, 0.35, 3);
+      }
+      ctx.rect(-1.1, 2.6, 2.2, 0.3);
+      W(-0.9, 0, 1.8, 2.3, 1);
+      env.emit(-1.5, 3.2, 'ember');
+      return true;
+    }
+    case 'aigle': {
+      for (const x of [-4.6, -3.0, 3.0, 4.6, -1.6, 1.6]) {
+        poly(ctx, [x - 0.85, 0, x, 1.5, x + 0.85, 0]);
+        W(x - 0.15, 0, 0.3, 0.45, 0);
+      }
+      ctx.rect(-0.07, 0, 0.14, 7.2);
+      ctx.rect(-0.95, 6.1, 1.9, 0.13);
+      ctx.rect(-0.65, 4.7, 1.3, 1.4);
+      poly(ctx, [-1.3, 7.55, -0.3, 7.1, 0, 7.75, 0.3, 7.1, 1.3, 7.55, 0.45, 6.85, 0, 7.15, -0.45, 6.85]);
+      W(-0.22, 7.0, 0.44, 0.44, 2, 1);
+      W(-0.4, 5.0, 0.8, 0.8, 1, 1);
+      return true;
+    }
+    case 'arsenal': {
+      ctx.rect(-5.2, 0, 10.4, 2.6);
+      for (let i = 0; i < 5; i++) poly(ctx, [-5.2 + i * 2.08, 2.6, -3.12 + i * 2.08, 3.9, -3.12 + i * 2.08, 2.6]);
+      ctx.rect(-4.0, 2.6, 0.75, 5.0);
+      ctx.rect(2.6, 2.6, 0.75, 6.3);
+      ctx.rect(-0.6, 2.6, 0.6, 4.2);
+      grid(-4.8, 0.5, 9.6, 1.5, 10, 1, 0.5, 1.0);
+      W(-1.0, 0, 2.0, 1.4, 1);
+      env.emit(-3.62, 7.7, 'smoke');
+      env.emit(2.98, 9.0, 'smoke');
+      env.emit(-0.3, 6.9, 'smoke');
+      return true;
+    }
+    case 'drapeau': {
+      ctx.rect(-3.1, 0, 6.2, 4.4);
+      ctx.rect(-3.4, 4.4, 6.8, 0.3);
+      ctx.rect(-2.9, 4.7, 5.8, 0.9);
+      ctx.rect(-0.06, 5.6, 0.12, 4.6);
+      const w1 = Math.sin(t * 2.2) * 0.25;
+      const w2 = Math.sin(t * 2.2 + 1.3) * 0.25;
+      poly(ctx, [0.06, 10.1, 1.3, 10.0 + w1, 2.7, 10.1 + w2, 2.7, 8.6 + w2, 1.3, 8.5 + w1, 0.06, 8.6]);
+      W(-0.95, 0, 1.9, 2.9, 3);
+      W(-2.5, 0.6, 0.7, 1.2, 0);
+      W(1.8, 0.6, 0.7, 1.2, 0);
+      W(-2.4, 4.95, 4.8, 0.3, 2);
+      return true;
+    }
+    case 'grotte': {
+      poly(ctx, [-5.4, 0, -4.6, 2.1, -3.0, 3.5, -1.0, 4.3, 1.2, 4.0, 3.1, 3.1, 4.6, 1.6, 5.4, 0]);
+      W(-1.25, 0, 2.5, 1.9, 1);
+      W(-3.2, 2.0, 0.42, 0.42, 2, 1);
+      W(2.5, 1.7, 0.38, 0.38, 2, 1);
+      W(-0.4, 3.2, 0.35, 0.35, 2, 1);
+      env.emit(0, 0.6, 'ember');
+      return true;
+    }
+    case 'tour_fer': {
+      poly(ctx, [-3.5, 0, -2.5, 0, -0.35, 5.6, -0.95, 5.6]);
+      poly(ctx, [3.5, 0, 2.5, 0, 0.35, 5.6, 0.95, 5.6]);
+      ctx.rect(-2.5, 2.1, 5.0, 0.32);
+      ctx.rect(-1.15, 5.5, 2.3, 0.26);
+      poly(ctx, [-0.95, 5.6, -0.14, 12.2, 0.14, 12.2, 0.95, 5.6]);
+      ctx.rect(-0.04, 12.2, 0.08, 1.3);
+      for (let i = 0; i < 5; i++) W(-0.08, 6.2 + i * 1.15, 0.16, 0.16, 1, 1);
+      W(-1.7, 0.7, 3.4, 0.25, 2);
+      env.emit(0, 13.4, 'blink');
+      return true;
+    }
+    case 'recit': {
+      ctx.rect(-3.0, 0, 6.0, 2.0);
+      poly(ctx, [-1.25, 2.0, -0.2, 13.0, 0.2, 13.0, 1.25, 2.0]);
+      ctx.rect(-1.45, 6.0, 2.9, 0.2);
+      ctx.rect(-1.0, 9.2, 2.0, 0.2);
+      ctx.rect(-5.0, 2.6, 3.2, 2.1);
+      ctx.rect(-3.5, 2.0, 0.2, 0.6);
+      W(-4.8, 2.8, 2.8, 1.7, 1);
+      grid(-2.6, 0.4, 5.2, 1.2, 6, 1, 0.45, 0.8);
+      for (let i = 0; i < 4; i++) W(-0.1, 3.0 + i * 2.4, 0.2, 0.2, 1, 1);
+      env.emit(0, 13.0, 'beam');
+      return true;
+    }
+    case 'telescope': {
+      ctx.rect(-3.2, 0, 6.4, 2.6);
+      ctx.rect(-3.4, 2.6, 6.8, 0.22);
+      poly(ctx, [-1.1, 2.8, 0, 5.2, 1.1, 2.8]);
+      poly(ctx, [-0.45, 4.6, 3.5, 10.2, 4.35, 9.7, 0.4, 4.1]);
+      ctx.rect(3.45, 9.7, 1.1, 0.25);
+      grid(-2.8, 0.5, 5.6, 1.5, 6, 1, 0.5, 1.0);
+      W(3.75, 9.95, 0.5, 0.5, 3, 1);
+      return true;
+    }
+    case 'voie': {
+      for (let i = 0; i < 6; i++) ctx.rect(-6.2 + i * 2.35, 0, 0.7, 3.2);
+      ctx.rect(-6.4, 3.2, 12.8, 0.75);
+      ctx.rect(-6.6, 3.95, 13.2, 0.18);
+      ctx.rect(-0.35, 4.13, 0.7, 2.6);
+      poly(ctx, [-0.45, 6.73, 0, 7.5, 0.45, 6.73]);
+      for (let i = 0; i < 5; i++) W(-5.4 + i * 2.35, 0, 1.55, 2.6, i === 2 ? 3 : 0);
+      W(-0.12, 5.6, 0.24, 0.5, 2);
+      return true;
+    }
+    // ------------------------------------------------ silhouettes de la rivale (horizon lointain)
+    case 'rival0': {
+      poly(ctx, [-0.7, 0, -0.45, 3.4, 0.3, 3.7, 0.7, 0]);
+      return true;
+    }
+    case 'rival1': {
+      ctx.rect(-0.62, 0, 0.42, 2.2);
+      ctx.rect(0.2, 0, 0.42, 2.2);
+      ctx.rect(-0.75, 2.2, 1.5, 2.3);
+      blob(ctx, 0, 4.95, 0.48);
+      poly(ctx, [0.7, 4.0, 1.7, 6.2, 1.4, 6.3, 0.5, 4.3]);
+      W(1.33, 6.15, 0.42, 0.42, 3, 1);
+      return true;
+    }
+    case 'rival2': {
+      ctx.rect(-3.4, 0, 6.8, 1.3);
+      crenel(ctx, -3.4, 1.3, 6.8, 10, 0.3);
+      for (const x of [-2.6, 0, 2.6]) {
+        ctx.rect(x - 0.5, 0, 1.0, 2.6);
+        poly(ctx, [x - 0.7, 2.6, x, 3.4, x + 0.7, 2.6]);
+      }
+      return true;
+    }
+    case 'rival3': {
+      ctx.rect(-0.7, 0, 1.4, 6.2);
+      ctx.rect(-1.0, 6.2, 2.0, 0.3);
+      poly(ctx, [-0.8, 6.5, 0, 8.4, 0.8, 6.5]);
+      for (let i = 0; i < 3; i++) W(-0.15, 1.2 + i * 1.6, 0.3, 0.6, 0);
+      return true;
+    }
+    case 'rival4': {
+      poly(ctx, [-1.6, 0, -0.9, 1.6, 0.9, 1.6, 1.6, 0]);
+      ctx.rect(-0.06, 1.6, 0.12, 60);
+      W(-0.2, 2.6, 0.4, 0.4, 3, 1);
+      env.emit(0, 2.8, 'climb');
+      return true;
+    }
+  }
+  return false;
+}
+
 function wonder(env: DrawEnv, e: Elem): void {
   const { ctx, t } = env;
-  switch (e.sub) {
+  if (wonderV2(env, e.sub)) return;
+  switch (ALIAS[e.sub] ?? e.sub) {
     case 'w_pierres': {
       for (let i = 0; i < 6; i++) {
         const x = -3.2 + i * 1.28;
@@ -953,12 +1186,38 @@ const SIG: Record<string, (env: DrawEnv, e: Elem) => void> = {
  * Dessine un élément à l'origine courante (base au sol, y vers le haut, unité = u).
  * `lightsOut` (0..1) éteint progressivement les fenêtres.
  */
+/** hauteur (unités locales) au-dessus de laquelle une ruine est rasée */
+function ruinHeight(e: Elem): number {
+  if (e.kind === 'relic') return 2.0 + e.r * 1.2;
+  if (e.kind === 'sig') return 1.2 + e.r * 0.6;
+  return 0.7 + e.r * 0.5;
+}
+
 export function drawElem(env: DrawEnv, e: Elem, lightsOut: number, alpha: number): void {
   const { ctx } = env;
   if (e.kind === 'field') {
     drawField(env, e, alpha);
     return;
   }
+  const ruined = e.state === 3;
+  if (ruined) {
+    // une ruine : le haut est arraché, en dents de scie
+    const h = ruinHeight(e);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-14, -1);
+    for (let i = 0; i <= 14; i++) {
+      const x = -14 + i * 2;
+      ctx.lineTo(x, h + (h01(hashString(e.key) + i * 31) - 0.5) * h * 0.7);
+    }
+    ctx.lineTo(14, -1);
+    ctx.closePath();
+    ctx.clip();
+    lightsOut = 1;
+  }
+  if (e.state === 1) lightsOut = Math.max(lightsOut, 0.85);
+  const gilded = env.gilded;
+  if (e.state === 2) env.gilded = 1;
   lights = [];
   wseed = hashString(e.key);
   ctx.beginPath();
@@ -966,6 +1225,8 @@ export function drawElem(env: DrawEnv, e: Elem, lightsOut: number, alpha: number
     case 'dwelling': dwelling(env, e); break;
     case 'sig': SIG[e.sub]?.(env, e); break;
     case 'wonder': wonder(env, e); break;
+    case 'relic': wonder(env, { ...e, sub: e.sub }); break;
+    case 'rival': wonderV2(env, `rival${e.sub}`); break;
     case 'wall': wall(env, e); break;
     case 'granary': granary(env, e); break;
     case 'stall': stall(env, e); break;
@@ -1010,6 +1271,9 @@ export function drawElem(env: DrawEnv, e: Elem, lightsOut: number, alpha: number
     }
   }
   ctx.globalAlpha = 1;
+  env.gilded = gilded;
+  if (ruined) ctx.restore();
+  if (e.state === 1 && e.kind === 'sig') env.emit(0, 2.6, 'smoke');
 }
 
 /** Centre lumineux approximatif d'un élément (pour le halo), en unités locales. */

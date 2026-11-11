@@ -1,265 +1,417 @@
-/** Types du jeu : tout ce qui décrit les cartes, crises, merveilles et l'état d'une partie. */
+/**
+ * Citadeck V2 — types du jeu.
+ * Tout est décrit en données (src/data) ; le moteur (engine.ts) ne connaît aucune carte.
+ */
 
-export type GaugeId = 'food' | 'army' | 'knowledge' | 'treasure';
-export const GAUGES: readonly GaugeId[] = ['food', 'army', 'knowledge', 'treasure'] as const;
+export type Res = 'vivres' | 'armee' | 'savoir' | 'tresor';
+export const RES: readonly Res[] = ['vivres', 'armee', 'savoir', 'tresor'];
+export const RES_LABEL: Record<Res, string> = { vivres: 'Vivres', armee: 'Armée', savoir: 'Savoir', tresor: 'Trésor' };
+export type Resources = Record<Res, number>;
+export type Bag = Partial<Record<Res, number>>;
 
-export const GAUGE_LABEL: Record<GaugeId, string> = {
-  food: 'Nourriture',
-  army: 'Armée',
-  knowledge: 'Savoir',
-  treasure: 'Trésor',
-};
+export type Tag = 'Guerre' | 'Foi' | 'Science' | 'Commerce' | 'Culture' | 'Nature';
+export const TAGS: readonly Tag[] = ['Guerre', 'Foi', 'Science', 'Commerce', 'Culture', 'Nature'];
 
-export type Gauges = Record<GaugeId, number>;
-export type Delta = Partial<Record<GaugeId, number>>;
+export type FamilyId = 'ourk' | 'sel' | 'brume' | 'troc';
+export const FAMILIES: readonly FamilyId[] = ['ourk', 'sel', 'brume', 'troc'];
+export type FamilyState = 'presente' | 'exilee' | 'rivale' | 'eteinte';
 
-export type Keyword = 'Foi' | 'Guerre' | 'Commerce' | 'Science' | 'Culture' | 'Nature';
-export const KEYWORDS: readonly Keyword[] = ['Foi', 'Guerre', 'Commerce', 'Science', 'Culture', 'Nature'];
+export type Motif =
+  | 'sun' | 'moon' | 'mountain' | 'wave' | 'tower' | 'eye' | 'spiral' | 'crown' | 'leaf' | 'gear'
+  | 'star' | 'flame' | 'shield' | 'scroll' | 'coin' | 'comet' | 'ring' | 'arch' | 'wheat' | 'mask'
+  | 'fang' | 'hand' | 'skull' | 'house' | 'ship' | 'bird' | 'key' | 'road' | 'scales' | 'bell';
 
-export type Side = 'left' | 'right';
-
-/** Condition évaluée sur l'état courant. Toutes les clauses présentes doivent être vraies. */
-export interface Condition {
-  gauge?: GaugeId;
-  gte?: number;
-  lte?: number;
-  keyword?: Keyword;
-  /** nombre minimal de cartes du deck portant le mot-clé */
-  min?: number;
-  wonder?: string;
-  flag?: string;
-  notFlag?: string;
-  /** relation avec la rivale (−100..100) */
-  rivalGte?: number;
-  rivalLte?: number;
+export interface ArtSpec {
+  motif: Motif;
+  hue?: number;
 }
 
-export interface AddCard {
-  card: string;
-  /** nombre de tours avant l'apparition (sinon mélangée dans la pioche de l'ère) */
-  delay?: number;
-  /** reste dans le deck d'une ère à l'autre */
-  persistent?: boolean;
+/** Condition : toutes les clauses présentes doivent être vraies. */
+export interface Cond {
+  res?: Bag; // au moins
+  resMax?: Bag; // au plus
+  tags?: Partial<Record<Tag, number>>; // au moins N
+  fam?: { id: FamilyId; min?: number; max?: number; state?: FamilyState };
+  mem?: string;
+  notMem?: string;
+  /** carte présente dans le deck (découverte) */
+  card?: string;
+  notCard?: string;
+  rival?: { min?: number; max?: number };
+  quartiers?: { min?: number; max?: number };
+  era?: { min?: number; max?: number };
+  dessein?: string;
+  /** au moins N jalons bâtis */
+  jalons?: number;
+  /** au moins une civilisation passée dans la chronique */
+  /** nombre minimal de civilisations passées dans la chronique */
+  ruins?: number;
+}
+
+export interface Bet {
+  /** chance de base (0..1), affichée */
+  chance: number;
+  /** bonus de chance par carte d'un mot-clé, affiché */
+  per?: { tag: Tag; bonus: number };
+  win: Effect;
+  lose: Effect;
 }
 
 export interface Effect {
-  delta?: Delta;
-  /** bonus par carte du deck portant le mot-clé (synergie) */
-  scale?: { keyword: Keyword; delta: Delta; cap?: number }[];
-  add?: AddCard[];
-  remove?: string[];
-  flags?: string[];
-  unflags?: string[];
+  /** variation de ressources, non affichée avant le choix (c'est le texte qui la dit) */
+  gain?: Bag;
+  quartiers?: number;
+  loy?: Partial<Record<FamilyId, number>>;
+  mem?: string[];
+  unmem?: string[];
+  /** cartes programmées : jouées dans `in` cartes (0 = tout de suite après) */
+  sched?: { card: string; in: number }[];
+  /** carte ajoutée au deck permanent */
+  addCard?: string[];
+  removeCard?: string[];
   rival?: number;
-  wonder?: string;
-  /** branche conditionnelle : si `when` est vrai, `then` remplace cet effet, sinon `else` */
-  when?: Condition;
+  famState?: { id: FamilyId; state: FamilyState };
+  /** la rivale bâtit (+1) ou perd (-1) un jalon */
+  rivalJalon?: number;
+  /** fait avancer le jalon de l'ère (bâtit le jalon) */
+  /** bâtir le jalon de l'ère (« alt » : la variante débloquée) */
+  jalon?: boolean | 'alt';
+  bet?: Bet;
+  if?: Cond;
   then?: Effect;
   else?: Effect;
-  /** réplique propre à cette branche (remplace celle de l'option) */
+  /** réplique affichée après le choix (remplace celle de l'option) */
   reply?: string;
+  /** cause, pour l'épitaphe, si l'effet coûte des quartiers */
+  cause?: string;
+  /** fin de partie forcée (rare : épilogues) */
+  end?: boolean;
 }
 
-export interface CardOption {
-  text: string;
+export interface Option {
+  label: string;
+  /** coût payé, affiché sur l'option */
+  cost?: Bag;
+  /** exigence affichée ; option grisée si non remplie */
+  req?: Cond;
+  /** texte court de l'exigence, s'il faut le préciser (sinon généré) */
+  reqLabel?: string;
+  /** menace affichée (« sinon, un quartier brûle ») */
+  warn?: string;
   effect: Effect;
-  /** réplique affichée brièvement après le choix */
   reply?: string;
 }
 
 export type CardKind =
-  | 'starter'
-  | 'era'
-  | 'tech'
-  | 'institution'
-  | 'character'
-  | 'consequence'
-  | 'rival'
-  | 'crisis'
-  | 'tutorial';
+  | 'famille' | 'evenement' | 'intrigue' | 'crise' | 'rivale' | 'institution' | 'rencontre' | 'ruines'
+  | 'tutoriel' | 'carrefour' | 'jalon' | 'decouverte' | 'croissance' | 'presage' | 'proces' | 'hommage' | 'revenant' | 'trahison';
 
-export interface ArtSpec {
-  /** motif de l'illustration générative */
-  motif: 'sun' | 'moon' | 'mountain' | 'wave' | 'tower' | 'eye' | 'spiral' | 'crown' | 'leaf' | 'gear' | 'star' | 'flame' | 'shield' | 'scroll' | 'coin' | 'comet' | 'ring' | 'arch' | 'wheat' | 'mask';
-  /** teinte dominante (0..360), sinon dérivée des mots-clés */
-  hue?: number;
-}
+export type Form = 'binaire' | 'qui' | 'pari' | 'dosage' | 'route' | 'seuil' | 'choix';
 
 export interface CardDef {
+  /** contenu verrouillé : n'apparaît qu'une fois débloqué (méta-progression) */
+  lock?: string;
   id: string;
+  kind: CardKind;
+  /** famille qui parle (son emblème illustre la carte) */
+  family?: FamilyId;
+  /** nom affiché de qui parle, gabarit (par défaut : la famille) */
+  speaker?: string;
   title: string;
   text: string;
-  kind: CardKind;
-  keywords?: Keyword[];
-  /** ère d'origine (0..4) pour les cartes d'ère et les récompenses */
-  era?: number;
-  left: CardOption;
-  right: CardOption;
+  /** ères où la carte peut apparaître (0..4) */
+  eras?: number[];
+  tags?: Tag[];
+  options: Option[];
+  form?: Form;
+  /** carte « qui ? » : options construites à partir des familles présentes */
+  qui?: { count: number; option: (f: FamilyId) => Option; exclude?: FamilyId[] };
+  /** condition pour être tirée */
+  cond?: Cond;
+  art?: ArtSpec;
   /** retirée du deck après avoir été jouée */
   oneShot?: boolean;
-  /** condition pour être proposée en récompense */
-  requires?: Condition;
-  art?: ArtSpec;
-  /** indice de tutoriel affiché avec la carte */
-  tutorial?: string;
-  /** ne peut pas être retirée du deck par le joueur */
-  locked?: boolean;
-  /** habillage par ère (1..4) : la même carte, racontée autrement selon l'époque */
-  variants?: Record<number, CardVariant>;
+  /** intrigue à laquelle la carte appartient (pour les mesures) */
+  arc?: string;
+  /** dernière étape d'une intrigue */
+  finale?: boolean;
+  /** découverte : passifs tant que la carte est dans le deck */
+  passive?: Passive[];
+  /** découverte : coût en Savoir pour l'étudier */
+  price?: number;
+  /** découverte : ce qu'elle apporte, en une ligne */
+  gift?: string;
+  /** carte valable à toutes les ères : coûts, gains et seuils grandissent avec l'ère */
+  scale?: boolean;
 }
 
-export interface CardVariant {
-  title?: string;
+export interface FamilyDef {
+  id: FamilyId;
+  tag: Tag;
+  res: Res;
+  hue: number;
+  motif: Motif;
+  /** chef de famille, par ère */
+  head: [string, string, string, string, string];
+  /** nom de la famille, par ère (« les Ourk », « les Ourkos »…) */
+  house: [string, string, string, string, string];
+  /** ce qu'ils sont, par ère (« chasseurs », « légionnaires »…) */
+  trade: [string, string, string, string, string];
+  /** une ligne qui résume leur caractère */
+  voice: string;
+}
+
+export interface Jalon {
+  name: string;
   text: string;
-  left?: string;
-  right?: string;
-  replyLeft?: string;
-  replyRight?: string;
+  cost: Bag;
+  req?: Cond;
+  /** ce que la merveille apporte une fois bâtie */
+  passive?: Passive;
+  gift: string;
+  /** silhouette dans la scène */
+  shape: string;
+  /** variante débloquée par la méta-progression (proposée au chantier) */
+  alt?: Jalon & { lock: string };
 }
 
-/** Ce que le joueur lit : la carte habillée pour une ère donnée. */
-export interface CardFace {
-  title: string;
+export interface DesseinDef {
+  id: string;
+  name: string;
+  pitch: string;
+  tag: Tag;
+  ending: 'science' | 'military' | 'culture';
+  jalons: [Jalon, Jalon, Jalon, Jalon, Jalon];
+}
+
+export interface OriginDef {
+  id: string;
+  name: string;
   text: string;
-  left: string;
-  right: string;
-  replyLeft?: string;
-  replyRight?: string;
-}
-
-export function cardFace(card: CardDef, era: number): CardFace {
-  const v = card.variants?.[era];
-  return {
-    title: v?.title ?? card.title,
-    text: v?.text ?? card.text,
-    left: v?.left ?? card.left.text,
-    right: v?.right ?? card.right.text,
-    replyLeft: v?.replyLeft ?? card.left.reply,
-    replyRight: v?.replyRight ?? card.right.reply,
-  };
+  res: Resources;
+  quartiers: number;
+  families: FamilyId[];
+  deck?: string[];
+  mem?: string[];
+  /** fait débloquant cette origine (doc) */
+  unlock?: string;
 }
 
 export interface CrisisDef {
-  id: string;
-  name: string;
-  /** phrase d'accroche */
-  intro: string;
   era: number;
+  name: string;
+  intro: string;
+  /** ce qui protège, annoncé au début de l'ère */
+  protects: string;
   cards: string[];
-  /** cartes supplémentaires tirées au sort parmi celles-ci */
-  extra?: string[];
-  extraCount?: number;
 }
 
 export type Passive =
-  | { type: 'dampen'; gauge: GaugeId; factor: number }
-  | { type: 'amplify'; gauge: GaugeId; factor: number }
-  | { type: 'keywordBonus'; keyword: Keyword; bonus: number }
-  | { type: 'crisisShield'; amount: number }
-  | { type: 'eraDrift'; delta: Delta }
-  | { type: 'rivalCalm'; amount: number }
-  | { type: 'overflow'; from: GaugeId; to: GaugeId; threshold: number }
-  | { type: 'floor'; gauge: GaugeId; value: number; once: true };
+  | { type: 'crisisShield'; amount: number } // ignore N quartiers perdus pendant les crises (par crise)
+  | { type: 'income'; res: Res; amount: number } // à chaque saison
+  | { type: 'loyalty'; family: FamilyId | 'all'; floor: number } // loyauté jamais sous ce plancher
+  | { type: 'shield'; amount: number } // la première perte de quartier de chaque ère est évitée
+  | { type: 'growth'; amount: number } // quartiers bonus à la croissance
+  | { type: 'tagBonus'; tag: Tag; amount: number } // compte pour N cartes du mot-clé
+  | { type: 'discount'; res: Res; amount: number }; // coûts réduits
 
-export interface WonderDef {
+export interface RouteDef {
   id: string;
-  name: string;
-  text: string;
-  /** ère minimale */
+  /** domaine d'une famille : y aller, c'est affronter ses cartes */
+  family?: FamilyId;
+  /** nom par ère (gabarit) */
+  name: string | [string, string, string, string, string];
+  /** promesse affichée sur la route */
+  promise: string;
+  /** risque affiché, s'il y en a */
+  risk?: string;
+  art: ArtSpec;
+  /** rencontres possibles (une est tirée) */
+  encounters: string[];
+  cond?: Cond;
+  weight?: number;
+}
+
+export interface RivalDef {
+  id: string;
+  name: string; // « les Orvandes »
+  /** souveraine, par ère (une dynastie, comme vos familles) */
+  leader: [string, string, string, string, string];
+  voice: string;
+  /** la souveraine est une femme (accords dans les lettres) */
+  she: boolean;
+  hue: number;
+  /** son propre dessein, visible sur son horizon */
+  jalons: [string, string, string, string, string];
+}
+
+// --------------------------------------------------------------------------- état
+
+export interface FamilyStatus {
+  loy: number;
+  state: FamilyState;
+  /** dernière ère où sa carte a été jouée */
+  seen: number;
+}
+
+export interface LossEntry {
+  turn: number;
   era: number;
-  keywords?: Keyword[];
-  passive: Passive;
-  requires?: Condition;
-}
-
-export interface EraDef {
-  index: number;
-  name: string;
-  subtitle: string;
-  /** nombre de cartes d'ère injectées */
-  packSize: number;
-  /** multiplicateur des effets de cartes : les enjeux montent avec les ères */
-  stakes?: number;
-  /** multiplicateur supplémentaire pendant la crise de l'ère */
-  crisisStakes?: number;
-  /** le vent de l'ère : une dérive appliquée à chaque décision (hors crise) */
-  wind?: Delta;
-  /** phrase qui annonce ce vent au joueur */
-  windText?: string;
-}
-
-export type EndingId = 'science' | 'military' | 'culture';
-
-export interface RivalState {
-  name: string;
-  progress: number;
-  relation: number;
-  alive: boolean;
-  /** dernier seuil ayant déclenché une carte */
-  lastTrigger: number;
+  card: string;
+  amount: number;
+  cause: string;
 }
 
 export interface HistoryEntry {
   turn: number;
   era: number;
+  /** date lisible, pour les citations (« an 7 650 avant le Calendrier ») */
+  date: string;
   card: string;
-  side: Side;
-  gauges: Gauges;
-  /** nombre de cartes du deck par mot-clé (ordre de KEYWORDS), pour rejouer la croissance */
-  kw: number[];
-  wonders: string[];
+  title: string;
+  choice: number;
+  label: string;
+  reply?: string;
+  /** loyautés modifiées par ce choix (pour que les familles citent leurs griefs) */
+  loy?: Partial<Record<FamilyId, number>>;
+  /** cartes et choix d'origine si la carte est une suite */
+  from?: string;
+  res: Resources;
+  quartiers: number;
 }
+
+export interface Prompt {
+  card: string;
+  /** données dynamiques : routes, technologies, recrues, familles d'une carte « qui ? » */
+  routes?: string[];
+  recruits?: string[];
+  qui?: FamilyId[];
+  /** procès : la famille plaignante et la décision citée */
+  plaintiff?: FamilyId;
+  quote?: number;
+  /** pour les suites : la décision qui l'a provoquée */
+  from?: string;
+}
+
+export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fin';
 
 export interface Result {
-  type: 'defeat' | 'victory';
-  gauge?: GaugeId;
-  /** 'low' | 'high' */
-  bound?: 'low' | 'high';
-  ending?: EndingId;
-  /** carte responsable de la défaite */
-  card?: string;
-}
-
-export type Phase = 'card' | 'crisis' | 'reward' | 'era' | 'end';
-
-export interface RewardOffer {
-  cards: string[];
-  wonder?: string;
+  type: 'victoire' | 'defaite';
+  ending?: 'science' | 'military' | 'culture';
+  jalons: number;
+  /** cause de la chute */
+  cause?: string;
 }
 
 export interface GameState {
   version: number;
   seed: number;
   rng: [number, number, number, number];
+  name: string;
+  origin: string;
+  dessein: string;
+  rival: string;
   era: number;
-  turn: number;
-  eraTurn: number;
-  gauges: Gauges;
-  /** cartes persistantes : la civilisation */
-  deck: string[];
-  /** pioche de l'ère en cours */
-  drawPile: string[];
-  /** cartes planifiées (conséquences à retardement) */
-  scheduled: { card: string; turns: number; persistent?: boolean }[];
+  saison: number;
   phase: Phase;
-  current: string | null;
-  crisis: { id: string; index: number; cards: string[] } | null;
-  reward: RewardOffer | null;
-  wonders: string[];
-  flags: string[];
-  rival: RivalState;
+  /** ce que le joueur doit trancher */
+  prompt: Prompt | null;
+  /** cartes restantes de la saison en cours */
+  pile: string[];
+  /** cartes de fin d'ère restantes */
+  steps: string[];
+  res: Resources;
+  quartiers: number;
+  fam: Record<FamilyId, FamilyStatus>;
+  mem: string[];
+  /** pour chaque souvenir : la décision exacte et sa date (les familles citent) */
+  memo: Record<string, { label: string; date: string; title: string; era: number }>;
+  deck: string[];
+  jalons: boolean[];
+  rivalRel: number;
+  rivalJalons: number;
+  /** cartes de l'ère pas encore jouées */
+  pool: string[];
+  /** dernière ère où chaque famille a été visitée (carrefour) */
+  visits: Record<FamilyId, number>;
+  /** cartes à usage unique déjà jouées */
+  spent: string[];
+  sched: { card: string; at: number; from?: string }[];
+  turn: number;
+  /** tour où l'ère en cours a commencé (dates) */
+  eraStart: number;
   history: HistoryEntry[];
-  /** nombre de tours avec au moins une jauge en danger */
-  dangerTurns: number;
-  /** cartes déjà jouées dans la partie (pour éviter les répétitions de récompenses) */
-  seen: string[];
-  /** récompenses déjà offertes */
-  offered: string[];
+  losses: LossEntry[];
+  /** une perte de quartier déjà évitée cette ère (passif « shield ») */
+  shieldUsed: boolean;
   result: Result | null;
+  /** première partie : tutoriel intégré */
   tutorial: boolean;
-  /** compteur de croissance visuelle */
+  /** civilisations passées (pour les ruines) */
+  ruins: RuinInfo[];
+  /** compteur pour la croissance visuelle */
   growth: number;
+  /** arcs ouverts / dénoués (mesures, chronique) */
+  arcs: { open: string[]; done: string[] };
+  /** contenus débloqués disponibles dans cette partie (méta-progression) */
+  unlocked: string[];
+  /** ères où la variante débloquée du jalon a été bâtie */
+  jalonAlt: number[];
+  /** Âge de fer : crises plus dures */
+  iron: boolean;
 }
 
-/** Seuils de la zone de danger (modifiables pour les balayages de simulation). */
-export const TUNING = { dangerLow: 30, dangerHigh: 70, maxSwing: 15 };
+/** Ce qu'une civilisation morte laisse aux suivantes. */
+export interface RuinInfo {
+  name: string;
+  dessein: string;
+  era: number;
+  jalons: number;
+  cause: string;
+  epitaph: string;
+  /** famille la plus loyale et la plus hostile à la fin */
+  ally?: FamilyId;
+  enemy?: FamilyId;
+  /** silhouette de son plus haut jalon */
+  shape?: string;
+  /** derniers mots, choisis à la chute */
+  testament?: string;
+  /** le grief le plus lourd de la famille la plus furieuse, cité dans la partie suivante */
+  grudge?: { family: FamilyId; house: string; quote: string; date: string };
+  /** ce que le testament lègue à la civilisation suivante */
+  legacy?: Legacy;
+  victory?: boolean;
+}
+
+/** Héritage d'un testament : appliqué au début de la partie suivante. */
+export interface Legacy {
+  label: string;
+  gain?: Bag;
+  loy?: Partial<Record<FamilyId, number>>;
+  quartiers?: number;
+}
+
+export interface ChronicleEntry extends RuinInfo {
+  seed: number;
+  origin: string;
+  rival: string;
+  /** dates de fondation et de chute */
+  from: string;
+  to: string;
+  result: 'victoire' | 'defaite';
+  ending?: string;
+  /** cinq lignes de chronique, partageables */
+  lines: string[];
+  turns: number;
+  iron?: boolean;
+}
+
+export interface MetaState {
+  version: number;
+  runs: number;
+  /** de la plus récente à la plus ancienne */
+  chronicle: ChronicleEntry[];
+  unlocked: string[];
+  /** faits accomplis (servent aux déblocages) */
+  feats: string[];
+}

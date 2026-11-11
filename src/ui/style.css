@@ -60,7 +60,11 @@ q { quotes: none; color: #ffe7b8; font-style: italic; }
 @keyframes bump { 40% { transform: scale(1.18); } }
 .hud-sp { flex: 1; }
 .era-pill { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 0; padding: 0 2px; }
-body.screen-open #hud, body.screen-open #stage, body.screen-open .after { opacity: 0; pointer-events: none; }
+body.screen-open #hud, body.screen-open #stage, body.screen-open .after,
+body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-events: none; }
+.cinema-cap { position: fixed; left: 0; right: 0; top: 18dvh; z-index: 30; text-align: center; pointer-events: none; animation: fadeUp 1.2s var(--ease-out) both; }
+.cinema-cap p { margin: 6px 0 0; font-family: var(--title); font-size: clamp(18px, 5vw, 26px); color: #fff4de; text-shadow: 0 0 24px #000, 0 1px 4px #000; }
+.cinema-cap span { display: block; margin-top: 10px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); }
 .era-name { font-family: var(--title); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; white-space: nowrap; color: var(--ink); text-shadow: 0 1px 8px #000; }
 .era-name b { color: var(--ui); margin-right: 4px; }
 .phase { display: flex; gap: 3px; }

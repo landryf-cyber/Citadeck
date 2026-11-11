@@ -1,7 +1,7 @@
 {
   "name": "citadeck",
   "version": "1.0.0",
-  "description": "",
+  "description": "Citadeck — un jeu de cartes où les familles de votre cité se souviennent de tout.",
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
@@ -10,10 +10,11 @@
     "preview": "vite preview",
     "typecheck": "tsc",
     "sim": "tsx src/sim/run.ts",
-    "shots": "tsx scripts/screenshots.ts",
-    "autotune": "tsx src/sim/autotune.ts",
+    "campaign": "tsx src/sim/run.ts --campaign",
+    "sweep": "tsx src/sim/sweep.ts",
+    "shots": "tsx scripts/shots.ts",
     "perf": "tsx scripts/perf.ts",
-    "play": "tsx scripts/playthrough.ts"
+    "single": "tsx scripts/single-file.ts"
   },
   "repository": {
     "type": "git",

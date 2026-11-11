@@ -4,13 +4,12 @@ import '@fontsource/source-sans-3/latin-400.css';
 import '@fontsource/source-sans-3/latin-400-italic.css';
 import '@fontsource/source-sans-3/latin-600.css';
 import '@fontsource/source-sans-3/latin-700.css';
-import './style.css';
+import './ui/style.css';
 import { content } from './data';
 import { Engine } from './core/engine';
 import { Scene } from './scene/scene';
-import { AudioEngine } from './audio/audio';
-import { Game } from './game';
-import { loadSettings } from './save';
+import { AudioEngine } from './audio';
+import { App } from './ui/app';
 
 function makeGrain(): void {
   const c = document.createElement('canvas');
@@ -29,14 +28,13 @@ function makeGrain(): void {
 
 function main(): void {
   makeGrain();
-  const settings = loadSettings();
-  const params = new URLSearchParams(location.search);
-  const fx = params.get('fx');
-  if (fx === 'low' || fx === 'high' || fx === 'auto') settings.quality = fx;
   const engine = new Engine(content);
   const scene = new Scene(document.getElementById('scene') as HTMLCanvasElement);
+  const params = new URLSearchParams(location.search);
+  const fx = params.get('fx');
+  if (fx === 'low' || fx === 'high' || fx === 'auto') scene.setQuality(fx);
   const audio = new AudioEngine();
-  const game = new Game(engine, scene, audio, settings);
+  const app = new App(engine, scene, audio);
 
   window.addEventListener('resize', () => scene.resize());
   window.addEventListener('orientationchange', () => setTimeout(() => scene.resize(), 200));
@@ -44,7 +42,6 @@ function main(): void {
     if (document.hidden) scene.stop();
     else scene.start();
   });
-  // empêche le défilement élastique et le zoom pendant le jeu
   document.addEventListener('touchmove', (e) => {
     const t = e.target as HTMLElement | null;
     if (!t?.closest('.screen')) e.preventDefault();
@@ -52,12 +49,10 @@ function main(): void {
   document.addEventListener('contextmenu', (e) => e.preventDefault());
 
   scene.start();
-  const start = () => game.boot();
+  const start = () => app.boot();
   if (document.fonts?.ready) void document.fonts.ready.then(start);
   else start();
-
-  // accès pour les scripts de capture et de test
-  (window as unknown as { __citadeck: unknown }).__citadeck = { game, scene, engine, audio };
+  (window as unknown as { __citadeck: unknown }).__citadeck = { app, scene, engine, audio };
 }
 
 main();

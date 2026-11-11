@@ -1,261 +1,199 @@
-import { card, opt, D } from './dsl';
-import type { CrisisDef } from '../core/types';
-
 /**
- * Crises : une par fin d'ère. 3 cartes imposées + 1 ou 2 tirées parmi les extras.
- * Elles testent l'état des jauges (conditions) et la composition du deck (synergies).
+ * Les cinq crises : une par ère, annoncées au début de l'ère (nature et protections, pas les seuils).
+ * Les seuils sont révélés dans la scène. Une famille qui vous hait peut trahir au milieu.
  */
-export const crisisCards = [
-  // ---------------------------------------------------------------- 0. LA HORDE
-  card({
-    id: 'x0_eclaireurs', title: 'Les Éclaireurs', kind: 'crisis',
-    text: 'Des cavaliers inconnus sur la crête. Ils comptent vos huttes. Ils sourient.',
-    left: opt('Les attaquer', { when: { gauge: 'army', gte: 55 }, then: { delta: D(0, -6, 3, 0) }, else: { delta: D(0, -11, 0, -4) } }, 'Deux cavaliers de moins. Ils savent où vous êtes.'),
-    right: opt('Offrir un repas', { delta: D(-9, 0, 3, 0), rival: 3 }, 'Ils ont mangé. Ils ont compté les greniers.'),
-    art: { motif: 'mountain' },
-  }),
-  card({
-    id: 'x0_portes', title: 'La Horde', kind: 'crisis',
-    text: 'Ils sont tous là. Des milliers. Leur chef veut parler. Ou pas.',
-    left: opt('Tenir les murs', { when: { gauge: 'army', gte: 50 }, then: { delta: D(-5, -8, -4, 0), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] }, else: { delta: D(-7, -13, -5, -5), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] } }, 'Les murs tiennent. Ils grignotent vos champs en attendant.'),
-    right: opt('Payer le tribut', { when: { gauge: 'treasure', gte: 50 }, then: { delta: D(0, -5, 0, -14), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }] }, else: { delta: D(-5, -7, -4, -10), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }] } }, 'Ils sont partis. Avec presque tout.'),
-    art: { motif: 'shield' },
-  }),
-  card({
-    id: 'x0_lendemain', title: 'Le Lendemain', kind: 'crisis',
-    text: 'La horde est passée. Il reste des cendres, des blessés et des gens qui vous regardent.',
-    left: opt('Reconstruire', { delta: D(-4, 0, -4, -9), scale: [{ keyword: 'Nature', delta: D(3) }] }, 'Les huttes repoussent. Plus solides. Les peintures ont brûlé.'),
-    right: opt('Se venger', { delta: D(-4, 7, -4, -5), scale: [{ keyword: 'Guerre', delta: D(0, 3) }], rival: -5 }, 'Vous les avez poursuivis. Vous avez trouvé d’autres cendres.'),
-    art: { motif: 'flame' },
-  }),
-  card({
-    id: 'x0_traitre', title: 'Le Traître', kind: 'crisis',
-    text: 'Quelqu’un a ouvert la palissade. On sait qui. C’est un bon chasseur.',
-    left: opt('L’exécuter', { delta: D(-5, 6, -5, 0), scale: [{ keyword: 'Foi', delta: D(0, 3) }] }, 'Mort. Il a dit qu’il avait faim.'),
-    right: opt('L’écouter', { delta: D(0, -8, 8, 0), scale: [{ keyword: 'Science', delta: D(0, 0, 3) }] }, 'Il avait des raisons. Elles vous concernaient.'),
-    art: { motif: 'mask' },
-  }),
-  card({
-    id: 'x0_otages', title: 'Les Otages', kind: 'crisis',
-    text: 'La horde a emmené vingt des vôtres. Elle propose de les vendre. Elle est honnête, pour une horde.',
-    left: opt('Les racheter', { delta: D(0, 3, 0, -13), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }] }, 'Ils sont rentrés. Ils ont des histoires.'),
-    right: opt('Tant pis pour eux', { delta: D(0, -9, 0, 3), scale: [{ keyword: 'Culture', delta: D(0, -3) }] }, 'On a chanté leurs noms. Une fois.'),
-    art: { motif: 'coin' },
-  }),
-  card({
-    id: 'x0_feu', title: 'Les Greniers brûlent', kind: 'crisis',
-    text: 'Ils ont lancé des torches. Les greniers ou le temple : vous ne sauverez qu’un des deux.',
-    left: opt('Les greniers', { delta: D(3, -4, 0, -4), scale: [{ keyword: 'Foi', delta: D(0, -3) }] }, 'On mangera. Les dieux ont eu chaud.'),
-    right: opt('Le temple', { delta: D(-9, 5, -3, 0), scale: [{ keyword: 'Foi', delta: D(0, 4) }] }, 'Les dieux sont sauvés. Ils n’ont rien fait pour vous.'),
-    art: { motif: 'flame' },
-  }),
-
-  // ---------------------------------------------------------------- 1. LA PESTE
-  card({
-    id: 'x1_morts', title: 'Les Premiers Morts', kind: 'crisis',
-    text: 'Une fièvre au port. Dix morts. Les médecins disent que ce n’est rien. Ils toussent.',
-    left: opt('Fermer le port', { delta: D(-3, 0, -4, -11), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, -2) }] }, 'Le port est vide. Les quais sont calmes. Trop.'),
-    right: opt('Laisser ouvert', { delta: D(-7, -7, -4, 4), scale: [{ keyword: 'Science', delta: D(3, 2) }], flags: ['peste_ouverte'] }, 'Le commerce continue. Les charrettes aussi.'),
-    art: { motif: 'wave' },
-  }),
-  card({
-    id: 'x1_rues', title: 'La Ville tousse', kind: 'crisis',
-    text: 'Un tiers de la ville est malade. Les prêtres prient. Les médecins cherchent. Les deux demandent de l’argent.',
-    left: opt('Les médecins', { delta: D(0, -4, 6, -10), scale: [{ keyword: 'Science', delta: D(3, 0, 2) }, { keyword: 'Foi', delta: D(0, -2) }] }, 'Ils ont trouvé les rats. Ils cherchent toujours les puces.'),
-    right: opt('Les prêtres', { when: { flag: 'peste_ouverte' }, then: { delta: D(-5, 4, -7, -8), scale: [{ keyword: 'Foi', delta: D(2, 3) }] }, else: { delta: D(0, 6, -7, -8), scale: [{ keyword: 'Foi', delta: D(2, 3) }] } }, 'Processions. Les malades suivent. Ils toussent en rythme.'),
-    art: { motif: 'spiral' },
-  }),
-  card({
-    id: 'x1_quarantaine', title: 'Les Murs fermés', kind: 'crisis',
-    text: 'Les bien-portants veulent sortir. Les malades veulent entrer. Les gardes toussent.',
-    left: opt('Personne ne bouge', { when: { gauge: 'army', gte: 45 }, then: { delta: D(-6, -5, -3, 0) }, else: { delta: D(-8, -9, -3, -3) } }, 'La ville est un tombeau. Fermé. Propre.'),
-    right: opt('Ouvrir', { delta: D(-6, -5, 0, -8), scale: [{ keyword: 'Nature', delta: D(3) }], rival: -5 }, 'La fièvre a voyagé. Les voisins vous écrivent.'),
-    art: { motif: 'tower' },
-  }),
-  card({
-    id: 'x1_rats', title: 'Les Rats', kind: 'crisis',
-    text: 'Un enfant dit que ce sont les rats. Les médecins rient. Il y a des rats partout.',
-    left: opt('L’écouter', { delta: D(-5, 0, 9, -6), scale: [{ keyword: 'Science', delta: D(3, 0, 2) }] }, 'Les chats sont en or. Les rats, en fuite.'),
-    right: opt('Brûler les malades', { delta: D(0, 5, -9, 0), scale: [{ keyword: 'Foi', delta: D(0, 2) }, { keyword: 'Culture', delta: D(0, -3) }] }, 'Les feux brûlent la nuit. On ne chante plus.'),
-    art: { motif: 'moon' },
-  }),
-  card({
-    id: 'x1_heritage', title: 'Les Maisons vides', kind: 'crisis',
-    text: 'La peste a emporté les riches aussi. Leurs maisons sont vides. Leurs coffres, pleins.',
-    left: opt('Tout au trésor', { delta: D(0, -5, 0, 13), scale: [{ keyword: 'Culture', delta: D(0, -3) }] }, 'Riche. Les héritiers survivants vous détestent.'),
-    right: opt('Aux survivants', { delta: D(8, 4, 0, -4), scale: [{ keyword: 'Culture', delta: D(0, 2) }] }, 'Les pauvres ont des maisons. Ils ne savent pas quoi en faire.'),
-    art: { motif: 'coin' },
-  }),
-  card({
-    id: 'x1_voisins', title: 'Les Voisins malades', kind: 'crisis',
-    text: 'La peste frappe les voisins aussi. Plus fort. Ils demandent des médecins. Ou du blé. Ou n’importe quoi.',
-    left: opt('Aider', { delta: D(-6, 0, 4, -5), rival: 15 }, 'Ils s’en souviendront. Ils le disent, en tout cas.'),
-    right: opt('Fermer la frontière', { delta: D(0, 4, -6, 3), rival: -18 }, 'Ils s’en souviendront aussi.'),
-    art: { motif: 'mask' },
-  }),
-
-  // ---------------------------------------------------------------- 2. LA RÉVOLTE
-  card({
-    id: 'x2_murmures', title: 'Les Murmures', kind: 'crisis',
-    text: 'Dans les tavernes, on dit que le roi n’est pas nécessaire. On le dit de plus en plus fort.',
-    left: opt('Fermer les tavernes', { delta: D(0, 7, -7, -3), scale: [{ keyword: 'Culture', delta: D(0, -3) }] }, 'On murmure dans la rue, maintenant. Plus sobrement.'),
-    right: opt('Écouter', { delta: D(0, -8, 7, 0), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }, { keyword: 'Culture', delta: D(0, 3) }] }, 'Ils ont des idées. Certaines sont bonnes. C’est le problème.'),
-    art: { motif: 'mask' },
-  }),
-  card({
-    id: 'x2_barricades', title: 'Les Barricades', kind: 'crisis',
-    text: 'La ville est à eux. Le palais, encore à vous. Ils demandent du pain, puis votre tête. Dans cet ordre.',
-    left: opt('Du pain', { when: { gauge: 'food', gte: 45 }, then: { delta: D(-10, 0, 0, -4), scale: [{ keyword: 'Nature', delta: D(3) }] }, else: { delta: D(-10, -5, -4, -4), scale: [{ keyword: 'Nature', delta: D(3) }] } }, 'Ils ont mangé. Ils ont gardé les barricades. Au cas où.'),
-    right: opt('La troupe', { when: { gauge: 'army', gte: 55 }, then: { delta: D(-4, -7, -4, 0), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] }, else: { delta: D(-6, -14, -4, -4), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] } }, 'Les rues sont calmes. Elles ont été nettoyées.'),
-    art: { motif: 'flame' },
-  }),
-  card({
-    id: 'x2_charte', title: 'La Charte', kind: 'crisis',
-    text: 'Les rebelles proposent une charte. Vous régnez, mais ils décident. Vous signez ou vous partez.',
-    left: opt('Signer', { delta: D(0, -6, 5, -7), scale: [{ keyword: 'Culture', delta: D(0, 2, 2) }], flags: ['charte'] }, 'Vous régnez. Entre guillemets.'),
-    right: opt('Déchirer', { when: { gauge: 'army', gte: 50 }, then: { delta: D(-5, 6, -7, 3), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, else: { delta: D(-8, -4, -10, -4) } }, 'Vous régnez. Sur une ville qui vous regarde de travers.'),
-    art: { motif: 'scroll' },
-  }),
-  card({
-    id: 'x2_eveque', title: 'L’Évêque choisit', kind: 'crisis',
-    text: 'L’évêque peut bénir la révolte ou la maudire. Il attend de voir qui gagne. Il attend aussi de l’or.',
-    left: opt('Acheter sa bénédiction', { delta: D(0, 7, 0, -11), scale: [{ keyword: 'Foi', delta: D(0, 4) }] }, 'Béni. Ruiné. Les rebelles ont perdu la foi.'),
-    right: opt('Se passer de lui', { delta: D(0, -7, 5, 3), scale: [{ keyword: 'Foi', delta: D(0, -4) }] }, 'Il a béni les rebelles. Par dépit.'),
-    art: { motif: 'arch' },
-  }),
-  card({
-    id: 'x2_mercenaires', title: 'Les Mercenaires à la porte', kind: 'crisis',
-    text: 'Une compagnie propose d’écraser la révolte. Ils sont chers. Ils sont efficaces. Ils ne partiront pas.',
-    left: opt('Les engager', { delta: D(0, 10, 0, -10), add: [{ card: 'q_mercenaires', delay: 6 }] }, 'La révolte est finie. Les mercenaires restent dîner.'),
-    right: opt('Non merci', { delta: D(-4, -10, 2, 0), scale: [{ keyword: 'Guerre', delta: D(0, 3) }] }, 'Ils ont proposé leurs services aux rebelles.'),
-    art: { motif: 'shield' },
-  }),
-  card({
-    id: 'x2_imprimeur', title: 'L’Imprimeur', kind: 'crisis',
-    text: 'Un imprimeur inonde la ville de pamphlets. Il vous appelle « le gros ». Vous n’êtes pas gros.',
-    left: opt('Le pendre', { delta: D(0, 6, -9, 0), scale: [{ keyword: 'Science', delta: D(0, 0, -3) }], flags: ['censure'] }, 'Pendu. Le pamphlet suivant parlait de ça.'),
-    right: opt('Répondre par pamphlet', { delta: D(0, -6, 7, -4), scale: [{ keyword: 'Culture', delta: D(0, 3) }] }, 'Le vôtre était drôle. Pas assez.'),
-    art: { motif: 'scroll' },
-  }),
-
-  // ---------------------------------------------------------------- 3. LA GRANDE GUERRE
-  card({
-    id: 'x3_mobilisation', title: 'La Mobilisation', kind: 'crisis',
-    text: 'Les voisins ont mobilisé. Leurs trains sont pleins de soldats. Les vôtres sont pleins de charbon.',
-    left: opt('Mobiliser aussi', { delta: D(-6, 10, 0, -7), scale: [{ keyword: 'Guerre', delta: D(0, 3) }], rival: -10 }, 'Tout le monde est soldat. Personne ne moissonne.'),
-    right: opt('Attendre', { delta: D(-3, -11, -4, 0), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }], rival: 5 }, 'Vous avez attendu. Ils aussi. Puis ils ont cessé.'),
-    art: { motif: 'gear' },
-  }),
-  card({
-    id: 'x3_tranchees', title: 'Les Tranchées', kind: 'crisis',
-    text: 'Le front ne bouge plus. Chaque mètre coûte mille hommes. Les généraux veulent un mètre.',
-    left: opt('L’offensive', { when: { gauge: 'army', gte: 60 }, then: { delta: D(-4, -9, -3, -5), scale: [{ keyword: 'Guerre', delta: D(0, 4) }], flags: ['rivalDefeated'] }, else: { delta: D(-8, -15, -3, -5), scale: [{ keyword: 'Guerre', delta: D(0, 4) }] } }, 'Un mètre. Puis deux. Puis la percée.'),
-    right: opt('Tenir', { delta: D(-10, -5, 0, -10), scale: [{ keyword: 'Nature', delta: D(3) }] }, 'Rien ne bouge. Tout s’épuise.'),
-    art: { motif: 'shield' },
-  }),
-  card({
-    id: 'x3_armistice', title: 'L’Armistice', kind: 'crisis',
-    text: 'Tout le monde est épuisé. Les voisins proposent la paix. Leurs conditions tiennent sur dix pages.',
-    left: opt('Signer', { delta: D(3, -5, -4, -10), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }], rival: 12 }, 'La paix. Chère. Les généraux parlent de trahison.'),
-    right: opt('Dicter vos conditions', { when: { flag: 'rivalDefeated' }, then: { delta: D(4, 4, 0, 10), rival: -15 }, else: { delta: D(-5, -8, -4, -5), rival: -15 } }, 'Vos dix pages contre les leurs. Les leurs sont mieux armées.'),
-    art: { motif: 'scroll' },
-  }),
-  card({
-    id: 'x3_usines', title: 'L’Effort de guerre', kind: 'crisis',
-    text: 'Les usines doivent choisir : des obus ou du pain. Les ouvrières font les deux. Elles voudraient dormir.',
-    left: opt('Des obus', { delta: D(-11, 8, 0, 0), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }] }, 'Le front est fourni. La ville, affamée.'),
-    right: opt('Du pain', { delta: D(8, -9, 0, -4), scale: [{ keyword: 'Nature', delta: D(3) }] }, 'La ville mange. Le front envoie des lettres.'),
-    art: { motif: 'gear' },
-  }),
-  card({
-    id: 'x3_mutinerie', title: 'La Mutinerie', kind: 'crisis',
-    text: 'Un régiment refuse de monter. Ils chantent. Les autres régiments écoutent.',
-    left: opt('Fusiller les meneurs', { delta: D(0, 6, -9, -3), scale: [{ keyword: 'Guerre', delta: D(0, 2) }, { keyword: 'Culture', delta: D(0, -3) }] }, 'Silence dans les rangs. Un silence qui dure.'),
-    right: opt('Des permissions', { delta: D(-3, -7, 5, -3), scale: [{ keyword: 'Culture', delta: D(0, 3) }] }, 'Ils sont rentrés chez eux. La moitié est revenue.'),
-    art: { motif: 'flame' },
-  }),
-  card({
-    id: 'x3_emprunt', title: 'L’Emprunt de guerre', kind: 'crisis',
-    text: 'Le trésor est vide. Les banquiers proposent de prêter. Le peuple propose de donner ses bijoux. Il n’en a plus.',
-    left: opt('Les banquiers', { delta: D(0, 4, 0, 10), add: [{ card: 'q_dette', delay: 5 }], scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 3) }] }, 'Des obus à crédit. La facture suivra.'),
-    right: opt('Les bijoux', { delta: D(-6, 4, 0, 6), scale: [{ keyword: 'Foi', delta: D(0, 3) }] }, 'Des alliances fondues. Des larmes. Des obus.'),
-    art: { motif: 'coin' },
-  }),
-
-  // ---------------------------------------------------------------- 4. LE GRAND FILTRE
-  card({
-    id: 'x4_signal', title: 'Le Signal', kind: 'crisis',
-    text: 'Les télescopes captent un signal. Pas d’ici. Il répète un nombre. Les voisins l’ont capté aussi.',
-    left: opt('Répondre', { delta: D(0, -7, 6, -7), scale: [{ keyword: 'Science', delta: D(0, 0, 0, 2) }], flags: ['signal'], rival: 5 }, 'Vous avez répondu. Le silence qui suit est très long.'),
-    right: opt('Se taire', { delta: D(-4, 7, -8, 0), scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, 'Silence. Les voisins ont répondu, eux.'),
-    art: { motif: 'star' },
-  }),
-  card({
-    id: 'x4_penurie', title: 'La Dernière Mine', kind: 'crisis',
-    text: 'Il ne reste presque plus de métal sur Terre. Il y en a dans le ciel. Et chez les voisins.',
-    left: opt('Le ciel', { delta: D(-6, -4, 4, -12), scale: [{ keyword: 'Science', delta: D(0, 0, 0, 2) }, { keyword: 'Commerce', delta: D(0, 0, 0, 2) }] }, 'Les mines orbitales. Lent. Propre. Ruineux.'),
-    right: opt('Les voisins', { when: { gauge: 'army', gte: 60 }, then: { delta: D(-4, -9, 0, 10), rival: -25, flags: ['rivalDefeated'], scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, else: { delta: D(-7, -13, 0, 2), rival: -25, scale: [{ keyword: 'Guerre', delta: D(0, 2) }] } }, 'Leurs mines sont à vous. Leur rancune aussi.'),
-    art: { motif: 'comet' },
-  }),
-  card({
-    id: 'x4_choix', title: 'Le Grand Filtre', kind: 'crisis',
-    text: 'Le signal avait un sens : « Montrez ce que vous êtes. » Vos conseillers ont chacun une idée.',
-    left: opt('Lancer l’arche', { delta: D(-7, -5, -10, -10), scale: [{ keyword: 'Science', delta: D(0, 0, 2, 2) }], flags: ['endingScience'] }, 'Le vaisseau est parti. Avec vos meilleurs esprits.'),
-    right: opt('Ouvrir les archives', { delta: D(-7, -9, -4, 5), scale: [{ keyword: 'Culture', delta: D(0, 2) }, { keyword: 'Foi', delta: D(0, 2) }], flags: ['endingCulture'], rival: 10 }, 'Tout le monde a tout lu. Tout le monde pleure. De joie, dit-on.'),
-    art: { motif: 'ring' },
-  }),
-  card({
-    id: 'x4_generaux', title: 'Les Généraux', kind: 'crisis',
-    text: 'Les généraux disent que les voisins préparent un coup. Ils proposent le leur. Ce soir.',
-    left: opt('Frapper', { when: { gauge: 'army', gte: 55 }, then: { delta: D(-6, -8, -5, 4), rival: -30, flags: ['endingMilitary', 'rivalDefeated'], scale: [{ keyword: 'Guerre', delta: D(0, 2) }] }, else: { delta: D(-11, -12, -5, -6), rival: -30, flags: ['endingMilitary'], scale: [{ keyword: 'Guerre', delta: D(0, 2) }] } }, 'Les voisins n’existent plus. La planète est à vous. Ce qu’il en reste.'),
-    right: opt('Les arrêter', { delta: D(0, -11, 3, -5), scale: [{ keyword: 'Culture', delta: D(0, 2) }], rival: 10 }, 'Les généraux sont en prison. L’armée est vexée.'),
-    art: { motif: 'shield' },
-  }),
-  card({
-    id: 'x4_exode', title: 'L’Exode', kind: 'crisis',
-    text: 'Un milliard de personnes veulent quitter la planète. Il y a de la place pour mille.',
-    left: opt('Tirer au sort', { delta: D(-6, -8, 0, -5), scale: [{ keyword: 'Culture', delta: D(0, 2) }, { keyword: 'Foi', delta: D(0, 2) }] }, 'Mille noms. Des émeutes. De la dignité, parfois.'),
-    right: opt('Les meilleurs', { delta: D(-6, 4, -9, -6), scale: [{ keyword: 'Science', delta: D(0, 0, 2) }] }, 'Les génies sont partis. La planète est moins intelligente. Plus calme.'),
-    art: { motif: 'comet' },
-  }),
-  card({
-    id: 'x4_fusion', title: 'Le Réacteur', kind: 'crisis',
-    text: 'Le réacteur à fusion est prêt. Il peut tout alimenter. Ou tout raser. Les ingénieurs disent 90 %.',
-    left: opt('Allumer', { when: { keyword: 'Science', min: 3 }, then: { delta: D(8, -4, 5, -8) }, else: { delta: D(-8, -6, 3, -11) } }, 'Ça marche. La nuit n’existe plus.'),
-    right: opt('Pas à 90 %', { delta: D(-8, 0, -8, 5), scale: [{ keyword: 'Foi', delta: D(0, 2) }] }, 'Prudence. Le noir continue.'),
-    art: { motif: 'sun' },
-  }),
-];
+import type { CrisisDef } from '../core/types';
+import { $, card } from './dsl';
 
 export const crises: CrisisDef[] = [
-  {
-    id: 'horde', era: 0, name: 'La Horde',
-    intro: 'Des cavaliers. Des milliers. Ils viennent voir ce que vous avez construit.',
-    cards: ['x0_eclaireurs', 'x0_portes', 'x0_lendemain'],
-    extra: ['x0_traitre', 'x0_otages', 'x0_feu'], extraCount: 1,
-  },
-  {
-    id: 'peste', era: 1, name: 'La Peste',
-    intro: 'Une fièvre au port. Dix morts. Puis cent. Puis on arrête de compter.',
-    cards: ['x1_morts', 'x1_rues', 'x1_quarantaine'],
-    extra: ['x1_rats', 'x1_heritage', 'x1_voisins'], extraCount: 2,
-  },
-  {
-    id: 'revolte', era: 2, name: 'La Révolte',
-    intro: 'On murmure que le roi n’est pas nécessaire. On le murmure très fort.',
-    cards: ['x2_murmures', 'x2_barricades', 'x2_charte'],
-    extra: ['x2_eveque', 'x2_mercenaires', 'x2_imprimeur'], extraCount: 2,
-  },
-  {
-    id: 'guerre', era: 3, name: 'La Grande Guerre',
-    intro: 'Les trains sont pleins de soldats. Tous les trains. Dans tous les pays.',
-    cards: ['x3_mobilisation', 'x3_tranchees', 'x3_armistice'],
-    extra: ['x3_usines', 'x3_mutinerie', 'x3_emprunt'], extraCount: 2,
-  },
-  {
-    id: 'filtre', era: 4, name: 'Le Grand Filtre',
-    intro: 'Un signal venu d’ailleurs. Il répète un nombre. Le vôtre, peut-être.',
-    cards: ['x4_signal', 'x4_penurie', 'x4_generaux', 'x4_choix'],
-    extra: ['x4_exode', 'x4_fusion'], extraCount: 1,
-  },
+  { era: 0, name: 'La Horde', intro: 'Des cavaliers, des milliers. Ils viennent voir ce que vous avez bâti, et le prendre.', protects: 'l’Armée, et des Ourk qui vous aiment', cards: ['x0_eclaireurs', 'x0_horde', 'x0_lendemain'] },
+  { era: 1, name: 'La Peste', intro: 'Une fièvre au port. Dix morts, puis cent. Puis on arrête de compter.', protects: 'le Savoir, des Vivres en réserve, et ceux qui soignent', cards: ['x1_port', 'x1_fievre', 'x1_maisons'] },
+  { era: 2, name: 'La Révolte', intro: 'On murmure que vous n’êtes pas nécessaire. On le murmure de plus en plus fort.', protects: 'des familles loyales, du Trésor, du pain', cards: ['x2_rumeur', 'x2_barricades', 'x2_charte'] },
+  { era: 3, name: 'La Grande Guerre', intro: '{Rival} mobilisent. Les trains sont pleins de soldats. Tous les trains.', protects: 'l’Armée, le Trésor, et l’état de vos relations avec {rival}', cards: ['x3_mobilisation', 'x3_front', 'x3_armistice'] },
+  { era: 4, name: 'Le Grand Filtre', intro: 'Un signal venu d’ailleurs. Il répète une question : « Qu’êtes-vous ? »', protects: 'votre dessein : ce que vous avez bâti répondra pour vous', cards: ['x4_signal', 'x4_panique', 'x4_reponse'] },
+];
+
+export const crisisCards = [
+  // ------------------------------------------------------------------ I. La Horde
+  card({
+    id: 'x0_eclaireurs', kind: 'crise', art: { motif: 'mountain', hue: 8 },
+    title: 'Les Éclaireurs',
+    text: 'Trois cavaliers sur la crête. Ils comptent vos huttes. Ils comptent mal, mais ils recommencent.',
+    options: [
+      { label: 'Les abattre', warn: 'Sans {k:4} Armée, ils s’enfuient et préviennent la horde',
+        effect: { if: { res: $('A4') }, then: { gain: $('A-1'), mem: ['horde_aveugle'], reply: 'Deux tombent, le troisième aussi. La horde ne sait pas ce qui l’attend. Vous non plus.' },
+          else: { mem: ['horde_prevenue'], reply: 'Ils s’enfuient en riant. La horde saura tout, et elle rit fort.' } } },
+      { label: 'Leur offrir à manger', cost: $('V3'), effect: { mem: ['horde_amadouee'] }, reply: 'Ils mangent, remercient, et repartent annoncer qu’ici on mange bien.' },
+      { label: 'L’embuscade des Ourk', req: { fam: { id: 'ourk', min: 2 } }, effect: { gain: $('A2'), mem: ['horde_aveugle'], loy: { ourk: 1 } },
+        reply: '{F:ourk} revient avec trois chevaux. « Ourk a demandé leur chemin. Ourk a gardé les chevaux. »' },
+    ],
+  }),
+  card({
+    id: 'x0_horde', kind: 'crise', art: { motif: 'shield', hue: 8 },
+    title: 'La Horde',
+    text: 'Ils sont là. {?mem:horde_prevenue|Ils savent exactement où frapper.|{?mem:horde_aveugle|Ils hésitent : ils ne savent pas ce que vous cachez.|Ils sont nombreux, et polis, ce qui est pire.}}',
+    options: [
+      { label: 'Tenir les murs', warn: 'Sans {k:7} Armée, un quartier tombe (deux si la horde est prévenue)',
+        effect: { if: { res: $('A7') }, then: { gain: $('A-3'), reply: 'Les murs tiennent. La horde fait le tour, deux fois, puis rentre chez elle en boudant.' },
+          else: { quartiers: -1, cause: 'la Horde', if: { mem: 'horde_prevenue' }, then: { quartiers: -1, cause: 'la Horde, prévenue par ses éclaireurs' }, reply: 'La horde passe. Elle emporte un quartier, et ce qui traînait dedans.' } } },
+      { label: 'Payer le tribut', cost: $('T5'), effect: { if: { mem: 'horde_amadouee' }, then: { gain: $('T2'), reply: 'Ils se souviennent du repas. Ils prennent moins. Ils prennent quand même.' } },
+        reply: 'Ils prennent l’or, saluent, et promettent de revenir. Ils tiennent toujours leurs promesses.' },
+      { label: 'Les chars de Brume', req: { mem: 'brume_roue' }, effect: { gain: $('A2'), loy: { brume: 2, ourk: -1 } },
+        reply: 'Les chars du vieux Brume chargent. La horde n’a jamais vu de roue. Elle en verra beaucoup.' },
+    ],
+  }),
+  card({
+    id: 'x0_lendemain', kind: 'crise', art: { motif: 'flame', hue: 20 },
+    title: 'Le Lendemain',
+    text: 'La horde est passée. Il reste des cendres, des blessés, et quatre familles qui vous regardent pour savoir à qui la faute.',
+    form: 'qui',
+    qui: { count: 3, option: (f) => ({ label: `Blâmer {H:${f}}`, effect: { loy: { [f]: -2, ...Object.fromEntries((['ourk', 'sel', 'brume', 'troc'] as const).filter((x) => x !== f).map((x) => [x, 1])) }, gain: $('V2') },
+      reply: `{H:${f}} sont coupables, c’est décidé. Les autres familles se sentent mieux. {H:${f}} se sentent notés.` }) },
+    options: [],
+  }),
+
+  // ------------------------------------------------------------------ II. La Peste
+  card({
+    id: 'x1_port', kind: 'crise', art: { motif: 'wave', hue: 120 },
+    title: 'Le Port',
+    text: 'La fièvre arrive par les navires. {F:troc} dit que fermer le port coûtera une fortune. {F:sel} dit que l’ouvrir coûtera des âmes. Les âmes ne paient pas d’impôts.',
+    options: [
+      { label: 'Fermer le port', cost: $('T6'), effect: { loy: { troc: -1, sel: 1 }, mem: ['port_ferme'] }, reply: 'Les quais sont vides. Les rats, déçus, prennent la route.' },
+      { label: 'Laisser ouvert', effect: { gain: $('T4'), loy: { troc: 1 }, mem: ['port_ouvert'] }, reply: 'Le commerce continue. La fièvre aussi, à bord des charrettes.' },
+    ],
+  }),
+  card({
+    id: 'x1_fievre', kind: 'crise', art: { motif: 'spiral', hue: 120 },
+    title: 'La Fièvre',
+    text: 'Un tiers de la ville tousse. {F:brume} veut des médecins. {F:sel} veut des processions. Les deux veulent un budget.',
+    options: [
+      { label: 'Les médecins', warn: 'Sans {k:9} Savoir, un quartier se vide{?mem:port_ouvert| (deux : le port était ouvert)|}',
+        effect: { loy: { brume: 1, sel: -1 }, if: { res: $('S9') }, then: { gain: $('S-3'), reply: 'Les médecins trouvent : ce sont les rats. Les rats nient.' },
+          else: { quartiers: -1, cause: 'la Peste', if: { mem: 'port_ouvert' }, then: { quartiers: -1, cause: 'la Peste, entrée par le port' }, reply: 'Les médecins cherchent, ils sont trop peu. Un quartier se tait.' } } },
+      { label: 'Les processions', cost: $('V6'), warn: 'Il faut que les Sel vous aiment',
+        effect: { if: { fam: { id: 'sel', min: 1 } }, then: { loy: { sel: 1 }, reply: 'Les processions ont rassemblé tout le monde. Par chance, la fièvre aussi est partie se promener.' },
+          else: { quartiers: -1, cause: 'la Peste, et des processions sans ferveur', reply: 'Les processions ont rassemblé tout le monde, et la fièvre en a profité.' } } },
+      { label: 'Le remède des Brumides', req: { fam: { id: 'brume', min: 2 } }, effect: { loy: { brume: 1 }, gain: $('S2') },
+        reply: 'Le remède est infect. Il marche. {F:brume} le savait, techniquement.' },
+    ],
+  }),
+  card({
+    id: 'x1_maisons', kind: 'crise', art: { motif: 'house', hue: 120 },
+    title: 'Les Maisons vides',
+    text: 'La fièvre a emporté des riches aussi. Leurs maisons sont vides, leurs coffres pleins. {F:troc} a déjà des clés.',
+    options: [
+      { label: 'Tout au trésor', effect: { gain: $('T7'), loy: { sel: -1 } }, reply: 'Les coffres sont pleins. Les héritiers survivants vous détestent avec méthode.' },
+      { label: 'Aux survivants', effect: { gain: $('V4'), loy: { sel: 1, troc: -1 }, quartiers: 1 }, reply: 'Les pauvres ont des maisons. Un quartier renaît, plus pauvre et plus reconnaissant.' },
+    ],
+  }),
+
+  // ------------------------------------------------------------------ III. La Révolte
+  card({
+    id: 'x2_rumeur', kind: 'crise', art: { motif: 'mask', hue: 300 },
+    title: 'La Rumeur',
+    text: 'Quelqu’un a lancé la rumeur que vous n’êtes pas nécessaire. Il faut un coupable avant ce soir. N’importe lequel, mais avant ce soir.',
+    form: 'qui',
+    qui: { count: 3, option: (f) => ({ label: `Accuser {H:${f}}`, effect: { loy: { [f]: -2 }, gain: $('A2'), if: { fam: { id: f, max: -1 } }, then: { reply: `{H:${f}} étaient vraiment coupables. Ça arrive. Ils vous en veulent quand même.` } },
+      reply: `{H:${f}} sont arrêtés. Ils étaient innocents, ce qui les rend furieux et très crédibles.` }) },
+    options: [],
+  }),
+  card({
+    id: 'x2_barricades', kind: 'crise', art: { motif: 'flame', hue: 300 },
+    title: 'Les Barricades',
+    text: 'La ville est aux insurgés. Ils réclament du pain, puis votre tête, dans cet ordre. Il est encore temps de choisir l’ordre.',
+    options: [
+      { label: 'Du pain pour tous', cost: $('V9'), effect: { loy: { sel: 1 } }, reply: 'Ils mangent. Ils gardent les barricades, au cas où. On ne sait jamais avec vous.' },
+      { label: 'La troupe', warn: 'Sans {k:13} Armée, un quartier brûle',
+        effect: { loy: { ourk: 1, sel: -1 }, if: { res: $('A13') }, then: { gain: $('A-4'), reply: 'Les rues sont calmes. Elles ont été nettoyées. Avec quoi, on ne le dit pas.' },
+          else: { quartiers: -1, cause: 'la Révolte', reply: 'La troupe a hésité, puis rejoint les barricades. Un quartier brûle sous les vivats.' } } },
+      { label: 'Les Salière calment la foule', req: { fam: { id: 'sel', min: 2 } }, effect: { loy: { sel: 1 }, gain: $('V2') },
+        reply: '{F:sel} parle. La foule écoute, pleure, rentre chez elle. On ne sait pas ce qu’elle a dit.' },
+    ],
+  }),
+  card({
+    id: 'x2_charte', kind: 'crise', art: { motif: 'scroll', hue: 300 },
+    title: 'La Charte',
+    text: 'Les insurgés proposent une charte : vous régnez, mais ils décident. Vous signez, ou vous expliquez pourquoi pas.',
+    options: [
+      { label: 'Signer', effect: { loy: { ourk: 1, sel: 1, brume: 1, troc: 1 }, gain: $('T-4'), mem: ['charte'] }, reply: 'Vous régnez, entre guillemets. Tout le monde est content, sauf vous et les guillemets.' },
+      { label: 'Déchirer', warn: 'Sans {k:12} Armée, un quartier brûle',
+        effect: { if: { res: $('A12') }, then: { gain: $('A-3 T3'), loy: { brume: -1 }, reply: 'Déchirée. Les morceaux circulent sous le manteau. Ils sont très lus.' },
+          else: { quartiers: -1, cause: 'la Révolte, après la charte déchirée', reply: 'Déchirée devant la foule. Mauvaise idée, devant la foule.' } } },
+    ],
+  }),
+
+  // ------------------------------------------------------------------ IV. La Grande Guerre
+  card({
+    id: 'x3_mobilisation', kind: 'crise', art: { motif: 'gear', hue: 0 },
+    title: 'La Mobilisation',
+    text: '{Reine} a mobilisé. {?rival>=1|{Elle} vous écrit que ce n’est « pas contre vous ». {Elle} souligne « pas ».|{Elle} vous écrit que c’est contre vous. {Elle} souligne « vous ».}',
+    options: [
+      { label: 'Mobiliser aussi', cost: $('V8'), effect: { gain: $('A8'), rival: -1 }, reply: 'Tout le monde est soldat. Personne ne moissonne. On mangera la guerre.' },
+      { label: 'Négocier', req: { rival: { min: 1 } }, reqLabel: 'Relations cordiales avec la rivale', effect: { mem: ['guerre_negociee'], rival: 1 },
+        reply: 'Une table, deux chaises, douze avocats. La guerre est repoussée d’une saison. C’est déjà ça.' },
+      { label: 'Attendre', effect: { gain: $('T3') }, reply: 'Vous attendez. {Rival} n’attendent pas.' },
+    ],
+  }),
+  card({
+    id: 'x3_front', kind: 'crise', art: { motif: 'shield', hue: 0 },
+    title: 'Le Front',
+    text: 'Le front ne bouge plus. Chaque mètre coûte mille hommes. {F:ourk} veut un mètre.{?mem:guerre_negociee| Les avocats négocient encore. Ça aide un peu.|}',
+    options: [
+      { label: 'Tenir le front', warn: 'Sans {k:17} Armée, deux quartiers tombent{?mem:guerre_negociee| (un : la négociation aide)|}',
+        effect: { if: { res: $('A17') }, then: { gain: $('A-5'), reply: 'Le front tient. Personne ne sait plus très bien pourquoi, mais il tient.' },
+          else: { quartiers: -2, cause: 'la Grande Guerre', if: { mem: 'guerre_negociee' }, then: { quartiers: 1 }, reply: 'Le front a craqué. Deux quartiers de la frontière sont désormais chez {rival}.' } } },
+      { label: 'Acheter des alliés', cost: $('T13'), effect: { rival: -1 }, reply: 'Des alliés arrivent, chers et vexés d’arriver si tard. Le front tient, grâce à eux et malgré eux.' },
+      { label: 'L’offensive Ourkov', req: { fam: { id: 'ourk', min: 2 } }, effect: { gain: $('A-2 T4'), rivalJalon: -1, loy: { ourk: 1 }, mem: ['rival_vaincu'] },
+        reply: 'Le colonel Ourkov perce le front, prend un chantier de {rival} et l’inaugure à votre nom.' },
+    ],
+  }),
+  card({
+    id: 'x3_armistice', kind: 'crise', art: { motif: 'scroll', hue: 0 },
+    title: 'L’Armistice',
+    text: 'Tout le monde est épuisé. {Reine} propose la paix. Ses conditions tiennent sur dix pages, écrites très petit.',
+    options: [
+      { label: 'Signer ses conditions', effect: { gain: $('T-5'), rival: 2, rivalJalon: 1 }, reply: 'La paix. Chère. {Reine} vous offre la plume en souvenir. {Elle} la facture.' },
+      { label: 'Dicter les vôtres', warn: 'Il faut avoir vaincu sur le front, sinon un quartier tombe',
+        effect: { if: { mem: 'rival_vaincu' }, then: { gain: $('T6'), rival: -1, reply: 'Vos dix pages contre les siennes. Les vôtres sont mieux armées.' },
+          else: { quartiers: -1, cause: 'la Grande Guerre, prolongée par orgueil', rival: -1, reply: 'Vous dictez. {Elle} rit. La guerre reprend un mois, juste pour vous.' } } },
+    ],
+  }),
+
+  // ------------------------------------------------------------------ V. Le Grand Filtre
+  card({
+    id: 'x4_signal', kind: 'crise', art: { motif: 'star', hue: 220 },
+    title: 'Le Signal',
+    text: 'Les antennes captent un signal. Il répète : « Qu’êtes-vous ? » {Rival} l’ont capté aussi. {Reine} a déjà répondu, en trois pages.',
+    options: [
+      { label: 'Répondre avec la science', cost: $('S12'), effect: { loy: { brume: 2 }, mem: ['signal_science'] }, reply: 'Vous envoyez les décimales de pi. Le signal répond : « Et ensuite ? »' },
+      { label: 'Répondre avec une chanson', cost: $('T12'), effect: { loy: { sel: 1, troc: 1 }, mem: ['signal_culture'] }, reply: 'Vous envoyez votre hymne. Le silence qui suit est poli. Très poli.' },
+      { label: 'Pointer les canons', cost: $('A12'), effect: { loy: { ourk: 2 }, mem: ['signal_guerre'] }, reply: 'Vous pointez les canons vers le ciel. Le signal se tait. Il prend des notes.' },
+      { label: 'Faire le mort', effect: { loy: { brume: -1, ourk: -1 }, mem: ['signal_silence'] }, reply: 'Vous ne répondez pas. Le signal répète la question, plus lentement, comme à un enfant.' },
+    ],
+  }),
+  card({
+    id: 'x4_panique', kind: 'crise', art: { motif: 'comet', hue: 220 },
+    title: 'La Panique',
+    text: 'Tout le monde croit à la fin du monde. Certains prient, d’autres pillent, quelques-uns font les deux.',
+    options: [
+      { label: 'Rationner', cost: $('V12'), effect: { loy: { sel: 1 } }, reply: 'Rations pour tous. La fin du monde est remise à plus tard, faute de participants.' },
+      { label: 'Couvre-feu', warn: 'Sans {k:19} Armée, un quartier brûle',
+        effect: { if: { res: $('A19') }, then: { gain: $('A-4'), reply: 'Couvre-feu. La fin du monde est priée de rentrer avant vingt heures.' },
+          else: { quartiers: -1, cause: 'la Panique du Grand Filtre', reply: 'Le couvre-feu a été annoncé. Personne ne l’a respecté. Un quartier brûle de joie.' } } },
+      { label: 'Montrer nos merveilles', req: { jalons: 3 }, effect: { loy: { sel: 1, troc: 1 } },
+        reply: 'On montre les merveilles. La foule se calme : on ne détruit pas ce qui est beau. Pas tout de suite.' },
+    ],
+  }),
+  card({
+    id: 'x4_reponse', kind: 'crise', art: { motif: 'ring', hue: 220 },
+    title: 'La Réponse',
+    text: 'Le signal attend votre réponse définitive. Ce que vous avez bâti parlera. Ce que vous n’avez pas bâti aussi, mais moins bien.',
+    options: [
+      { label: 'Montrer notre dessein', warn: 'Sans le quatrième jalon, deux quartiers tombent',
+        effect: { if: { jalons: 4 }, then: { mem: ['filtre_passe'], reply: 'Le signal se tait longuement. Puis : « D’accord. » Personne ne sait à quoi on a dit oui.' },
+          else: { quartiers: -2, cause: 'le Grand Filtre, devant un dessein inachevé', reply: 'Le signal n’est pas impressionné. Il éteint deux quartiers, pour voir.' } } },
+      { label: 'Tout donner', cost: $('V9 A9 S9 T9'), effect: { mem: ['filtre_passe'] }, reply: 'Vous envoyez tout ce que vous avez. Le signal accepte. Il ne rend pas la monnaie.' },
+      { label: 'Se cacher', effect: { quartiers: -1, cause: 'le Grand Filtre, à qui l’on n’a pas répondu', gain: $('V4') }, reply: 'Vous éteignez tout. Le signal passe, sans vous voir. Il emporte un quartier, par distraction.' },
+    ],
+  }),
 ];

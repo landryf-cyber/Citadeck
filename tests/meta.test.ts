@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { content } from '../src/v2/data';
-import { Engine } from '../src/v2/core/engine';
-import { epitaph, newMeta, nextSetup, recordRun, testaments, UNLOCKS, loadMeta, chronicleLines } from '../src/v2/core/meta';
-import { campaign, finalState } from '../src/v2/sim/sim';
-import { PROFILES } from '../src/v2/sim/bots';
+import { content } from '../src/data';
+import { Engine } from '../src/core/engine';
+import { epitaph, newMeta, nextSetup, recordRun, testaments, UNLOCKS, loadMeta, chronicleLines } from '../src/core/meta';
+import { campaign, finalState } from '../src/sim/sim';
+import { PROFILES } from '../src/sim/bots';
 
 const reader = PROFILES.find((p) => p.name === 'lecteur')!;
 const greedy = PROFILES.find((p) => p.name === 'gourmand')!;
@@ -117,5 +117,18 @@ describe('méta-progression V2', () => {
     expect(loadMeta(JSON.parse(JSON.stringify(meta))).chronicle.length).toBe(12);
     expect(loadMeta({ version: 0 }).runs).toBe(0);
     expect(UNLOCKS.every((u) => u.how.length > 5 && u.text.length > 5)).toBe(true);
+  });
+});
+
+describe('rejouer une partie', () => {
+  it('le rejeu depuis la graine retrouve exactement la fin (chronologie de la cité)', async () => {
+    const { replaySnapshots } = await import('../src/ui/snapshot');
+    const s = finalState(content, reader, 31, { ruins: [{ name: 'Vorie', dessein: 'empire', era: 2, jalons: 1, cause: 'la famine', epitaph: 'x', legacy: { label: 'x', gain: { vivres: 3 } } }], unlocked: ['silos'] });
+    const snaps = replaySnapshots(e, s);
+    const last = snaps[snaps.length - 1];
+    expect(last.quartiers).toBe(s.quartiers);
+    expect(last.era).toBe(s.era);
+    expect(last.jalons.length).toBe(s.jalons.filter(Boolean).length);
+    expect(snaps.length).toBeGreaterThan(20);
   });
 });

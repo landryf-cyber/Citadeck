@@ -1,61 +1,69 @@
-import type { CardDef, CrisisDef, EraDef, WonderDef } from './types';
+import type { CardDef, CrisisDef, DesseinDef, FamilyDef, FamilyId, OriginDef, RivalDef, RouteDef } from './types';
 
-/** Tout le contenu du jeu, assemblé depuis src/data. */
+export interface Moods { hostile: string; cold: string; warm: string; devoted: string }
+
+/** Tout le contenu du jeu, assemblé dans src/data. */
 export interface Content {
   cards: Record<string, CardDef>;
-  eras: EraDef[];
-  /** cartes de départ (persistantes) */
-  starters: string[];
-  /** cartes de tutoriel, jouées en premier lors de la première partie */
-  tutorial: string[];
-  /** pool de cartes d'ère, par ère */
-  eraPools: string[][];
-  /** cartes proposées en récompense */
-  rewards: string[];
+  families: Record<FamilyId, FamilyDef>;
+  /** carte de chaque famille pour chaque ère : la première dont la condition passe est tirée */
+  familyCards: Record<FamilyId, string[][]>;
+  /** carte de trahison de chaque famille (jouée pendant une crise si elle vous hait) */
+  betrayal: Record<FamilyId, string>;
+  /** qui méprise qui */
+  rivalries: Record<FamilyId, FamilyId>;
+  desseins: DesseinDef[];
+  origins: OriginDef[];
+  routes: RouteDef[];
   crises: CrisisDef[];
-  wonders: WonderDef[];
-  rival: {
-    names: string[];
-    hostile: string[];
-    neutral: string[];
-    friendly: string[];
-  };
+  /** événements par ère */
+  events: string[][];
+  rivalCards: { hostile: string[]; neutral: string[]; friendly: string[] };
+  discoveries: string[];
+  rivals: RivalDef[];
+  tutorial: string[];
+  ruinsCard: string;
+  revenantCard: string;
+  /** humeur affichée en tête des cartes de famille */
+  moods: Record<FamilyId, Moods>;
+  /** souvenirs rappelés par les familles */
+  recalls: { family: FamilyId; mem: string; line: string }[];
 }
 
 export function validateContent(c: Content): string[] {
   const errors: string[] = [];
-  const has = (id: string) => id in c.cards;
-  const checkList = (ids: string[], where: string) => {
-    for (const id of ids) if (!has(id)) errors.push(`${where}: carte inconnue "${id}"`);
+  const has = (id: string, where: string) => {
+    if (!c.cards[id]) errors.push(`${where} : carte inconnue « ${id} »`);
   };
-  checkList(c.starters, 'starters');
-  checkList(c.tutorial, 'tutorial');
-  c.eraPools.forEach((p, i) => checkList(p, `eraPools[${i}]`));
-  checkList(c.rewards, 'rewards');
-  checkList(c.rival.hostile, 'rival.hostile');
-  checkList(c.rival.neutral, 'rival.neutral');
-  checkList(c.rival.friendly, 'rival.friendly');
-  for (const cr of c.crises) {
-    checkList(cr.cards, `crisis ${cr.id}`);
-    if (cr.extra) checkList(cr.extra, `crisis ${cr.id} extra`);
-  }
-  const wonderIds = new Set(c.wonders.map((w) => w.id));
+  for (const [f, eras] of Object.entries(c.familyCards)) eras.forEach((ids, e) => ids.forEach((id) => has(id, `famille ${f} ère ${e}`)));
+  for (const id of Object.values(c.betrayal)) has(id, 'trahison');
+  for (const cr of c.crises) cr.cards.forEach((id) => has(id, `crise ${cr.name}`));
+  c.events.forEach((ids, e) => ids.forEach((id) => has(id, `événements ère ${e}`)));
+  for (const k of ['hostile', 'neutral', 'friendly'] as const) c.rivalCards[k].forEach((id) => has(id, `rivale ${k}`));
+  c.discoveries.forEach((id) => has(id, 'découvertes'));
+  c.routes.forEach((r) => r.encounters.forEach((id) => has(id, `route ${r.id}`)));
+  c.tutorial.forEach((id) => has(id, 'tutoriel'));
+  has(c.ruinsCard, 'ruines');
+  has(c.revenantCard, 'revenants');
+  const walk = (card: CardDef, e: CardDef['options'][number]['effect'] | undefined) => {
+    if (!e) return;
+    for (const sc of e.sched ?? []) has(sc.card, `${card.id} (suite)`);
+    for (const id of e.addCard ?? []) has(id, `${card.id} (ajout)`);
+    walk(card, e.then);
+    walk(card, e.else);
+    if (e.bet) {
+      walk(card, e.bet.win);
+      walk(card, e.bet.lose);
+    }
+  };
   for (const card of Object.values(c.cards)) {
-    for (const opt of [card.left, card.right]) {
-      const walk = (e: typeof opt.effect) => {
-        for (const a of e.add ?? []) if (!has(a.card)) errors.push(`${card.id}: add inconnu "${a.card}"`);
-        if (e.wonder && !wonderIds.has(e.wonder)) errors.push(`${card.id}: merveille inconnue "${e.wonder}"`);
-        if (e.then) walk(e.then);
-        if (e.else) walk(e.else);
-      };
-      walk(opt.effect);
-      if (opt.text.length > 32) errors.push(`${card.id}: option trop longue "${opt.text}"`);
+    for (const o of card.options) {
+      walk(card, o.effect);
+      if (!o.label.includes('{?') && o.label.length > 34) errors.push(`${card.id} : option trop longue « ${o.label} »`);
     }
-    if (card.text.length > 125) errors.push(`${card.id}: texte trop long (${card.text.length})`);
-    for (const [era, v] of Object.entries(card.variants ?? {})) {
-      if (v.text.length > 125) errors.push(`${card.id}/${era}: texte trop long (${v.text.length})`);
-      for (const t of [v.left, v.right]) if (t && t.length > 32) errors.push(`${card.id}/${era}: option trop longue "${t}"`);
-    }
+    if (card.text.length > 260) errors.push(`${card.id} : texte trop long (${card.text.length})`);
+    const dynamic = ['carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(card.kind);
+    if (!card.qui && !dynamic && card.options.length < 1) errors.push(`${card.id} : aucune option`);
   }
   return errors;
 }

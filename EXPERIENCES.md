@@ -37,7 +37,7 @@ Journal des expériences : hypothèse, changement, test, résultat, décision.
 
 ## E4 — Premier passage des bots sur le vrai contenu V2 : trop facile
 - **Hypothèse** : le squelette de contenu (4 familles, rencontres, crises, découvertes) produit déjà une partie tendue.
-- **Test** : `npx tsx src/v2/sim/run.ts 150`, 8 profils de bots (lecteur qui simule chaque option sur une copie de l'état, indicateurs seuls, prudent, gourmand, trois spécialistes, aléatoire).
+- **Test** : `npx tsx src/sim/run.ts 150`, 8 profils de bots (lecteur qui simule chaque option sur une copie de l'état, indicateurs seuls, prudent, gourmand, trois spécialistes, aléatoire).
 - **Résultat** : lecture nécessaire (lecteur 95 % contre indicateurs 0 %), 33-37 % de cartes dépendantes, ~10 formes de dilemme par partie. Mais le lecteur survit 99 % et le prudent aussi : l'économie ne pèse pas. Les ressources s'accumulent sans limite dès l'ère III.
 - **Décision** : ajouter de la pression sans hasard pur : humeurs des familles et procès (E5), mise à l'échelle par ère, chantier avant la crise, érosion de l'armée et du trésor.
 
@@ -49,7 +49,7 @@ Journal des expériences : hypothèse, changement, test, résultat, décision.
 ## E6 — L'envie : les merveilles attirent les crises
 - **Hypothèse** : si chaque jalon bâti durcit les crises suivantes (« vos merveilles attirent les regards »), la gloire devient un pari : le gourmand gagne plus souvent grand mais meurt plus souvent, le prudent survit mais reste modeste. Sans toucher à la lisibilité : le présage annonce l'intensité.
 - **Changement** : intensité de crise = `crisisK × (1 + envie × jalons bâtis)`.
-- **Test** : `npx tsx src/v2/sim/sweep.ts '[...]' 60`, trois réglages (survie / grande victoire) :
+- **Test** : `npx tsx src/sim/sweep.ts '[...]' 60`, trois réglages (survie / grande victoire) :
 
 | Réglage | lecteur | prudent | gourmand | étoiles | empire | postérité |
 |---|---|---|---|---|---|---|

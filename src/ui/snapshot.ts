@@ -19,3 +19,22 @@ export function snapshot(e: Engine, s: GameState): CivSnapshot {
     res: { vivres: n(s.res.vivres), armee: n(s.res.armee), savoir: n(s.res.savoir), tresor: n(s.res.tresor) },
   };
 }
+
+/**
+ * Rejoue la partie depuis sa graine (le moteur est déterministe) pour retrouver la cité
+ * à chaque moment : de quoi montrer dix mille ans en quelques secondes.
+ */
+export function replaySnapshots(e: Engine, s: GameState, every = 2): CivSnapshot[] {
+  const r = e.newGame(s.seed, { dessein: s.dessein, origin: s.origin, ruins: s.ruins, unlocked: s.unlocked, iron: s.iron, name: s.name, tutorial: s.tutorial });
+  const out: CivSnapshot[] = [snapshot(e, r)];
+  s.history.forEach((h, i) => {
+    if (r.phase === 'fin') return;
+    try {
+      e.act(r, h.choice);
+    } catch {
+      return;
+    }
+    if (i % every === 0 || (r.phase as string) === 'fin') out.push(snapshot(e, r));
+  });
+  return out;
+}

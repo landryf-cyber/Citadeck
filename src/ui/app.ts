@@ -12,7 +12,7 @@ import { drawElem, type DrawEnv, type Elem } from '../scene/city';
 import type { AudioEngine } from '../audio';
 import { cardArt, medallion, type ArtSpec } from './art';
 import { bagChips, el, esc, ICON, rich, RES_ICON, ROMAN, wait } from './dom';
-import { snapshot } from './snapshot';
+import { replaySnapshots, snapshot } from './snapshot';
 import { store, type Settings } from './store';
 
 const KIND_LABEL: Record<string, string> = {
@@ -372,6 +372,7 @@ export class App {
     stage.innerHTML = '';
     stage.appendChild(card);
     this.audio.cardIn();
+    if ((v.kind === 'ruines' || v.kind === 'revenant') && s.ruins[0]) this.scene.sparkAt(`old0_${s.ruins[0].shape ?? 'cercle'}`);
     this.keyHandler = (k) => {
       const n = Number(k);
       if (n >= 1 && n <= v.options.length) void this.choose(n - 1);
@@ -481,8 +482,9 @@ export class App {
     this.scene.pulse(lostQ ? 0.2 : 0.45);
 
     // les grands moments
-    const jal = ev.find((x) => x.type === 'jalon') as { name: string } | undefined;
+    const jal = ev.find((x) => x.type === 'jalon') as { name: string; era: number } | undefined;
     if (jal) {
+      setTimeout(() => this.scene.sparkAt(`j${s.jalons.filter(Boolean).length - 1}`), 900);
       this.audio.wonder();
       await this.banner('Merveille bâtie', jal.name, 'gold');
     }
@@ -620,7 +622,41 @@ export class App {
       await this.banner(r.ending ? 'Dessein accompli' : 'La fin des temps', s.name, 'gold');
     }
     if (this.s !== s) return;
+    await this.timelapse(s);
+    if (this.s !== s) return;
     this.endScreen(s);
+  }
+
+  /** Dix mille ans en quelques secondes : la cité rejouée de sa fondation à sa fin. */
+  private timelapse(s: GameState): Promise<void> {
+    if (document.documentElement.classList.contains('reduced')) return Promise.resolve();
+    const snaps = replaySnapshots(this.e, s);
+    if (snaps.length < 4) return Promise.resolve();
+    return new Promise((done) => {
+      const dead = s.result?.type === 'defaite';
+      document.body.classList.add('cinema');
+      const cap = el('div', 'cinema-cap', `<div class="over">${esc(s.name)}</div><p>${esc(s.history[0]?.date ?? '')} — ${esc(s.history[s.history.length - 1]?.date ?? '')}</p><span>Toucher pour passer</span>`);
+      document.body.appendChild(cap);
+      this.scene.setMood({ dead: false, crisis: false, danger: 0 });
+      this.setEraColor(0);
+      let finished = false;
+      const end = () => {
+        if (finished) return;
+        finished = true;
+        this.scene.stopTimelapse();
+        this.scene.setSnapshot(snapshot(this.e, s), { instant: true });
+        this.setEraColor(s.era);
+        if (dead) this.scene.setMood({ dead: true });
+        document.body.classList.remove('cinema');
+        cap.remove();
+        window.removeEventListener('pointerdown', end);
+        this.keyHandler = null;
+        done();
+      };
+      window.addEventListener('pointerdown', end);
+      this.keyHandler = () => end();
+      this.scene.playTimelapse(snaps, Math.min(10, 4 + snaps.length * 0.06), () => setTimeout(end, 900));
+    });
   }
 
   private endScreen(s: GameState): void {

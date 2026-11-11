@@ -4,7 +4,6 @@
  * la cité (pleine résolution, rafraîchie à la demande) et les éléments vivants (chaque image).
  */
 import { Rng, hashString } from '../core/rng';
-import { TUNING } from '../core/types';
 import { layoutCity, drawElem, type CivSnapshot, type DrawEnv, type Elem } from './city';
 import { LOOKS, mixLook, mix, rgb, ease, clamp01, lerp, type EraLook, type RGB } from './palette';
 
@@ -48,11 +47,20 @@ export interface Mood {
   dead: boolean;
 }
 
+// palier 2 = tous les effets (cible : 30 images par seconde) ; on ne descend que sous 30 i/s
 const TIER_CFG = [
-  { dpr: 1, backEvery: 12, cityEvery: 30, particles: 18, rays: false, glow: false },
-  { dpr: 1.5, backEvery: 4, cityEvery: 10, particles: 44, rays: true, glow: true },
-  { dpr: 2, backEvery: 2, cityEvery: 5, particles: 90, rays: true, glow: true },
+  { dpr: 1, backEvery: 6, cityEvery: 8, particles: 22, rays: false, glow: false },
+  { dpr: 1.5, backEvery: 3, cityEvery: 5, particles: 48, rays: true, glow: true },
+  { dpr: 2, backEvery: 2, cityEvery: 4, particles: 90, rays: true, glow: true },
 ];
+
+function hueRGB(h: number): RGB {
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return [255 * f(0), 255 * f(8), 255 * f(4)];
+}
 
 export class Scene {
   private ctx: CanvasRenderingContext2D;
@@ -124,7 +132,8 @@ export class Scene {
     this.city = document.createElement('canvas');
     this.cctx = this.city.getContext('2d')!;
     const coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
-    this.tier = coarse ? 1 : 2;
+    this.tier = 2;
+    void coarse;
     const rng = new Rng(0xc17adec);
     for (let i = 0; i < 150; i++) this.stars.push({ x: rng.next(), y: Math.pow(rng.next(), 1.4), s: rng.range(0.5, 1.6), p: rng.range(0, 6.28) });
     this.makeHills(1);
@@ -166,8 +175,9 @@ export class Scene {
     this.city.width = Math.round((this.W + this.margin * 2) * this.dpr);
     this.city.height = Math.round(this.H * this.dpr);
     const portrait = this.H > this.W * 1.05;
-    this.horizon = this.H * (portrait ? 0.835 : 0.775);
-    this.u = Math.max(7.5, Math.min(22, Math.min(this.W / 40, this.H / 42)));
+    // la cité occupe le bas de l'écran (environ 40 %) : la carte se tient au-dessus
+    this.horizon = this.H * (portrait ? 0.83 : 0.8);
+    this.u = Math.max(7.5, Math.min(22, portrait ? Math.min(this.W / 33, this.H / 44) : Math.min(this.W / 44, this.H / 40)));
     this.cityDirtyUntil = this.t + 0.1;
     this.frame = 0;
     this.onTier(this.tier);
@@ -304,7 +314,7 @@ export class Scene {
     this.frameEma = this.frameEma * 0.95 + ms * 0.05;
     this.fps = 1000 / this.frameEma;
     if (this.setting !== 'auto') return;
-    if (this.frameEma > 21) this.slowFrames++;
+    if (this.frameEma > 34) this.slowFrames++;
     else this.slowFrames = Math.max(0, this.slowFrames - 2);
     if (this.frameEma < 13) this.fastFrames++;
     else this.fastFrames = 0;
@@ -315,12 +325,9 @@ export class Scene {
       this.frameEma = 16;
       this.resize();
     } else if (this.fastFrames > 900 && this.tier < 2 && this.downgrades === 0) {
-      const coarse = matchMedia('(pointer: coarse)').matches;
-      if (!coarse || this.tier < 1) {
-        this.tier = (this.tier + 1) as Tier;
-        this.fastFrames = 0;
-        this.resize();
-      }
+      this.tier = (this.tier + 1) as Tier;
+      this.fastFrames = 0;
+      this.resize();
     }
   }
 
@@ -375,7 +382,8 @@ export class Scene {
     this.parallax += (this.parallaxTarget - this.parallax) * k;
     const targetLight = this.mood.dead ? 0.14 : 1;
     this.lightLevel += (targetLight - this.lightLevel) * (1 - Math.pow(this.mood.dead ? 0.55 : 0.25, dt));
-    if (this.mood.dead && this.t - this.deadAt < 4.5) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
+    // en danger, en crise et pendant la chute, la cité vit à chaque image (flammes, lumières qui vacillent)
+    if (this.mood.dead || this.dangerSmooth > 0.02 || this.crisisSmooth > 0.02) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
 
     this.updateParticles(dt);
   }
@@ -384,6 +392,8 @@ export class Scene {
 
   private layerBase(layer: number): number {
     const u = this.u;
+    if (layer <= -2) return this.horizon - 4.6 * u;
+    if (layer <= -1.5) return this.horizon - 1.2 * u;
     if (layer < 0) return this.horizon - 2.6 * u;
     if (layer <= 0) return this.horizon + 0.1 * u;
     if (layer <= 1) return this.horizon + 1.3 * u;
@@ -395,6 +405,8 @@ export class Scene {
   }
 
   private layerScale(layer: number): number {
+    if (layer <= -2) return 0.5;
+    if (layer <= -1.5) return 1.0;
     if (layer < 0) return 1.25;
     if (layer <= 0) return 0.82;
     if (layer <= 1) return 1;
@@ -427,7 +439,7 @@ export class Scene {
     const backDue = this.frame % cfg.backEvery === 1 || transitioning || this.frame < 3 || dying;
     if (backDue) this.renderBack();
     const cityDirty = this.t < this.cityDirtyUntil;
-    if (this.frame < 3 || transitioning || ((cityDirty || this.frame % cfg.cityEvery === 2) && (!backDue || cityDirty) && (this.tier > 0 || !cityDirty || this.frame % 2 === 0))) this.renderCity();
+    if (this.frame < 3 || transitioning || cityDirty || this.frame % cfg.cityEvery === 2) this.renderCity();
 
     const ctx = this.ctx;
     const { W, H, dpr } = this;
@@ -728,8 +740,8 @@ export class Scene {
 
     if (!snap) return;
     this.lampAmount = l.smoke > 0.5 ? clamp01((l.smoke - 0.5) * 2) : 0;
-    const k01 = snap.gauges.knowledge / 100;
-    const lit = (snap.gauges.knowledge <= TUNING.dangerLow ? 0.06 + k01 * 0.3 : 0.16 + 0.84 * k01) * (this.mood.dead ? 1 : 0.25 + 0.75 * Math.min(1, lv + 0.2));
+    const k01 = snap.res.savoir;
+    const lit = (0.3 + 0.7 * k01) * (this.mood.dead ? 1 : 0.25 + 0.75 * Math.min(1, lv + 0.2));
     const out = this.mood.dead ? clamp01((this.t - this.deadAt) / 3.2) : 0;
     const env: DrawEnv = {
       ctx,
@@ -741,7 +753,7 @@ export class Scene {
       gold: rgb(l.gold),
       crop: rgb(mix(l.crop, l.ground, 0.25 + (1 - lv) * 0.6)),
       lit,
-      gilded: snap.gauges.treasure / 100,
+      gilded: snap.res.tresor,
       flicker: this.reducedMotion ? 0 : Math.min(1, 0.45 + this.dangerSmooth * 0.55),
       emit: () => undefined,
     };
@@ -790,11 +802,24 @@ export class Scene {
       const k = u * this.layerScale(e.layer) * e.size * (e.kind === 'wonder' ? 1.0 : 1);
       const bodyCol: RGB =
         e.layer < 0 ? mix(mix(l.far, l.mid, 0.55), l.skyLow, 0.06) : e.layer <= 0 ? mix(mix(l.far, l.mid, 0.4), l.skyLow, 0.12) : e.layer <= 1 ? l.mid : e.layer <= 1.5 ? mix(l.mid, l.near, 0.5) : l.near;
-      env.body = rgb(mix(bodyCol, [2, 2, 5], (1 - lv) * 0.7));
+      let body = bodyCol;
+      // la rivale : silhouettes teintées de sa couleur, sur la crête ; les ruines : pierre morte
+      if (e.kind === 'rival') body = mix(mix(l.far, l.skyLow, 0.25), hueRGB(e.r2), 0.32);
+      if (e.kind === 'relic') body = mix(mix(l.far, l.mid, 0.55), mix(l.light, [150, 144, 136], 0.6), 0.22 - 0.05 * e.r2);
+      env.body = rgb(mix(body, [2, 2, 5], (1 - lv) * 0.7));
       env.era = a.styleEra;
-      env.emit = (ex, ey, type) => {
+      env.emit = e.kind === 'relic' ? () => undefined : (ex, ey, type) => {
         this.emitters.push({ x: px + ex * k, y: py - ey * k * sy, type, k });
       };
+      if (e.kind === 'relic' || e.kind === 'rival') {
+        // une butte sous chaque ruine et chaque monument lointain
+        ctx.fillStyle = env.body;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.ellipse(px, py + u * 0.15, k * 4.2, k * 0.9, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
       if (e.kind === 'wonder') {
         // chaque merveille se dresse sur sa butte, au-dessus des toits
         ctx.fillStyle = env.body;
@@ -810,7 +835,7 @@ export class Scene {
       drawElem(env, e, out, alpha);
       ctx.restore();
 
-      if (e.kind === 'dwelling' || e.kind === 'sig' || e.kind === 'wonder') {
+      if (e.kind === 'dwelling' || e.kind === 'sig' || e.kind === 'wonder' || e.kind === 'relic') {
         this.elemPos.set(e.key, { x: px, y: py, h: k * (e.kind === 'wonder' ? 6 : 2.4) });
       }
       // halo doux autour des bâtiments éclairés

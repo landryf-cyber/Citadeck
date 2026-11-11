@@ -1,7 +1,7 @@
 import { content } from '../data';
 import { Engine } from '../core/engine';
 import { PROFILES, chooseIndex } from './bots';
-import { Rng } from '../../core/rng';
+import { Rng } from '../core/rng';
 for (const name of ['lecteur', 'gourmand', 'prudent']) {
   const p = PROFILES.find((x) => x.name === name)!;
   const agg = [0, 1, 2, 3, 4].map(() => ({ n: 0, q: 0, V: 0, A: 0, S: 0, T: 0, gain: 0, loss: 0 }));

@@ -1,22 +1,53 @@
 # DECISIONS — Citadeck
 
-Décisions prises en autonomie, avec leur raison.
+Décisions prises en autonomie, avec leur raison. Les décisions de la première version (V1) sont dans
+l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre une fois la V2 jouable.
 
-1. **Le nom reste « Citadeck ».** Le brief donne le nom et demande aussi d'en trouver un. « Citadeck » (cité + deck) porte déjà l'idée centrale : le deck est la cité. Sous-titre : « Le deck est la cité. »
-2. **Pile de rendu : DOM/CSS pour la carte, Canvas 2D pour la scène.** La carte a besoin d'un texte net et d'une transformation 3D fluide (CSS le fait mieux que tout). La scène est faite de silhouettes, d'aplats et de halos additifs : Canvas 2D suffit, tient 60 fps sur mobile et évite la fragilité d'un pipeline WebGL. Aucune dépendance d'exécution hors fontes.
-3. **L'aperçu montre le sens et l'intensité, pas la valeur.** Reigns cache le sens ; ici une flèche (haut/bas, simple/double) apparaît sur chaque jauge touchée. Le brief demande des décisions « rapides et instinctives » : cacher le sens transformerait chaque carte en devinette.
-4. **Structure du deck : cartes persistantes + paquet d'ère.** Le deck du joueur (départ, récompenses) revient à chaque ère ; chaque ère y mêle 7 cartes tirées d'un pool propre à l'époque. Sans paquet d'ère, l'âge spatial rejouerait les dilemmes de l'âge de pierre.
-5. **Conséquences à retardement = cartes à usage unique planifiées N tours plus tard.** Le joueur revoit littéralement sa décision revenir sous forme de carte.
-6. **La rivale est un flux de cartes, pas une simulation.** Une relation (−100..100) choisit le registre (hostile, neutre, amical) des cartes qu'elle injecte toutes les ~6 cartes.
-7. **La fin est calculée, puis infléchie par la dernière crise.** Score par voie (mots-clés du deck + jauges + choix de la crise finale).
-8. **Les enjeux montent avec les ères** (`stakes` dans `src/data/eras.ts`) : les effets des cartes sont multipliés par 1,45 à l'âge de pierre et 1,95 à l'ère spatiale. Sans cela, un joueur qui recentre mécaniquement ses jauges gagnait 3 parties sur 4.
-9. **Le « vent de l'ère »** : chaque ère pousse une jauge à chaque décision (la faim à l'âge de pierre, les légions dans l'Antiquité, l'oubli au Moyen Âge, l'argent à l'ère industrielle, le progrès à l'ère spatiale). C'est une règle ajoutée au brief. Raison : sans pression systématique on s'installe au milieu, et aucune jauge ne tuait par le haut. Le vent est annoncé à chaque changement d'ère et inclus dans l'aperçu.
-10. **Zone de danger à 30/70.** La cible « une jauge en danger plus de la moitié des tours » était inatteignable à 20/80 sans rendre le jeu injouable. À 30/70, on passe du temps en zone rouge sans mourir à chaque carte : la tension dure.
-11. **Équilibrage outillé.** Une table de biais par jauge (`src/data/tuning.ts`) et des retouches par carte générées par `npm run autotune` (`src/data/adjust.ts`) s'ajoutent aux valeurs écrites dans les cartes. Les valeurs ne sont jamais montrées au joueur, seulement le sens et l'intensité ; l'outil garde les signes. Contrepartie assumée : la valeur réelle d'une carte se lit en deux fichiers.
-12. **Push GitHub.** Le premier `git push` a été refusé (403 : l'app GitHub n'a pas accès au dépôt). Le travail continue en commits locaux.
-13. **Publication hors GitHub.** L'écriture vers GitHub étant refusée (push 403, API en lecture seule), le déploiement Pages n'a pas pu être déclenché depuis cette session. Contournement : `scripts/single-file.ts` produit le jeu en un seul fichier HTML (JS, CSS, polices intégrés), publié comme page hébergée sur claude.ai. Le workflow Pages reste prêt dans `.github/workflows/deploy.yml`.
-14. **Cité recomposée après comparaison.** Deux parties aux choix opposés donnaient presque la même silhouette (les habitations cachaient tout). Les merveilles sont désormais sur une butte, les remparts au premier plan, les bâtiments-signatures agrandis, et le nombre d'habitations suit la nourriture.
-15. **Retours du premier testeur appliqués** : options cliquables (la capture du pointeur avalait le clic), danger libellé « trop bas / trop haut », icône du Savoir changée (l'étoile ne laissait pas lire le niveau), aperçu des effets sur l'écran de récompense, mention « selon l'Armée » sur les options conditionnelles, répliques d'échec.
-16. **Retours du second testeur (clarté 4/10) appliqués.** Les jauges sont devenues une icône plus une barre de niveau avec ses deux zones rouges ; les flèches d'aperçu ont trois intensités ; des aides s'affichent une fois, au moment où la situation se présente (danger, rivale, option « selon… », suite, mot-clé).
-17. **Amplitudes réduites et « sursis ».** Aucune carte ne déplace une jauge de plus de 15 points (au lieu de 24) : une double flèche ne traverse plus toute la zone sûre. Et si les deux options d'une carte sont mortelles, la carte laisse le joueur au bord du gouffre au lieu de le tuer, une fois par ère. Le testeur décrivait ses deux défaites comme « imposées » ; une mort doit venir d'un choix.
-18. **Retours des testeurs n°3 et n°4 appliqués.** Plafond ramené à 15 points par carte ; mention « Armée suffisante / insuffisante » sous les options conditionnelles ; flèche d'aperçu rouge quand le choix mène dans une zone rouge ; l'état « trop bas / trop haut » s'affiche sous le nom de la jauge au lieu de le remplacer ; page « Comment jouer » dans les réglages ; la partie démarre avec des jauges inégales pour qu'il y ait un enjeu dès les premières cartes ; la rivale ne rejoue plus une carte déjà vue.
+## V2
+
+1. **Mécanique signature : la mémoire des familles.** Chaque décision importante crée un souvenir qui garde
+   la phrase exacte et sa date. Les familles la citent plus tard (cartes de famille, procès, trahisons,
+   revenants). Phrase : « Les familles de votre cité se souviennent de tout : humiliez un chasseur à l'âge de
+   pierre, et ses descendants mènent la grève générale dix mille ans plus tard. » Ni Reigns, ni Slay the Spire,
+   ni Civilization ne citent au joueur ses propres décisions.
+2. **Les jauges qui tuent à 0 et à 100 sont supprimées.** Elles forçaient la prudence (accumuler rapprochait de
+   la mort) et rendaient le fil rouge impossible (E1, E3). La vie de la cité, ce sont ses quartiers ; les
+   ressources se dépensent.
+3. **Le coût est affiché, le reste est dans le texte.** Une option montre son coût, ses exigences, les familles
+   concernées (sans le sens), un sablier si une suite est programmée, un seuil annoncé, la chance d'un pari.
+   Les gains et les loyautés ne sont pas affichés. Mesure : un joueur qui ne lit que les indicateurs survit
+   0 % du temps, un lecteur 85 %.
+4. **Le glissement gauche/droite disparaît** au profit d'options touchées (deux à quatre) : le jeu a des
+   dilemmes à trois voies, des routes, des avocats, des paris. Touches 1 à 4 au clavier.
+5. **L'envie des merveilles** : chaque merveille bâtie rend les crises suivantes 25 % plus dures (annoncé
+   dans le présage). Sans cela, tout miser sur le dessein dominait (E5-E6).
+6. **Le dessein n'est accompli qu'avec la cinquième merveille.** Finir l'ère V sans elle, c'est « survivre ».
+   La fin nomme donc honnêtement ce qui a été atteint.
+7. **Le testament lègue quelque chose.** À la fin, trois derniers mots possibles, générés depuis la partie
+   (une famille fidèle, la leçon de la chute, le dessein) ; chacun donne un héritage concret à la civilisation
+   suivante (loyauté de départ ou réserves), doublé pour l'origine « Les Héritiers ». Le choix de fin de partie
+   pèse ainsi sur la partie d'après.
+8. **Les civilisations victorieuses laissent aussi des ruines** (« partie pour les étoiles… »). Toute partie
+   laisse une trace visible dans la suivante : ruines sur la colline, stèle citée, revenants qui réclament le
+   grief de la famille la plus maltraitée.
+9. **Noms de familles au pluriel à toutes les ères** (« les Ourkonautes », « les Sélestes », « les TrocCorp »)
+   : les textes accordent au pluriel ; des noms collectifs au singulier (« l'Église de Sel ») cassaient la
+   grammaire dans des dizaines de phrases.
+10. **Jamais de blocage** : si aucune option n'est jouable faute de moyens, une issue de secours apparaît
+    (« Encaisser » pendant une crise, avec la perte annoncée ; « Ne rien faire » ailleurs).
+11. **Performance : tous les effets partout au départ, dégradation seulement sous 30 i/s.** La V1 démarrait
+    les téléphones en qualité moyenne et dégradait sous 47 i/s ; les cadences de rafraîchissement d'origine
+    sont rétablies, ainsi que le rafraîchissement continu de la cité en crise. Mesuré sans GPU (rendu
+    logiciel) sur un profil mobile dpr 2,5 : 44 à 51 i/s avec tous les effets ; avec un CPU ralenti ×2, la
+    scène descend d'elle-même d'un palier (25 à 36 i/s), ce qui est le comportement voulu.
+12. **Portraits de famille** : un médaillon par famille, dans le même langage visuel que les cartes, dont le
+    cadre change à chaque ère, dont l'anneau prend la couleur de l'humeur, et qui porte une cicatrice par
+    paire d'affronts. L'orateur d'une carte apparaît ainsi sur son illustration.
+13. **La scène raconte la partie** : quartiers (et ruines de ceux qu'on a perdus), maisons des familles qui
+    s'agrandissent avec leur loyauté, fument quand elles sont hostiles, restent vides quand elles sont parties ;
+    merveilles du dessein sur leur butte ; merveilles de la rivale sur la crête, à sa couleur ; ruines des
+    civilisations passées.
+14. **Rejouer plutôt que stocker** : la fin rejoue la partie depuis sa graine pour montrer la cité grandir et
+    tomber en quelques secondes. Le moteur est déterministe (testé).
+15. **Publication hors GitHub** : l'écriture vers GitHub est refusée à cette session (push 403). Le jeu est
+    publié en page hébergée (un seul fichier HTML) ; le workflow Pages reste prêt.

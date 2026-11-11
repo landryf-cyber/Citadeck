@@ -1,5 +1,5 @@
 /** Partie automatique, mesures, et transcription lisible. */
-import { Rng } from '../../core/rng';
+import { Rng } from '../core/rng';
 import { Engine, type Ev, type Setup } from '../core/engine';
 import { newMeta, nextSetup, recordRun, testaments } from '../core/meta';
 import { RES_LABEL, type GameState, type MetaState, type RuinInfo } from '../core/types';

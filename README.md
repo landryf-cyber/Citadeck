@@ -1,11 +1,11 @@
 # Citadeck
 
-*Le deck est la cité.*
+*Les familles se souviennent de tout.*
 
-Un roguelite de cartes jouable dans le navigateur, sur mobile et sur ordinateur. On guide une civilisation
-de l'âge de pierre à l'ère spatiale, une décision à la fois. Chaque carte est un dilemme que l'on tranche
-en la glissant à gauche ou à droite. Les cartes que l'on ajoute au deck entre deux ères sont les dilemmes
-que l'on affrontera plus tard : construire son deck, c'est choisir ses futurs problèmes.
+Un jeu de cartes jouable dans le navigateur, sur mobile et sur ordinateur. On guide une cité de l'âge de pierre
+à l'ère spatiale, une décision à la fois. Quatre familles y vivent — les guerriers Ourk, les prêtresses Sel,
+les savants Brume, les marchands Troc — et elles n'oublient rien : humiliez un chasseur à l'âge de pierre,
+et ses descendants mènent la grève générale dix mille ans plus tard, en vous citant mot pour mot.
 
 ## Jouer
 
@@ -19,11 +19,20 @@ npm run dev
 
 Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 
-- **Tactile** : glisser la carte. **Souris** : glisser, ou cliquer une option. **Clavier** : flèche gauche ou
-  droite pour pencher la carte et voir l'aperçu, la même flèche une seconde fois pour trancher.
-- Quatre jauges : Nourriture, Armée, Savoir, Trésor. À 0 ou à 100, la partie s'arrête.
-- Une ère = le deck parcouru une fois, puis une crise. Cinq ères, trois fins.
-- La partie est sauvegardée à chaque décision. La graine affichée à la fin permet de rejouer la même partie.
+- **Une carte = un dilemme.** On choisit une option (toucher, cliquer, ou touches 1 à 4). Le **coût** d'une
+  option est affiché ; ce qu'elle rapporte, et ce que les familles en penseront, est dans le texte. Les
+  pastilles indiquent seulement quelles familles sont concernées, le sablier qu'il y aura une suite.
+- **La cité, ce sont ses quartiers.** À zéro quartier, elle tombe. Quatre réserves se dépensent : Vivres,
+  Armée, Savoir, Trésor.
+- **Une ère** : un présage (la merveille à bâtir, la crise qui vient, ce qui en protège), deux saisons où l'on
+  choisit sa route (une famille, la frontière ou l'inconnu), le chantier de la merveille, la crise, puis le bilan,
+  la croissance, le procès de la famille la plus lésée et une découverte. Cinq ères.
+- **Le grand dessein** : toucher les étoiles, soumettre la vallée ou être chantés pour toujours. Cinq
+  merveilles à bâtir, pendant que la rivale bâtit les siennes. Chaque merveille attire aussi les crises.
+- **Après la partie** : on grave les derniers mots de la civilisation. Ils lèguent quelque chose à la suivante,
+  qui trouvera ses ruines sur la colline. La chronique garde toutes les civilisations ; certaines parties
+  débloquent des origines, des merveilles, des découvertes et un mode plus dur.
+- La partie est sauvegardée à chaque décision.
 
 ## Commandes
 
@@ -32,85 +41,88 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 | `npm run dev` | serveur de développement |
 | `npm run build` | vérification des types puis build statique dans `dist/` |
 | `npm run preview` | sert le build de production |
-| `npm test` | tests du moteur, du contenu et de l'équilibrage |
-| `npm run sim` | simulation : des milliers de parties, vérification des cibles d'équilibrage |
-| `npm run autotune` | rééquilibre les options trop souvent choisies, écrit `src/data/adjust.ts` |
-| `npm run shots` | captures de chaque écran, mobile et desktop, dans `shots/` |
-| `npm run play` | parties complètes jouées par l'interface, journal tour par tour |
-| `npm run perf` | images par seconde sur un profil mobile |
+| `npm test` | tests du moteur, du contenu et de la méta-progression |
+| `npm run sim -- 200` | 200 parties par profil de bot : survie, stratégies viables, lecture nécessaire… |
+| `npm run sim -- --transcript lecteur 7` | transcription lisible d'une partie dans `shots/transcripts/` |
+| `npm run campaign -- 10` | dix parties reliées par la méta (chronique, testaments, ruines, déblocages) |
+| `npm run sweep -- '[{"crisisK":1.2}]' 60` | balayage de réglages d'équilibrage |
+| `npm run shots` | captures de chaque écran, mobile et bureau, dans `shots/` |
+| `npm run perf -- 2` | images par seconde sur un profil mobile (CPU ralenti ×2) |
+| `npm run single` | le jeu en un seul fichier HTML, dans `dist-single/` |
 
-Options utiles : `npm run sim -- --games 500 --cards`, `npm run shots -- --dist era2`,
-`npm run play -- --until-all --log`, `npm run perf -- 4`.
-
-### Chromium pour les scripts
-
-Les scripts utilisent Playwright. S'il ne trouve pas son navigateur, ils essaient dans l'ordre la variable
-`PW_CHROMIUM`, `/opt/pw-browsers/chromium`, puis un `chromium` ou `google-chrome` du système. Dans
-l'environnement où le jeu a été développé, le téléchargement de Playwright ne correspondait pas à la version
-installée : c'est le Chromium déjà présent dans `/opt/pw-browsers` qui a servi.
+Les scripts de capture utilisent le Chromium de `/opt/pw-browsers/chromium`.
 
 ## Ajouter une carte
 
 Les cartes sont des données, dans `src/data/`. Aucune logique à toucher.
 
-1. Choisir le fichier : `era0.ts` à `era4.ts` (cartes propres à une ère), `rewards.ts` (cartes proposées
-   entre deux ères, qui restent dans le deck), `consequences.ts`, `rival.ts`, `crises.ts`.
+1. Choisir le fichier : `ourk.ts`, `sel.ts`, `brume.ts`, `troc.ts` (cartes de famille, une par ère et plus),
+   `events.ts` (événements d'ère et cartes de la rivale), `encounters.ts` (rencontres des routes),
+   `crises.ts`, `discoveries.ts`.
 2. Ajouter une entrée :
 
 ```ts
 card({
-  id: 'e2_moulin', title: 'Le Moulin', kind: 'era', era: 2, kw: ['Commerce'],
-  text: 'Le meunier veut un monopole. Il a déjà la seule roue.',
-  //                     D(nourriture, armée, savoir, trésor)
-  left: opt('Accorder', { delta: D(6, 0, 0, 8), scale: [{ keyword: 'Commerce', delta: D(0, 0, 0, 2) }] }, 'Le pain est cher. Le meunier, gras.'),
-  right: opt('Refuser', { delta: D(-5, 4, 3, 0), add: [{ card: 'q_bandits', delay: 6 }] }, 'Trois moulins. Trois meuniers fâchés.'),
-  art: { motif: 'gear' },
+  id: 'troc_moulin', kind: 'famille', family: 'troc', eras: [2], tags: ['Commerce'], art: { motif: 'gear' },
+  title: 'Le Moulin',
+  text: '{F:troc} veut le monopole du moulin. « Prix d’ami : le pain à deux pièces, l’amitié en sus. »',
+  options: [
+    { label: 'Accorder le monopole', effect: { gain: $('T5'), loy: { troc: 1, sel: -1 }, mem: ['moulin_troc'] },
+      reply: 'Le pain est cher. {F:troc} est gras.' },
+    { label: 'Un moulin par quartier', cost: $('T3'), effect: { gain: $('V4'), loy: { troc: -1 },
+      sched: [{ card: 'troc_moulin_2', in: 6 }] }, reply: 'Trois moulins, trois meuniers fâchés.' },
+  ],
 }),
 ```
 
-- `scale` : bonus par autre carte du deck portant ce mot-clé (les synergies).
-- `add` : carte ajoutée plus tard (`delay` en tours) : les conséquences à retardement.
-- `when / then / else` : effet conditionnel (jauge, mot-clé, drapeau, relation avec la rivale).
-- `variants` : habillage différent selon l'ère (voir `starters.ts`).
-- `art.motif` : l'un des vingt motifs de `src/ui/art.ts`.
+- `cost` est affiché au joueur ; `gain`, `loy` (loyautés) et `quartiers` ne le sont pas : le texte doit les
+  laisser deviner.
+- `mem` crée un souvenir : la décision exacte et sa date sont gardées. Plus tard, une carte peut la citer avec
+  `{Q:moulin_troc}` (la phrase entre guillemets) et `{D:moulin_troc}` (sa date), ou n'apparaître que si le
+  souvenir existe (`cond: { mem: 'moulin_troc' }`).
+- `sched` programme une suite (le joueur voit un sablier). `if / then / else` rend un effet conditionnel
+  (réserves, loyauté, souvenir, mot-clé). `bet` fait un pari dont la chance est affichée. `warn` affiche un
+  seuil (« Sans 5 Armée, un quartier brûle »).
+- Gabarits : `{F:troc}` le chef de famille de l'ère, `{H:troc}` la famille, `{rival}`, `{reine}`, `{cite}`,
+  `{date}`, et des clauses `{?mem:x|si oui|sinon}`, `{?loy:ourk>=2|…|…}` (voir `src/core/text.ts`).
+- `$('V2 A-3 S1 T4')` écrit un paquet de ressources (Vivres, Armée, Savoir, Trésor).
+- `scale: true` fait grandir coûts et gains avec les ères.
 
-3. Lancer `npm test` (références, longueurs, coût des deux côtés), puis `npm run sim -- --cards` pour voir si
-   une option domine, et `npm run autotune` pour la rééquilibrer.
-
-Les crises et leurs cartes sont dans `crises.ts`, les merveilles dans `wonders.ts`, les ères (enjeux, vent)
-dans `eras.ts`.
+3. Lancer `npm test` (références, longueurs, gabarits non résolus, parties sans blocage), puis `npm run sim`
+   pour vérifier que l'équilibre tient et `npm run sim -- --transcript lecteur 7` pour relire une partie.
 
 ## Organisation
 
 ```
-src/core/     moteur pur et testable : jauges, deck, ères, crises, merveilles, rivale, fins, RNG à graine
-src/data/     tout le contenu, plus les tables d'équilibrage (tuning.ts, adjust.ts)
-src/scene/    la civilisation visible : Canvas 2D, lumière par ère, silhouettes, particules
-src/ui/       carte (DOM/CSS), jauges, écrans, illustrations SVG génératives
-src/audio/    ambiance et retours sonores synthétisés en WebAudio
-src/sim/      bots, simulation, cibles, équilibreur
-scripts/      captures, parties automatiques, mesure de performance
+src/core/     moteur pur et testable : état, ères, familles et souvenirs, procès, crises, méta-progression
+src/data/     tout le contenu : familles, routes, rencontres, crises, découvertes, événements, desseins
+src/scene/    la cité visible : Canvas 2D, lumière par ère, quartiers, familles, merveilles, rivale, ruines
+src/ui/       interface (DOM/CSS), illustrations SVG génératives, sauvegarde, rejeu de la partie
+src/sim/      bots, mesures, transcriptions, campagnes, balayages
+src/proto/    les prototypes de boucle comparés avant la V2
+scripts/      captures, mesure de performance, version en un seul fichier
 ```
 
-## Choix principaux
+## Documents
 
-- **Rendu** : la carte est en DOM/CSS (texte net, transformations fluides), la scène en Canvas 2D en trois
-  passes (fond en demi-résolution, cité redessinée à la demande, éléments vivants à chaque image). La qualité
-  baisse d'elle-même si les images ralentissent, et `prefers-reduced-motion` est respecté.
+- `DESIGN-V2.md` : le diagnostic de la première version, les douze concepts explorés, le choix, le jeu retenu,
+  la voix des personnages.
+- `EXPERIENCES.md` : le journal des expériences (hypothèse, changement, test, résultat, décision).
+- `DECISIONS.md` : les décisions prises et leurs raisons. `PROGRESS.md` : l'avancement.
+
+## Choix techniques
+
+- **Rendu** : DOM/CSS pour la carte et l'interface, Canvas 2D pour la scène en trois passes (fond en
+  demi-résolution, cité redessinée à la demande, éléments vivants à chaque image). Tous les effets sont actifs
+  au départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde. `prefers-reduced-motion` est
+  respecté (et réglable).
 - **Aucun fichier d'image ni de son** : illustrations en SVG généré, décor dessiné par code, son en WebAudio.
-  Seules les deux polices (Cinzel, Source Sans 3, licence OFL) sont embarquées.
-- **Le deck** : six cartes de départ qui changent d'habit à chaque ère, les cartes choisies entre les ères,
-  et sept cartes tirées du pool de l'ère en cours.
-- **La tension** : les enjeux montent d'ère en ère, et chaque ère pousse une jauge à chaque décision
-  (le « vent de l'ère »). La zone de danger commence à 30 et 70. Aucune carte ne déplace une jauge de plus de 15 points, et une carte dont les deux options tuent accorde un sursis, une fois par ère.
-- **L'équilibrage est outillé** : `npm run sim` vérifie les cibles, `npm run autotune` corrige les options
-  dominantes. Les valeurs écrites dans les cartes sont corrigées par `tuning.ts` puis `adjust.ts`.
-
-Le détail des décisions et de leurs raisons est dans `DECISIONS.md`, l'avancement dans `PROGRESS.md`.
+  Seules deux polices (Cinzel, Source Sans 3, licence OFL) sont embarquées.
+- **Déterminisme** : une graine et la liste des choix suffisent à rejouer une partie (c'est ainsi que la fin
+  montre dix mille ans en quelques secondes).
 
 ## Déploiement
 
-Le jeu est un site statique. Le workflow `.github/workflows/deploy.yml` teste, construit avec la bonne base
-d'URL et publie sur GitHub Pages à chaque push sur `main`. Il faut activer Pages une fois :
-*Settings → Pages → Build and deployment → Source : GitHub Actions*.
-L'adresse sera `https://<compte>.github.io/<dépôt>/`.
+Le jeu est un site statique. Le workflow `.github/workflows/deploy.yml` teste, construit et publie sur GitHub
+Pages à chaque push sur `main` (activer une fois *Settings → Pages → Source : GitHub Actions*).
+`npm run single` produit aussi une version en un seul fichier HTML, publiable n'importe où.
