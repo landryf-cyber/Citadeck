@@ -408,6 +408,8 @@ export class App {
     stage.appendChild(card);
     this.audio.cardIn();
     if ((v.kind === 'ruines' || v.kind === 'revenant') && s.ruins[0]) this.scene.sparkAt(`old0_${s.ruins[0].shape ?? 'cercle'}`);
+    if (v.kind === 'ruines' || v.kind === 'revenant') this.audio.mystery();
+    if (v.kind === 'proces') this.audio.gavel();
     this.keyHandler = (k) => {
       const n = Number(k);
       if (n >= 1 && n <= v.options.length) void this.choose(n - 1);

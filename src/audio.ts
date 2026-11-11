@@ -456,6 +456,25 @@ export class AudioEngine {
     [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => this.voice('bell', root * Math.pow(2, s / 12), t + i * 0.16, 0.8, this.sfx));
   }
 
+  /** Trois coups de maillet : le procès s'ouvre. */
+  gavel(): void {
+    const c = this.ready();
+    if (!c) return;
+    const t = c.currentTime;
+    [0, 0.22, 0.44].forEach((d, i) => {
+      this.thump(t + d, 180 - i * 10, 0.35, 0.18);
+      this.noiseHit(t + d, 1400, 1.2, 0.06, 0.08, this.sfx, 'bandpass');
+    });
+  }
+
+  /** Un accord de verre, grave : des ruines, des revenants. */
+  mystery(): void {
+    const c = this.ready();
+    if (!c) return;
+    const e = this.era_();
+    [0, 3, 7].forEach((d, i) => this.voice('glass', this.freq(e, d, e.octave - 1), c.currentTime + i * 0.18, 1.4, this.sfx));
+  }
+
   /** Relance la nappe après une fin de partie. */
   revive(): void {
     this.dead = false;
