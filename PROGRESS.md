@@ -17,14 +17,17 @@
 - Test de performance (`npm run perf`), README, typographie française, écran paysage, tablette
 - Workflow GitHub Pages écrit
 
+- Tests joueurs par agents séparés : n°1 (partiel), n°2 (complet, clarté 4/10), n°3 (une partie) ; corrections appliquées après chacun
+  (options cliquables, jauges en barres avec zones rouges, aides ponctuelles, conditions explicites,
+  répliques d'échec, sursis, plafond de 15 points par carte, rivale sans répétition)
+- Build en un seul fichier, publié : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom
+
 ## En cours
-- Test par un agent séparé n°1 (joueur qui découvre), puis corrections, puis agent n°2
+- Test joueur n°4 sur la version corrigée
 
 ## Bloqué
 - `git push` refusé (403) et API GitHub en lecture seule : le déploiement Pages demande une action
-  du propriétaire du dépôt. Contournement prévu : publication du build comme page hébergée + archive git.
+  du propriétaire du dépôt (voir le message final). Sauvegarde git envoyée.
 
 ## Reste à faire
-- Corrections issues des tests d'agents
-- Passe de finition : relecture des textes, cas limites, dernière partie sur le build publié
-- Message final
+- Corrections éventuelles du test n°4, dernière partie complète sur le build publié, message final
