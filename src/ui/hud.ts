@@ -11,6 +11,7 @@ interface GaugeEl {
   prev: HTMLElement;
   delta: HTMLElement;
   wind: HTMLElement;
+  label: HTMLElement;
 }
 
 /** Les quatre jauges, intégrées en haut de la scène. */
@@ -35,7 +36,7 @@ export class Hud {
       const wind = el('div', 'gauge-wind');
       root.append(prev, icon, label, delta, wind);
       this.root.append(root);
-      this.g[id] = { root, fill: icon.querySelector('.g-fill') as SVGRectElement, prev, delta, wind };
+      this.g[id] = { root, fill: icon.querySelector('.g-fill') as SVGRectElement, prev, delta, wind, label };
     }
   }
 
@@ -47,6 +48,9 @@ export class Hud {
       const y = 38 - (v / 100) * 36;
       ge.fill.style.transform = `translateY(${y.toFixed(2)}px)`;
       ge.root.classList.toggle('danger', v <= TUNING.dangerLow || v >= TUNING.dangerHigh);
+      ge.root.classList.toggle('too-low', v <= TUNING.dangerLow);
+      ge.root.classList.toggle('too-high', v >= TUNING.dangerHigh);
+      ge.label.textContent = v <= TUNING.dangerLow ? 'trop bas' : v >= TUNING.dangerHigh ? 'trop haut' : GAUGE_LABEL[id];
       ge.root.setAttribute('aria-valuenow', String(Math.round(v)));
     }
   }

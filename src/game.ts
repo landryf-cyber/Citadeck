@@ -414,7 +414,7 @@ export class Game {
       this.audio.setTension(danger, true);
       this.showReply('');
       this.screens.banner('crisis', 'Crise', def.name, def.intro);
-      await wait(1500);
+      await this.skippableWait(2550);
       if (token !== this.flowToken) return;
       this.deal();
       return;

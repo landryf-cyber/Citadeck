@@ -1,11 +1,23 @@
 import type { Engine } from '../core/engine';
 import { codeToSeed, seedToCode } from '../core/rng';
-import { GAUGE_LABEL, KEYWORDS, cardFace, type GameState, type GaugeId, type Keyword } from '../core/types';
+import { GAUGES, GAUGE_LABEL, KEYWORDS, cardFace, type Delta, type GameState, type GaugeId, type Keyword } from '../core/types';
 import type { Settings } from '../save';
-import { cardArt, keywordGlyph, KEYWORD_HUE } from './art';
+import { cardArt, keywordGlyph, GAUGE_PATH, KEYWORD_HUE } from './art';
 import { el, esc, ICONS, ROMAN, wait } from './dom';
 import { wonderEmblem } from '../scene/emblem';
 import { ARCHETYPE, DEFEAT, ENDINGS, relationWord } from './texts';
+
+/** Petites icônes d'effet : la forme de la jauge, puis une flèche (double si l'effet est fort). */
+function fxHtml(d: Delta): string {
+  return GAUGES.filter((g) => d[g])
+    .map((g) => {
+      const v = d[g]!;
+      const big = Math.abs(v) >= 13;
+      const arrow = v > 0 ? (big ? 'M2 8 L8 2 L14 8 M2 14 L8 8 L14 14' : 'M2 11 L8 5 L14 11') : big ? 'M2 2 L8 8 L14 2 M2 8 L8 14 L14 8' : 'M2 5 L8 11 L14 5';
+      return `<span class="fx ${v > 0 ? 'up' : 'down'}" title="${GAUGE_LABEL[g]}"><svg viewBox="0 0 40 40"><path class="fx-i" d="${GAUGE_PATH[g]}"/></svg><svg class="fx-a" viewBox="0 0 16 16"><path d="${arrow}"/></svg></span>`;
+    })
+    .join('');
+}
 
 const kwSpan = (k: Keyword) => `<span style="color:hsl(${KEYWORD_HUE[k]} 80% 76%)">${keywordGlyph(k)}${k}</span>`;
 
@@ -188,7 +200,7 @@ export class Screens {
 <div class="tile-kw">${(c.keywords ?? []).map(kwSpan).join('')}</div>
 <div class="tile-title">${esc(c.title)}</div>
 <p class="tile-text">${esc(c.text)}</p>
-<div class="tile-opts"><span>‹ ${esc(c.left.text)}</span><span>${esc(c.right.text)} ›</span></div>
+<div class="tile-opts"><span>‹ ${esc(c.left.text)}${fxHtml(engine.computeDelta(state, c, c.left.effect))}</span><span>› ${esc(c.right.text)}${fxHtml(engine.computeDelta(state, c, c.right.effect))}</span></div>
 <div class="tile-syn">${esc(syn)}</div>
 </div></button>`;
         })
@@ -196,7 +208,7 @@ export class Screens {
       s.innerHTML = `
 <div class="h-over">Fin de l’ère ${ROMAN[state.era]} · ${esc(this.eraName(state.era))}</div>
 <h2 class="h-big">Que retient votre civilisation ?</h2>
-<p class="h-sub">Une carte rejoint votre deck. Elle reviendra à chaque ère, avec son dilemme.</p>
+<p class="h-sub">Une carte rejoint votre deck. Elle reviendra à chaque ère, avec son dilemme. Les icônes montrent ce que chaque réponse fera à vos jauges.</p>
 <div class="reward-list">${tiles}</div>
 <div class="reward-actions"><button class="btn" data-a="ok" disabled>Choisir une carte</button><button class="link" data-a="skip">Ne rien ajouter</button></div>`;
       const list = s.querySelector('.reward-list') as HTMLElement;
@@ -286,7 +298,7 @@ export class Screens {
             ok.disabled = !sel;
             if (sel) {
               const c = engine.card(sel);
-              detail.innerHTML = `<b>${esc(c.title)}.</b> ${esc(c.text)}<br>‹ ${esc(c.left.text)} · ${esc(c.right.text)} ›`;
+              detail.innerHTML = `<b>${esc(c.title)}.</b> ${esc(c.text)}<br>‹ ${esc(c.left.text)}${fxHtml(engine.computeDelta(state, c, c.left.effect))} &nbsp;·&nbsp; › ${esc(c.right.text)}${fxHtml(engine.computeDelta(state, c, c.right.effect))}`;
               ok.textContent = `Oublier « ${c.title} »`;
             } else {
               detail.innerHTML = '';
@@ -543,7 +555,7 @@ ${wonders ? `<div class="deck-sec"><h3>Merveilles</h3>${wonders}</div>` : ''}
       const chip = t.closest('.chip[data-id]') as HTMLElement | null;
       if (chip) {
         const c = engine.card(chip.dataset.id!);
-        detail.innerHTML = `<b>${esc(c.title)}.</b> ${esc(c.text)}<br>‹ ${esc(c.left.text)} · ${esc(c.right.text)} ›`;
+        detail.innerHTML = `<b>${esc(c.title)}.</b> ${esc(c.text)}<br>‹ ${esc(c.left.text)}${fxHtml(engine.computeDelta(state, c, c.left.effect))} &nbsp;·&nbsp; › ${esc(c.right.text)}${fxHtml(engine.computeDelta(state, c, c.right.effect))}`;
         this.onUi();
         return;
       }

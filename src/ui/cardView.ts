@@ -38,6 +38,8 @@ export class CardView {
   private lastT = 0;
   private vx = 0;
   private dragMax = 0;
+  private tapSide: Side | null = null;
+  private armedAtDown: Side | null = null;
   private previewSide: Side | null = null;
   private armed: Side | null = null;
   private lastPointerType = 'mouse';
@@ -98,15 +100,10 @@ export class CardView {
     this.optL = card.querySelector('.opt.left');
     this.optR = card.querySelector('.opt.right');
     for (const [btn, side] of [[this.optL, 'left'], [this.optR, 'right']] as [HTMLButtonElement, Side][]) {
-      btn.addEventListener('pointerdown', (e) => {
-        this.lastPointerType = e.pointerType;
-      });
-      btn.addEventListener('click', () => {
-        if (!this.enabled || this.card !== card) return;
-        if (Math.abs(this.dragMax) > 8) return;
-        this.onTouch();
-        if (this.lastPointerType === 'mouse' || this.armed === side) this.choose(side);
-        else this.arm(side);
+      // activation au clavier (Entrée/Espace sur le bouton) ; souris et doigt passent par down/up
+      btn.addEventListener('click', (e) => {
+        if (e.detail !== 0 || !this.enabled || this.card !== card) return;
+        this.choose(side);
       });
     }
     this.zone.classList.remove('empty');
@@ -178,6 +175,9 @@ export class CardView {
     this.lastT = performance.now();
     this.vx = 0;
     this.dragMax = 0;
+    const opt = (e.target as HTMLElement | null)?.closest?.('.opt');
+    this.tapSide = opt ? (opt.classList.contains('left') ? 'left' : 'right') : null;
+    this.armedAtDown = this.armed;
     this.armed = null;
     this.optL?.classList.remove('armed');
     this.optR?.classList.remove('armed');
@@ -236,6 +236,14 @@ export class CardView {
     const c = this.card;
     if (!c) return;
     c.classList.remove('dragging');
+    // un simple appui sur une option : la souris tranche, le doigt penche d'abord puis confirme
+    if (this.tapSide && Math.abs(this.dragMax) < 8) {
+      const side = this.tapSide;
+      this.tapSide = null;
+      if (e.pointerType === 'mouse' || this.armedAtDown === side) this.choose(side);
+      else this.arm(side);
+      return;
+    }
     const t = this.threshold();
     const flick = Math.abs(this.vx) > 0.5 && Math.abs(this.dx) > 28 && Math.sign(this.vx) === Math.sign(this.dx);
     if (Math.abs(this.dx) > t || flick) {

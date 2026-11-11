@@ -265,11 +265,11 @@ ${motif(name, rng, st, `url(#${id}m)`, dim)}
 
 export const GAUGE_PATH: Record<string, string> = {
   // grain
-  food: 'M20 2.5 C30.5 12 33 23 20 37.5 C7 23 9.5 12 20 2.5 Z',
+  food: 'M20 2 C33 11 36 25 20 38 C4 25 7 11 20 2 Z',
   // bouclier
   army: 'M6 5 H34 V19 C34 28.5 27.5 34 20 37.5 C12.5 34 6 28.5 6 19 Z',
-  // étoile à quatre branches
-  knowledge: 'M20 1.5 L25 15 L38.5 20 L25 25 L20 38.5 L15 25 L1.5 20 L15 15 Z',
+  // hexagone (la lanterne du savoir)
+  knowledge: 'M20 2 L35.6 11 V29 L20 38 L4.4 29 V11 Z',
   // pièce
   treasure: 'M20 3 A17 17 0 1 1 19.99 3 Z',
 };
@@ -277,7 +277,7 @@ export const GAUGE_PATH: Record<string, string> = {
 export const GAUGE_DETAIL: Record<string, string> = {
   food: '<path d="M20 9 V31" /><path d="M20 17 l5 -4 M20 23 l5 -4 M20 17 l-5 -4 M20 23 l-5 -4"/>',
   army: '<path d="M20 5 V37 M6 17 H34"/>',
-  knowledge: '<circle cx="20" cy="20" r="3.5"/>',
+  knowledge: '<path d="M20 12 L22 18 L28 20 L22 22 L20 28 L18 22 L12 20 L18 18 Z"/>',
   treasure: '<rect x="15.5" y="15.5" width="9" height="9"/>',
 };
 
