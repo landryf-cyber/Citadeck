@@ -7,15 +7,15 @@ import type { EraDef } from '../core/types';
 export const eras: EraDef[] = [
   {
     index: 0, name: 'Âge de pierre', subtitle: 'Un feu, des huttes, et déjà des problèmes.', packSize: 7,
-    stakes: 1.3, crisisStakes: 1.15, wind: { food: -1 }, windText: 'La faim rôde : la Nourriture s’érode à chaque décision.',
+    stakes: 1.45, crisisStakes: 1.15, wind: { food: -1 }, windText: 'La faim rôde : la Nourriture s’érode à chaque décision.',
   },
   {
     index: 1, name: 'Antiquité', subtitle: 'Le soleil, la poussière, et des gens qui écrivent.', packSize: 7,
-    stakes: 1.6, crisisStakes: 1.15, wind: { army: 1 }, windText: 'Les légions grossissent : l’Armée enfle à chaque décision.',
+    stakes: 1.7, crisisStakes: 1.15, wind: { army: 1 }, windText: 'Les légions grossissent : l’Armée enfle à chaque décision.',
   },
   {
     index: 2, name: 'Moyen Âge', subtitle: 'Des bougies, des cloches, et des certitudes.', packSize: 7,
-    stakes: 1.55, crisisStakes: 1.0, wind: { knowledge: -2 }, windText: 'On oublie : le Savoir s’érode à chaque décision.',
+    stakes: 1.75, crisisStakes: 1.0, wind: { knowledge: -2 }, windText: 'On oublie : le Savoir s’érode à chaque décision.',
   },
   {
     index: 3, name: 'Ère industrielle', subtitle: 'De la fumée. Beaucoup de fumée.', packSize: 7,
@@ -23,6 +23,6 @@ export const eras: EraDef[] = [
   },
   {
     index: 4, name: 'Ère spatiale', subtitle: 'Le ciel n’est plus une limite. Le reste, si.', packSize: 7,
-    stakes: 2.25, crisisStakes: 1.15, wind: { knowledge: 2 }, windText: 'Le progrès s’emballe : le Savoir enfle à chaque décision.',
+    stakes: 2.2, crisisStakes: 1.15, wind: { knowledge: 3 }, windText: 'Le progrès s’emballe : le Savoir enfle à chaque décision.',
   },
 ];

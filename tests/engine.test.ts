@@ -121,7 +121,7 @@ describe('moteur — partie', () => {
 
 describe('moteur — jauges et défaite', () => {
   it('une jauge à 0 provoque la défaite, avec la carte responsable', () => {
-    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-20)), right: opt('R', D(20)) }), crisisCard]);
+    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-16)), right: opt('R', D(16)) }), crisisCard]);
     const e = new Engine(c);
     const s = e.newGame(1, false);
     s.gauges.food = 12;
@@ -132,7 +132,7 @@ describe('moteur — jauges et défaite', () => {
   });
 
   it('une jauge à 100 provoque aussi la défaite', () => {
-    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-20)), right: opt('R', D(20)) }), crisisCard]);
+    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-16)), right: opt('R', D(16)) }), crisisCard]);
     const e = new Engine(c);
     const s = e.newGame(1, false);
     s.gauges.food = 88;
@@ -157,11 +157,11 @@ describe('moteur — jauges et défaite', () => {
     }
   });
 
-  it('aucune carte ne déplace une jauge de plus de 24 points', () => {
+  it('aucune carte ne déplace une jauge de plus de 18 points', () => {
     const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-60, 60)), right: opt('R', D(1)) }), crisisCard]);
     const e = new Engine(c);
     const s = e.newGame(1, false);
-    expect(e.preview(s, 'left')).toEqual({ food: -24, army: 24 });
+    expect(e.preview(s, 'left')).toEqual({ food: -18, army: 18 });
   });
 
   it('le vent de l’ère s’ajoute à chaque décision, hors crise', () => {
@@ -185,11 +185,35 @@ describe('moteur — jauges et défaite', () => {
     expect(cardFace(sage, 3).left).not.toBe(sage.left.text);
   });
 
+  it('sursis : une carte dont les deux options tuent laisse au bord du gouffre, une fois par ère', () => {
+    const doom = () => card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-15)), right: opt('R', D(-12)) });
+    const c = mini([doom(), { ...doom(), id: 'b' }, crisisCard]);
+    const e = new Engine(c);
+    const s = e.newGame(1, false);
+    s.gauges.food = 8;
+    const ev = e.choose(s, 'left');
+    expect(s.result).toBeNull();
+    expect(s.gauges.food).toBe(4);
+    expect(ev.some((x) => x.type === 'reprieve')).toBe(true);
+    e.choose(s, 'left');
+    expect(s.result).toMatchObject({ type: 'defeat', gauge: 'food' });
+  });
+
+  it('pas de sursis quand une des deux options permettait de survivre', () => {
+    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-15)), right: opt('R', D(5)) }), crisisCard]);
+    const e = new Engine(c);
+    const s = e.newGame(1, false);
+    s.gauges.food = 8;
+    e.choose(s, 'left');
+    expect(s.result).toMatchObject({ type: 'defeat', gauge: 'food' });
+  });
+
   it('compte les tours passés en zone de danger', () => {
     const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-35)), right: opt('R', D(1)) }), neutral('b'), crisisCard]);
     const e = new Engine(c);
     const s = e.newGame(3, false);
     while (s.current !== 'a') e.choose(s, 'right');
+    s.gauges.food = 40;
     const before = s.dangerTurns;
     e.choose(s, 'left');
     expect(s.dangerTurns).toBe(before + 1);
@@ -339,7 +363,7 @@ describe('moteur — synergies et merveilles', () => {
   });
 
   it('une merveille « overflow » détourne l’excès au lieu de tuer', () => {
-    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(0, 0, 0, 20)), right: opt('R', D(-1)) }), crisisCard], {
+    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(0, 0, 0, 18)), right: opt('R', D(-1)) }), crisisCard], {
       wonders: [{ id: 'w', name: 'w', text: '', era: 0, passive: { type: 'overflow', from: 'treasure', to: 'food', threshold: 85 } }],
     });
     const e = new Engine(c);
@@ -349,11 +373,11 @@ describe('moteur — synergies et merveilles', () => {
     e.choose(s, 'left');
     expect(s.result).toBeNull();
     expect(s.gauges.treasure).toBe(85);
-    expect(s.gauges.food).toBe(50 + Math.ceil(25 / 2));
+    expect(s.gauges.food).toBe(50 + Math.ceil(23 / 2));
   });
 
   it('une merveille « floor » sauve une fois, puis disparaît', () => {
-    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-20)), right: opt('R', D(-1)) }), neutral('b'), crisisCard], {
+    const c = mini([card({ id: 'a', title: 'a', text: 'a', kind: 'starter', left: opt('L', D(-18)), right: opt('R', D(-1)) }), neutral('b'), crisisCard], {
       wonders: [{ id: 'w', name: 'w', text: '', era: 0, passive: { type: 'floor', gauge: 'food', value: 25, once: true } }],
     });
     const e = new Engine(c);

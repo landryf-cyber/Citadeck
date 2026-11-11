@@ -20,7 +20,7 @@ import {
 export const SAVE_VERSION = 3;
 export const ERA_COUNT = 5;
 export const START_GAUGE = 50;
-export const MAX_SWING = 24;
+export const MAX_SWING = 18;
 
 export type GameEvent =
   | { type: 'gauges'; delta: Delta; before: Gauges; after: Gauges }
@@ -36,6 +36,7 @@ export type GameEvent =
   | { type: 'eraStart'; era: number }
   | { type: 'defeat'; gauge: GaugeId; bound: 'low' | 'high'; card: string }
   | { type: 'victory'; ending: EndingId }
+  | { type: 'reprieve' }
   | { type: 'draw'; card: string };
 
 export class Engine {
@@ -338,6 +339,15 @@ export class Engine {
     return false;
   }
 
+  /** Vrai si cette option, jouée maintenant, mettrait une jauge à 0 ou à 100. */
+  isLethal(state: GameState, card: CardDef, side: Side): boolean {
+    const d = this.totalDelta(state, card, card[side].effect);
+    return GAUGES.some((g) => {
+      const v = state.gauges[g] + (d[g] ?? 0);
+      return v <= 0 || v >= 100;
+    });
+  }
+
   /** Le joueur tranche la carte courante. */
   choose(state: GameState, side: Side): GameEvent[] {
     const events: GameEvent[] = [];
@@ -346,7 +356,17 @@ export class Engine {
     if (!card) return events;
     const rng = Rng.fromState(state.rng);
 
+    // Sursis : si les deux options de la carte sont mortelles, le joueur n'a pas eu de choix.
+    // Une fois par ère, la carte le laisse au bord du gouffre au lieu de le tuer.
+    const reprieveFlag = `sursis:${state.era}`;
+    const reprieve = !state.flags.includes(reprieveFlag) && this.isLethal(state, card, 'left') && this.isLethal(state, card, 'right');
+
     this.applyEffect(state, card, card[side].effect, rng, events);
+    if (reprieve) {
+      for (const g of GAUGES) state.gauges[g] = Math.max(4, Math.min(96, state.gauges[g]));
+      state.flags.push(reprieveFlag);
+      events.push({ type: 'reprieve' });
+    }
     state.turn++;
     state.eraTurn++;
     state.growth++;
