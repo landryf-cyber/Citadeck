@@ -23,11 +23,11 @@
 - Build en un seul fichier, publié : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom
 
 ## En cours
-- Test joueur n°4 sur la version corrigée
+- Test joueur n°5 sur la dernière version (le n°4 a noté : clarté 6, tension 7, textes 8,5, beauté 9, envie de rejouer 7 ; ses remarques sont corrigées)
 
 ## Bloqué
 - `git push` refusé (403) et API GitHub en lecture seule : le déploiement Pages demande une action
   du propriétaire du dépôt (voir le message final). Sauvegarde git envoyée.
 
 ## Reste à faire
-- Corrections éventuelles du test n°4, dernière partie complète sur le build publié, message final
+- Corrections éventuelles du test n°5, message final
