@@ -128,7 +128,7 @@ export class Screens {
   ${o.save ? `<button class="btn" data-a="continue">Continuer<span style="font:600 11px var(--text);letter-spacing:.1em;opacity:.7;text-transform:none">${saveLine}</span></button>` : ''}
   <button class="btn ${o.save ? 'ghost' : ''}" data-a="new">Nouvelle partie</button>
   <div class="seed-row"><input maxlength="6" placeholder="GRAINE" aria-label="Graine de la partie" autocomplete="off" spellcheck="false" /><button class="btn ghost" data-a="seed-go">Jouer</button></div>
-  <div class="title-links"><button class="link" data-a="seed">Rejouer une graine</button><button class="link" data-a="settings">Réglages</button></div>
+  <div class="title-links"><button class="link" data-a="seed">Rejouer une graine</button><button class="link" data-a="settings">Règles et réglages</button></div>
 </div>`;
     const seedRow = s.querySelector('.seed-row') as HTMLElement;
     const input = s.querySelector('input') as HTMLInputElement;
@@ -192,7 +192,7 @@ export class Screens {
         .map((id) => {
           const c = engine.card(id);
           const syn = (c.keywords ?? [])
-            .map((k) => (counts[k] > 1 ? `${k} : renforcée par vos ${counts[k]} autres cartes ${k}` : counts[k] === 1 ? `${k} : renforcée par votre autre carte ${k}` : `Votre première carte ${k}`))
+            .map((k) => (counts[k] > 0 ? `Synergie ${k} : ${counts[k] + 1} cartes` : `Première carte ${k}`))
             .join(' · ');
           return `<button class="tile" data-id="${id}" aria-label="${esc(c.title)}">
 <div class="tile-art">${cardArt(c)}</div>
@@ -208,7 +208,7 @@ export class Screens {
       s.innerHTML = `
 <div class="h-over">Fin de l’ère ${ROMAN[state.era]} · ${esc(this.eraName(state.era))}</div>
 <h2 class="h-big">Que retient votre civilisation ?</h2>
-<p class="h-sub">Une carte rejoint votre deck. Elle reviendra à chaque ère, avec son dilemme. Les icônes montrent ce que chaque réponse fera à vos jauges.</p>
+<p class="h-sub" style="font-size:14.5px">Elle reviendra à chaque ère. Les icônes montrent l’effet de chaque réponse. Les cartes d’un même mot-clé se renforcent.</p>
 <div class="reward-list">${tiles}</div>
 <div class="reward-actions dock"><button class="btn" data-a="ok" disabled>Touchez une carte</button><button class="link" data-a="skip">Ne rien ajouter</button></div>`;
       const list = s.querySelector('.reward-list') as HTMLElement;
@@ -464,7 +464,15 @@ ${why}
     const body = el('div');
     body.style.display = 'contents';
     body.innerHTML = `
-<div class="h-over" style="margin-top:34px">Réglages</div>
+<div class="h-over" style="margin-top:34px">Comment jouer</div>
+<ol class="rules">
+<li>Glissez la carte à gauche ou à droite pour <b>trancher</b>. Pendant le geste, des flèches annoncent l’effet sur les jauges.</li>
+<li>Quatre jauges. Dans une <b>zone rouge</b>, danger. <b>Tout en bas ou tout en haut</b>, la partie s’arrête.</li>
+<li>Une ère = votre deck parcouru une fois, puis une <b>crise</b>. Cinq ères à traverser.</li>
+<li>Entre deux ères, vous ajoutez une carte à votre deck : elle reviendra à chaque ère. Les cartes d’un même <b>mot-clé</b> se renforcent.</li>
+<li>Le <b>chevron doré</b> près d’une jauge est le vent de l’ère : cette jauge bouge un peu à chaque décision.</li>
+</ol>
+<div class="h-over" style="margin-top:22px">Réglages</div>
 <div class="panel">
   <div class="set-row"><span>Son</span><button class="switch" role="switch" data-k="sound" aria-checked="${st.sound}" aria-label="Son"></button></div>
   <div class="set-row"><span>Volume</span><input type="range" min="0" max="1" step="0.05" value="${st.volume}" aria-label="Volume" /></div>

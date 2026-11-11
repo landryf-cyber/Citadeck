@@ -14,6 +14,7 @@ interface GaugeEl {
   delta: HTMLElement;
   wind: HTMLElement;
   label: HTMLElement;
+  status: HTMLElement;
 }
 
 /** Les quatre jauges, intégrées en haut de la scène. */
@@ -39,10 +40,11 @@ export class Hud {
       row.append(icon, meter);
       const label = el('div', 'gauge-label', GAUGE_LABEL[id]);
       const delta = el('div', 'gauge-delta');
+      const status = el('div', 'gauge-status');
       const wind = el('div', 'gauge-wind');
-      root.append(prev, row, label, delta, wind);
+      root.append(prev, row, label, status, delta, wind);
       this.root.append(root);
-      this.g[id] = { root, fill: meter.querySelector('.fill') as HTMLElement, prev, delta, wind, label };
+      this.g[id] = { root, fill: meter.querySelector('.fill') as HTMLElement, prev, delta, wind, label, status };
     }
   }
 
@@ -54,7 +56,7 @@ export class Hud {
       ge.root.classList.toggle('danger', v <= TUNING.dangerLow || v >= TUNING.dangerHigh);
       ge.root.classList.toggle('too-low', v <= TUNING.dangerLow);
       ge.root.classList.toggle('too-high', v >= TUNING.dangerHigh);
-      ge.label.textContent = v <= TUNING.dangerLow ? 'trop bas' : v >= TUNING.dangerHigh ? 'trop haut' : GAUGE_LABEL[id];
+      ge.status.textContent = v <= TUNING.dangerLow ? 'trop bas' : v >= TUNING.dangerHigh ? 'trop haut' : '';
       ge.root.setAttribute('aria-valuenow', String(Math.round(v)));
     }
   }
@@ -71,7 +73,7 @@ export class Hud {
   }
 
   /** Aperçu d'une option : sens et intensité, jamais la valeur. */
-  preview(delta: Delta | null): void {
+  preview(delta: Delta | null, after?: Gauges): void {
     for (const id of GAUGES) {
       const ge = this.g[id];
       const d = delta?.[id] ?? 0;
@@ -85,6 +87,10 @@ export class Hud {
         ge.prev.dataset.k = key;
       }
       ge.root.classList.add('prev');
+      // la flèche rougit si ce choix mène la jauge dans une zone rouge, et clignote s'il la tue
+      const v = after?.[id];
+      ge.prev.classList.toggle('warn', v !== undefined && (v <= TUNING.dangerLow || v >= TUNING.dangerHigh));
+      ge.prev.classList.toggle('fatal', v !== undefined && (v <= 0 || v >= 100));
     }
   }
 

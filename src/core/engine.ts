@@ -52,7 +52,17 @@ export class Engine {
       era: 0,
       turn: 0,
       eraTurn: 0,
-      gauges: { food: START_GAUGE, army: START_GAUGE, knowledge: START_GAUGE, treasure: START_GAUGE },
+      // chaque partie démarre déséquilibrée : une jauge inquiète dès les premières cartes
+      gauges: tutorial
+        ? { food: 42, army: 50, knowledge: 50, treasure: 50 }
+        : (() => {
+            const g = { food: START_GAUGE, army: START_GAUGE, knowledge: START_GAUGE, treasure: START_GAUGE };
+            const order = rng.shuffle(GAUGES.slice());
+            g[order[0]] = rng.int(34, 38);
+            g[order[1]] = rng.int(60, 64);
+            g[order[2]] = rng.int(44, 56);
+            return g;
+          })(),
       deck: this.content.starters.slice(),
       drawPile: [],
       scheduled: [],

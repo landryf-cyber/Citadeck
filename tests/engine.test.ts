@@ -64,9 +64,12 @@ describe('rng', () => {
 });
 
 describe('moteur — partie', () => {
-  it('démarre avec les quatre jauges à 50 et une carte en main', () => {
+  it('démarre déséquilibrée mais hors danger, avec une carte en main', () => {
     const s = engine.newGame(1, false);
-    expect(s.gauges).toEqual({ food: 50, army: 50, knowledge: 50, treasure: 50 });
+    const vals = Object.values(s.gauges);
+    expect(Math.min(...vals)).toBeGreaterThan(30);
+    expect(Math.max(...vals)).toBeLessThan(70);
+    expect(Math.max(...vals) - Math.min(...vals)).toBeGreaterThan(15);
     expect(s.current).toBeTruthy();
     expect(s.phase).toBe('card');
     expect(s.deck).toEqual(content.starters);
@@ -148,7 +151,8 @@ describe('moteur — jauges et défaite', () => {
         const side: Side = rng.chance(0.5) ? 'left' : 'right';
         const before = { ...s.gauges };
         const p = engine.preview(s, side);
-        engine.choose(s, side);
+        const ev = engine.choose(s, side);
+        if (ev.some((x) => x.type === 'reprieve')) continue;
         for (const g of ['food', 'army', 'knowledge', 'treasure'] as const) {
           const expected = Math.max(0, Math.min(100, before[g] + (p[g] ?? 0)));
           expect(s.gauges[g]).toBe(expected);
@@ -169,6 +173,7 @@ describe('moteur — jauges et défaite', () => {
     c.eras[0].wind = { knowledge: -2 };
     const e = new Engine(c);
     const s = e.newGame(1, false);
+    s.gauges = { food: 50, army: 50, knowledge: 50, treasure: 50 };
     expect(e.previewCard(s, 'left')).toEqual({ food: 1, army: -1 });
     expect(e.preview(s, 'left')).toEqual({ food: 1, army: -1, knowledge: -2 });
     e.choose(s, 'left');
@@ -369,7 +374,7 @@ describe('moteur — synergies et merveilles', () => {
     const e = new Engine(c);
     const s = e.newGame(1, false);
     s.wonders = ['w'];
-    s.gauges.treasure = 90;
+    s.gauges = { food: 50, army: 50, knowledge: 50, treasure: 90 };
     e.choose(s, 'left');
     expect(s.result).toBeNull();
     expect(s.gauges.treasure).toBe(85);

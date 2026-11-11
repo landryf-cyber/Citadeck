@@ -80,7 +80,14 @@ export class Game {
 
     this.cardView.onPreview = (side) => {
       if (!this.state) return;
-      this.hud.preview(side ? this.engine.previewCard(this.state, side) : null);
+      if (!side) {
+        this.hud.preview(null);
+        return;
+      }
+      const total = this.engine.preview(this.state, side);
+      const after = { ...this.state.gauges };
+      for (const g of GAUGES) after[g] += total[g] ?? 0;
+      this.hud.preview(this.engine.previewCard(this.state, side), after);
     };
     this.cardView.onDrag = (f) => this.scene.setParallax(f);
     this.cardView.onChoose = (side) => this.choose(side);
@@ -300,6 +307,7 @@ export class Game {
     if (card.kind === 'rival' && once('rivale')) return `Cette carte vient ${s.rival.name.startsWith('les ') ? 'des ' + s.rival.name.slice(4) : 'de ' + s.rival.name}, votre rivale. Elle en glisse dans votre deck. Vos réponses changent son humeur.`;
     if (conditional && once('selon')) return 'Certaines options dépendent d’une jauge : la mention sous l’option dit si elle est suffisante. Les flèches montrent ce qui arrivera.';
     if (card.kind === 'consequence' && once('suite')) return 'Une suite : cette carte existe à cause d’un de vos choix passés.';
+    if (s.turn >= 3 && card.kind !== 'tutorial' && once('vent')) return 'Le petit chevron doré près d’une jauge, c’est le vent de l’ère : elle bouge un peu à chaque décision, toute seule.';
     const kw = (card.keywords ?? []).find((k) => this.engine.keywordCount(s, k, card.id) >= 1 && [card.left.effect, card.right.effect].some((e) => (e.scale ?? []).some((x) => x.keyword === k)));
     if (kw && once('motcle')) return `Mot-clé ${kw} : cette carte frappe plus fort, car votre deck en contient d’autres.`;
     return '';
