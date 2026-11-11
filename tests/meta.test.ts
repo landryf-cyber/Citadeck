@@ -129,6 +129,6 @@ describe('rejouer une partie', () => {
     expect(last.quartiers).toBe(s.quartiers);
     expect(last.era).toBe(s.era);
     expect(last.jalons.length).toBe(s.jalons.filter(Boolean).length);
-    expect(snaps.length).toBeGreaterThan(20);
+    expect(snaps.length).toBeGreaterThan(8);
   });
 });

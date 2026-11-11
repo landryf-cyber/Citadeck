@@ -10,11 +10,21 @@ import { discoveryCards } from './discoveries';
 import { eventCards, rivalCards } from './events';
 import { desseins, engineCards, families, origins, rivalries, rivals, routes } from './world';
 import { moods, recalls } from './moods';
+import { moreEncounters, moreEvents, moreRival } from './more';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
+  ...moreEvents, ...moreEncounters, ...moreRival,
 ];
+
+const events = [...eventCards, ...moreEvents];
+
+/** les rencontres supplémentaires rejoignent leur route */
+const extraEnc: Record<string, string[]> = {
+  camp_ourk: ['r_ourk_veteran', 'r_ourk_bete'], grotte_sel: ['r_sel_pelerinage', 'r_sel_saint'], rocher_brume: ['r_brume_automate', 'r_brume_fin'],
+  comptoir_troc: ['r_troc_loterie', 'r_troc_monopole'], frontiere: ['r_front_refugies', 'r_front_pont'], inconnu: ['r_inc_grotte', 'r_inc_jumeau'],
+};
 
 const famEra = (prefix: string) =>
   [0, 1, 2, 3, 4].map((e) => all.filter((c) => c.kind === 'famille' && c.id.startsWith(prefix) && c.eras?.includes(e))
@@ -29,13 +39,13 @@ export const content: Content = {
   rivalries,
   desseins,
   origins,
-  routes,
+  routes: routes.map((r) => ({ ...r, encounters: [...r.encounters, ...(extraEnc[r.id] ?? [])] })),
   crises,
-  events: [0, 1, 2, 3, 4].map((e) => eventCards.filter((c) => c.kind === 'evenement' && c.eras?.includes(e)).map((c) => c.id)),
+  events: [0, 1, 2, 3, 4].map((e) => events.filter((c) => c.kind === 'evenement' && c.eras?.includes(e)).map((c) => c.id)),
   rivalCards: {
-    hostile: ['v_raid', 'v_ultimatum', 'v_espion', 'v_lettre'],
-    neutral: ['v_lettre', 'v_frontiere', 'v_mariage', 'v_commerce'],
-    friendly: ['v_alliance', 'v_savants', 'v_commerce', 'v_mariage'],
+    hostile: ['v_raid', 'v_ultimatum', 'v_espion', 'v_lettre', 'v_portrait'],
+    neutral: ['v_lettre', 'v_frontiere', 'v_mariage', 'v_commerce', 'v_invitation', 'v_portrait'],
+    friendly: ['v_alliance', 'v_savants', 'v_commerce', 'v_mariage', 'v_cadeau', 'v_invitation'],
   },
   discoveries: discoveryCards.map((c) => c.id),
   rivals,

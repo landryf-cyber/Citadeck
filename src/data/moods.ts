@@ -4,30 +4,94 @@
  */
 import type { FamilyId } from '../core/types';
 
-export const moods: Record<FamilyId, { hostile: string; cold: string; warm: string; devoted: string }> = {
+export const moods: Record<FamilyId, { hostile: string[]; cold: string[]; warm: string[]; devoted: string[] }> = {
   ourk: {
-    hostile: '{F:ourk} ne vous regarde pas. Il regarde votre cou.',
-    cold: '{F:ourk} vous salue du bout de la lance.',
-    warm: '{F:ourk} vous tape dans le dos. Vous survivez.',
-    devoted: '{F:ourk} vous appelle « chef ». Ourk n’appelle jamais personne « chef ».',
+    hostile: [
+      '{F:ourk} ne vous regarde pas. Il regarde votre cou.',
+      '{F:ourk} aiguise quelque chose pendant que vous parlez. Il ne dit pas quoi.',
+      '{F:ourk} vous salue en vous appelant par votre nom. Il ne l’avait jamais fait. C’est pire.',
+    ],
+    cold: [
+      '{F:ourk} vous salue du bout de la lance.',
+      '{F:ourk} parle de vous à la troisième personne. D’habitude, il réserve ça à lui-même.',
+      '{F:ourk} croise les bras. Ses bras sont plus larges que votre porte.',
+    ],
+    warm: [
+      '{F:ourk} vous tape dans le dos. Vous survivez.',
+      '{F:ourk} vous a gardé la meilleure part du rôti. Il en a mangé la moitié, par loyauté.',
+      '{F:ourk} sourit. Il lui manque des dents, mais pas l’enthousiasme.',
+    ],
+    devoted: [
+      '{F:ourk} vous appelle « chef ». Ourk n’appelle jamais personne « chef ».',
+      '{F:ourk} a fait graver votre nom sur son bouclier. À côté du sien, presque aussi gros.',
+      '{F:ourk} se jetterait dans le feu pour vous. Il l’a déjà fait, pour voir.',
+    ],
   },
   sel: {
-    hostile: '{F:sel} vous bénit avec deux doigts. Pas les bons.',
-    cold: '{F:sel} prie pour vous, à voix basse, avec une grimace.',
-    warm: '{F:sel} a allumé une bougie pour vous. Une petite.',
-    devoted: '{F:sel} assure que le ciel vous adore. Le ciel a dû le lui dire.',
+    hostile: [
+      '{F:sel} vous bénit avec deux doigts. Pas les bons.',
+      '{F:sel} a prévu votre avenir. Elle le garde pour elle, et elle sourit.',
+      '{F:sel} prie pour votre âme, très fort, devant tout le monde.',
+    ],
+    cold: [
+      '{F:sel} prie pour vous, à voix basse, avec une grimace.',
+      '{F:sel} vous tend la main. Pour la quête, pas pour vous saluer.',
+      '{F:sel} soupire que le ciel est déçu. Elle a l’air de l’avoir aidé.',
+    ],
+    warm: [
+      '{F:sel} a allumé une bougie pour vous. Une petite.',
+      '{F:sel} vous prédit une longue vie. Elle facture la prédiction, mais à moitié prix.',
+      '{F:sel} glisse votre nom dans ses prières, entre la pluie et les impôts.',
+    ],
+    devoted: [
+      '{F:sel} assure que le ciel vous adore. Le ciel a dû le lui dire.',
+      '{F:sel} a fait sculpter votre profil sur l’autel. Du bon côté.',
+      '{F:sel} jure que vous serez canonisé. Elle a déjà commandé le vitrail.',
+    ],
   },
   brume: {
-    hostile: '{F:brume} vous corrige avant même que vous ayez parlé.',
-    cold: '{F:brume} soupire en vous voyant. Techniquement, c’est un bonjour.',
-    warm: '{F:brume} vous a dédié une équation. Elle est fausse, par affection.',
-    devoted: '{F:brume} vous trouve « presque intelligent ». C’est son plus beau compliment.',
+    hostile: [
+      '{F:brume} vous corrige avant même que vous ayez parlé.',
+      '{F:brume} prend des notes pendant que vous parlez. Beaucoup de notes. Avec des schémas.',
+      '{F:brume} a calculé la date de votre chute. Il refuse de vous la donner, par politesse.',
+    ],
+    cold: [
+      '{F:brume} soupire en vous voyant. Techniquement, c’est un bonjour.',
+      '{F:brume} vous explique la chose lentement, comme à un enfant pas très doué.',
+      '{F:brume} lève les yeux de ses calculs, puis y retourne.',
+    ],
+    warm: [
+      '{F:brume} vous a dédié une équation. Elle est fausse, par affection.',
+      '{F:brume} vous laisse toucher son instrument. Une seconde. Avec des gants.',
+      '{F:brume} admet que vous avez eu raison une fois. Il a noté la date.',
+    ],
+    devoted: [
+      '{F:brume} vous trouve « presque intelligent ». C’est son plus beau compliment.',
+      '{F:brume} a donné votre nom à une étoile. Petite, mais elle brille.',
+      '{F:brume} vous consulte avant ses expériences. Il ne vous écoute pas, mais il vous consulte.',
+    ],
   },
   troc: {
-    hostile: '{F:troc} vous serre la main, puis compte ses bagues.',
-    cold: '{F:troc} vous fait un prix. Pas un prix d’ami.',
-    warm: '{F:troc} vous fait un prix d’ami. Presque un vrai.',
-    devoted: '{F:troc} vous offre un cadeau. Sans l’étiquette du prix. C’est dire.',
+    hostile: [
+      '{F:troc} vous serre la main, puis compte ses bagues.',
+      '{F:troc} vous présente une facture. Pour le temps qu’il passe à vous détester.',
+      '{F:troc} parle affaires avec {rival}, assez fort pour que vous entendiez.',
+    ],
+    cold: [
+      '{F:troc} vous fait un prix. Pas un prix d’ami.',
+      '{F:troc} vous salue d’un « cher client ». Il dit ça aux gens qu’il n’aime pas.',
+      '{F:troc} pèse vos paroles. Littéralement : il a une balance.',
+    ],
+    warm: [
+      '{F:troc} vous fait un prix d’ami. Presque un vrai.',
+      '{F:troc} vous offre un verre. L’addition arrivera plus tard, mais elle est petite.',
+      '{F:troc} vous appelle « associé ». Il rit. Vous ne savez pas s’il plaisante.',
+    ],
+    devoted: [
+      '{F:troc} vous offre un cadeau. Sans l’étiquette du prix. C’est dire.',
+      '{F:troc} a frappé une pièce à votre effigie. Il en garde une dans sa poche, pas pour la dépenser.',
+      '{F:troc} vous fait crédit. Sans intérêts. Ses comptables en pleurent encore.',
+    ],
   },
 };
 

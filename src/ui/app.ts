@@ -260,7 +260,7 @@ export class App {
   private renderHud(): void {
     const s = this.s!;
     const hud = document.getElementById('hud')!;
-    const upkeep = Math.ceil(s.quartiers * 1.5);
+    const upkeep = this.e.presageInfo(s).upkeep;
     const rv = this.e.rival(s);
     const phaseIdx = s.phase === 'saison' ? s.saison : s.phase === 'chantier' ? 2 : s.phase === 'crise' ? 3 : s.phase === 'finere' ? 4 : -1;
     const top = `<div class="hud-top">

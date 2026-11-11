@@ -53,11 +53,11 @@ export const desseins: DesseinDef[] = [
     pitch: 'La vallée sera à vous, et {rival} avec. Il faudra de l’Armée, et des guerriers fidèles.',
     jalons: [
       { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'palissade' },
-      { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A8 T3'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle' },
-      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A11 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse',
+      { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A7 T3'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle' },
+      { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A10 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse',
         alt: { lock: 'alt_empire', name: 'La Voie impériale', text: 'Une route droite d’un bout à l’autre de la vallée. Les légions arrivent partout en trois jours. Les impôts, en deux.', cost: $('A9 T6'), req: { tags: { Guerre: 3 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'voie' } },
-      { name: 'L’Arsenal', text: 'Une usine qui ne fabrique qu’une chose. Beaucoup.', cost: $('A15 T6'), req: { tags: { Guerre: 4 } }, gift: 'Il rapporte 2 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 2 }, shape: 'arsenal' },
-      { name: 'La Capitulation', text: '{Rival} signent. Sur votre table, avec votre stylo.', cost: $('A19 T8 V5'), req: { tags: { Guerre: 5 } }, gift: 'La vallée.', shape: 'drapeau' },
+      { name: 'L’Arsenal', text: 'Une usine qui ne fabrique qu’une chose. Beaucoup.', cost: $('A13 T6'), req: { tags: { Guerre: 4 } }, gift: 'Il rapporte 2 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 2 }, shape: 'arsenal' },
+      { name: 'La Capitulation', text: '{Rival} signent. Sur votre table, avec votre stylo.', cost: $('A17 T8 V5'), req: { tags: { Guerre: 5 } }, gift: 'La vallée.', shape: 'drapeau' },
     ],
   },
   {

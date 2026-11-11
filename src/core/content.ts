@@ -1,6 +1,6 @@
 import type { CardDef, CrisisDef, DesseinDef, FamilyDef, FamilyId, OriginDef, RivalDef, RouteDef } from './types';
 
-export interface Moods { hostile: string; cold: string; warm: string; devoted: string }
+export interface Moods { hostile: string[]; cold: string[]; warm: string[]; devoted: string[] }
 
 /** Tout le contenu du jeu, assemblé dans src/data. */
 export interface Content {

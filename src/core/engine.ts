@@ -15,7 +15,7 @@ export const SAVE_VERSION = 21;
 export const ERAS = 5;
 export const SAISON_CARDS = 4;
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.25, iron: 1.2 };
+export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.4, iron: 1.2, upkeep: 1.8, gain: 0.8 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -159,6 +159,7 @@ export interface View {
 }
 
 const clampLoy = (v: number) => Math.max(-3, Math.min(3, v));
+const ONE_SHOT = new Set(['evenement', 'rencontre', 'rivale', 'decouverte']);
 
 export class Engine {
   constructor(public readonly c: Content) {}
@@ -548,7 +549,8 @@ export class Engine {
   familyLead(s: GameState, f: FamilyId): string {
     const loy = s.fam[f].loy;
     const m = this.c.moods[f];
-    const mood = loy <= -2 ? m.hostile : loy === -1 ? m.cold : loy === 1 ? m.warm : loy >= 2 ? m.devoted : '';
+    const pickM = (a: string[]) => a[(s.era + s.seed) % a.length];
+    const mood = loy <= -2 ? pickM(m.hostile) : loy === -1 ? pickM(m.cold) : loy === 1 ? pickM(m.warm) : loy >= 2 ? pickM(m.devoted) : '';
     const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era);
     const recall = rec.length ? rec[(s.era + rec.length) % rec.length].line : '';
     return [mood, recall].filter(Boolean).join(' ');
@@ -582,7 +584,7 @@ export class Engine {
       envy: built > 0 ? Math.round((k - 1) * 100) : 0,
       rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
       legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
-      upkeep: Math.ceil(s.quartiers * 1.5),
+      upkeep: Math.ceil(s.quartiers * TUNING.upkeep),
     };
   }
 
@@ -654,7 +656,8 @@ export class Engine {
       const r = this.applyEffect(s, card, o.effect, rng, ev);
       if (r) reply = r;
     }
-    if (card.oneShot && !s.spent.includes(card.id)) s.spent.push(card.id);
+    // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
+    if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
     if (card.arc) {
       if (!s.arcs.open.includes(card.arc)) s.arcs.open.push(card.arc);
       if (card.finale && !s.arcs.done.includes(card.arc)) s.arcs.done.push(card.arc);
@@ -711,7 +714,8 @@ export class Engine {
       const r = this.applyEffect(s, card, win ? e.bet.win : e.bet.lose, rng, ev);
       if (r) reply = r;
     }
-    if (e.gain) for (const r of RES) if (e.gain[r]) s.res[r] = Math.max(0, s.res[r] + e.gain[r]!);
+    // les gains (cachés au joueur) passent par un coefficient d'équilibrage ; les pertes restent telles qu'écrites
+    if (e.gain) for (const r of RES) if (e.gain[r]) s.res[r] = Math.max(0, s.res[r] + (e.gain[r]! > 0 ? Math.max(1, Math.round(e.gain[r]! * TUNING.gain)) : e.gain[r]!));
     if (e.loy) for (const f of Object.keys(e.loy) as FamilyId[]) this.changeLoy(s, f, e.loy[f]!, ev);
     if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev);
     for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
@@ -788,7 +792,7 @@ export class Engine {
       const id = this.familyCard(s, f);
       if (id) pool.push(id);
     }
-    for (const id of s.deck) if (this.c.cards[id]?.options.length) pool.push(id);
+    for (const id of s.deck) if (this.c.cards[id]?.options.length && !s.spent.includes(id)) pool.push(id);
     const events = (this.c.events[s.era] ?? []).filter((id) => {
       const c = this.c.cards[id];
       return this.available(s, c) && !s.spent.includes(id) && this.check(s, c.cond);
@@ -1005,7 +1009,7 @@ export class Engine {
       ev.push({ type: 'decay', armee: da, tresor: dt });
     }
     // la cité mange
-    const upkeep = Math.ceil(s.quartiers * 1.5);
+    const upkeep = Math.ceil(s.quartiers * TUNING.upkeep);
     if (s.res.vivres >= upkeep) {
       s.res.vivres -= upkeep;
       ev.push({ type: 'upkeep', amount: upkeep });
