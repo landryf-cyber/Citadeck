@@ -12,7 +12,7 @@ function fxHtml(d: Delta): string {
   return GAUGES.filter((g) => d[g])
     .map((g) => {
       const v = d[g]!;
-      const big = Math.abs(v) >= 13;
+      const big = Math.abs(v) >= 8;
       const arrow = v > 0 ? (big ? 'M2 8 L8 2 L14 8 M2 14 L8 8 L14 14' : 'M2 11 L8 5 L14 11') : big ? 'M2 2 L8 8 L14 2 M2 8 L8 14 L14 8' : 'M2 5 L8 11 L14 5';
       return `<span class="fx ${v > 0 ? 'up' : 'down'}" title="${GAUGE_LABEL[g]}"><svg viewBox="0 0 40 40"><path class="fx-i" d="${GAUGE_PATH[g]}"/></svg><svg class="fx-a" viewBox="0 0 16 16"><path d="${arrow}"/></svg></span>`;
     })
@@ -192,7 +192,7 @@ export class Screens {
         .map((id) => {
           const c = engine.card(id);
           const syn = (c.keywords ?? [])
-            .map((k) => (counts[k] > 0 ? `${k} : ${counts[k]} déjà dans votre cité` : `Première carte ${k}`))
+            .map((k) => (counts[k] > 0 ? `${k} : renforcée par vos ${counts[k]} autre${counts[k] > 1 ? 's' : ''} carte${counts[k] > 1 ? 's' : ''} ${k}` : `Votre première carte ${k}`))
             .join(' · ');
           return `<button class="tile" data-id="${id}" aria-label="${esc(c.title)}">
 <div class="tile-art">${cardArt(c)}</div>
@@ -210,7 +210,7 @@ export class Screens {
 <h2 class="h-big">Que retient votre civilisation ?</h2>
 <p class="h-sub">Une carte rejoint votre deck. Elle reviendra à chaque ère, avec son dilemme. Les icônes montrent ce que chaque réponse fera à vos jauges.</p>
 <div class="reward-list">${tiles}</div>
-<div class="reward-actions"><button class="btn" data-a="ok" disabled>Choisir une carte</button><button class="link" data-a="skip">Ne rien ajouter</button></div>`;
+<div class="reward-actions dock"><button class="btn" data-a="ok" disabled>Touchez une carte</button><button class="link" data-a="skip">Ne rien ajouter</button></div>`;
       const list = s.querySelector('.reward-list') as HTMLElement;
       const ok = s.querySelector('[data-a=ok]') as HTMLButtonElement;
       pick = await new Promise<string | null>((resolve) => {
@@ -228,7 +228,7 @@ export class Screens {
             list.classList.add('has-sel');
             list.querySelectorAll('.tile').forEach((x) => x.classList.toggle('sel', x === tile));
             ok.disabled = false;
-            ok.textContent = `Ajouter « ${engine.card(sel).title} »`;
+            ok.textContent = 'Ajouter cette carte';
             return;
           }
           const a = (t.closest('[data-a]') as HTMLElement | null)?.dataset.a;
@@ -252,6 +252,7 @@ export class Screens {
 <div class="wonder-emblem"></div>
 <h2 class="h-big" style="margin-top:20px">${esc(w.name)}</h2>
 <p class="h-sub">${esc(w.text)}</p>
+<p class="h-sub" style="font-size:13.5px;color:var(--faint)">Chaque fin d’ère peut offrir une merveille. Son effet est permanent, et elle se dresse dans votre paysage.</p>
 <div class="reward-actions" style="margin-top:22px"><button class="btn" data-a="ok">Bâtir</button></div>
 <div class="spacer"></div>`;
       const emblem = wonderEmblem(w.id, WONDER_HUE[w.id] ?? 44);
@@ -283,7 +284,7 @@ export class Screens {
 <p class="h-sub">Une carte oubliée ne reviendra plus. Son dilemme non plus.</p>
 <div class="chips">${chips}</div>
 <div class="chip-detail"></div>
-<div class="reward-actions"><button class="btn" data-a="keep">Tout garder</button><button class="btn ghost" data-a="ok" disabled style="margin-top:8px">Oublier</button></div>`;
+<div class="reward-actions dock"><button class="btn" data-a="keep">Tout garder</button><button class="btn ghost" data-a="ok" disabled style="margin-top:8px">Oublier</button></div>`;
       const detail = s.querySelector('.chip-detail') as HTMLElement;
       const ok = s.querySelector('[data-a=ok]') as HTMLButtonElement;
       remove = await new Promise<string | null>((resolve) => {
@@ -299,7 +300,7 @@ export class Screens {
             if (sel) {
               const c = engine.card(sel);
               detail.innerHTML = `<b>${esc(c.title)}.</b> ${esc(c.text)}<br>‹ ${esc(c.left.text)}${fxHtml(engine.computeDelta(state, c, c.left.effect))} &nbsp;·&nbsp; › ${esc(c.right.text)}${fxHtml(engine.computeDelta(state, c, c.right.effect))}`;
-              ok.textContent = `Oublier « ${c.title} »`;
+              ok.textContent = 'Oublier cette carte';
             } else {
               detail.innerHTML = '';
               ok.textContent = 'Oublier';

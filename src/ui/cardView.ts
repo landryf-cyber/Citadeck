@@ -264,7 +264,7 @@ export class CardView {
   arm(side: Side, soft = false): void {
     if (!this.card || !this.enabled) return;
     this.armed = side;
-    this.dx = (side === 'left' ? -1 : 1) * this.threshold() * (soft ? 0.5 : 0.72);
+    this.dx = (side === 'left' ? -1 : 1) * this.threshold() * (soft ? 0.4 : 0.5);
     this.card.classList.remove('enter');
     this.card.classList.add('settle');
     this.apply(this.dx);

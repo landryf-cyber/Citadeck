@@ -3,11 +3,13 @@ import { gaugeSvg } from './art';
 import { el, ICONS } from './dom';
 
 /** à partir de cette amplitude, l'aperçu montre une double flèche */
-const BIG = 13;
+const BIG = 7;
+const HUGE = 13;
+const level = (d: number) => (Math.abs(d) >= HUGE ? 3 : Math.abs(d) >= BIG ? 2 : 1);
 
 interface GaugeEl {
   root: HTMLElement;
-  fill: SVGRectElement;
+  fill: HTMLElement;
   prev: HTMLElement;
   delta: HTMLElement;
   wind: HTMLElement;
@@ -31,12 +33,16 @@ export class Hud {
       root.setAttribute('aria-valuemax', '100');
       const prev = el('div', 'gauge-prev');
       const icon = el('div', 'gauge-icon', gaugeSvg(id));
+      // la barre de niveau : zones rouges en haut et en bas, niveau au milieu
+      const meter = el('div', 'meter', '<i class="zone hi"></i><i class="zone lo"></i><i class="fill"></i>');
+      const row = el('div', 'gauge-row');
+      row.append(icon, meter);
       const label = el('div', 'gauge-label', GAUGE_LABEL[id]);
       const delta = el('div', 'gauge-delta');
       const wind = el('div', 'gauge-wind');
-      root.append(prev, icon, label, delta, wind);
+      root.append(prev, row, label, delta, wind);
       this.root.append(root);
-      this.g[id] = { root, fill: icon.querySelector('.g-fill') as SVGRectElement, prev, delta, wind, label };
+      this.g[id] = { root, fill: meter.querySelector('.fill') as HTMLElement, prev, delta, wind, label };
     }
   }
 
@@ -44,9 +50,7 @@ export class Hud {
     for (const id of GAUGES) {
       const v = Math.max(0, Math.min(100, gauges[id]));
       const ge = this.g[id];
-      // la forme utile de l'icône occupe ~y 2..38
-      const y = 38 - (v / 100) * 36;
-      ge.fill.style.transform = `translateY(${y.toFixed(2)}px)`;
+      ge.fill.style.height = `${v.toFixed(1)}%`;
       ge.root.classList.toggle('danger', v <= TUNING.dangerLow || v >= TUNING.dangerHigh);
       ge.root.classList.toggle('too-low', v <= TUNING.dangerLow);
       ge.root.classList.toggle('too-high', v >= TUNING.dangerHigh);
@@ -75,8 +79,7 @@ export class Hud {
         ge.root.classList.remove('prev');
         continue;
       }
-      const big = Math.abs(d) >= BIG;
-      const key = d > 0 ? (big ? 'up2' : 'up1') : big ? 'down2' : 'down1';
+      const key = `${d > 0 ? 'up' : 'down'}${level(d)}` as keyof typeof ICONS;
       if (ge.prev.dataset.k !== key) {
         ge.prev.innerHTML = ICONS[key];
         ge.prev.dataset.k = key;
@@ -96,7 +99,7 @@ export class Hud {
       ge.delta.classList.remove('go-up', 'go-down');
       void ge.root.offsetWidth;
       ge.root.classList.add(up ? 'bump-up' : 'bump-down');
-      ge.delta.innerHTML = ICONS[up ? (Math.abs(d) >= BIG ? 'up2' : 'up1') : Math.abs(d) >= BIG ? 'down2' : 'down1'];
+      ge.delta.innerHTML = ICONS[`${up ? 'up' : 'down'}${level(d)}` as keyof typeof ICONS];
       ge.delta.classList.add(up ? 'go-up' : 'go-down');
     }
   }

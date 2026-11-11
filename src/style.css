@@ -4,7 +4,7 @@
   --dim: rgba(246, 238, 223, 0.66);
   --faint: rgba(246, 238, 223, 0.38);
   --bg: #05050a;
-  --card-w: min(82vw, 350px, calc((100dvh - 300px) * 0.7));
+  --card-w: min(82vw, 350px, calc((100dvh - 316px) * 0.7));
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in: cubic-bezier(0.55, 0, 0.9, 0.4);
@@ -58,19 +58,26 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .hidden-ui #hud { transform: translateY(-12px); }
 .hidden-ui #foot { transform: translateY(12px); }
 
-.gauge { position: relative; display: flex; flex-direction: column; align-items: center; width: 56px; }
-.gauge-prev { height: 15px; display: flex; align-items: flex-end; justify-content: center; opacity: 0; transform: translateY(4px); transition: opacity 0.16s var(--ease-out), transform 0.2s var(--ease-out); }
-.gauge-prev svg { width: 16px; height: 15px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--ui)); }
+.gauge { position: relative; display: flex; flex-direction: column; align-items: center; width: 66px; }
+.gauge-prev { height: 22px; display: flex; align-items: flex-end; justify-content: center; opacity: 0; transform: translateY(4px); transition: opacity 0.16s var(--ease-out), transform 0.2s var(--ease-out); }
+.gauge-prev svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--ui)) drop-shadow(0 1px 2px #000); }
 .gauge.prev .gauge-prev { opacity: 1; transform: none; }
-.gauge-icon { width: 40px; height: 40px; position: relative; transition: transform 0.35s var(--ease-back), filter 0.4s; filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.7)); }
+.gauge-row { display: flex; align-items: center; gap: 6px; }
+.gauge-icon { width: 30px; height: 30px; position: relative; transition: transform 0.35s var(--ease-back), filter 0.4s; filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.7)); }
 .gauge.prev .gauge-icon { transform: scale(1.12); }
 .gauge-icon svg { width: 100%; height: 100%; overflow: visible; display: block; }
-.g-bg { fill: rgba(8, 7, 12, 0.6); }
-.g-fill { fill: var(--ink); transition: transform 0.7s var(--ease-out), fill 0.5s; }
-.g-line { fill: none; stroke: rgba(246, 238, 223, 0.86); stroke-width: 1.5; stroke-linejoin: round; }
-.g-detail { fill: none; stroke: rgba(10, 8, 14, 0.5); stroke-width: 1.3; stroke-linecap: round; mix-blend-mode: multiply; }
+.g-bg { fill: var(--ink); transition: fill 0.5s; }
+.g-line { fill: none; stroke: rgba(246, 238, 223, 0.9); stroke-width: 1.5; stroke-linejoin: round; }
+.g-detail { fill: none; stroke: rgba(10, 8, 14, 0.62); stroke-width: 1.6; stroke-linecap: round; }
+/* barre de niveau : le rouge en haut et en bas, c'est le danger ; tout en haut ou tout en bas, c'est la fin */
+.meter { position: relative; width: 9px; height: 44px; border-radius: 5px; background: rgba(246, 238, 223, 0.16); box-shadow: 0 0 0 1px rgba(8, 7, 12, 0.55), 0 0 8px rgba(0, 0, 0, 0.6); overflow: hidden; }
+.meter .zone { position: absolute; left: 0; right: 0; height: 30%; background: rgba(255, 96, 70, 0.5); }
+.meter .zone.hi { top: 0; border-bottom: 1px solid rgba(255, 150, 130, 0.9); }
+.meter .zone.lo { bottom: 0; border-top: 1px solid rgba(255, 150, 130, 0.9); }
+.meter .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: var(--ink); border-top: 2px solid #fff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.5); transition: height 0.7s var(--ease-out), background 0.4s; mix-blend-mode: normal; opacity: 0.92; }
+.gauge.danger .meter .fill { background: #ff7a5c; border-top-color: #ffd6cc; }
 .gauge-label { margin-top: 4px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); transition: color 0.4s; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9); white-space: nowrap; }
-.gauge.danger .g-fill { fill: #ff7a5c; }
+.gauge.danger .g-bg { fill: #ff8a6c; }
 .gauge.danger .g-line { stroke: #ffb4a0; }
 .gauge.danger .gauge-icon { animation: danger 1.05s ease-in-out infinite; }
 .gauge.danger .gauge-label { color: #ffb4a0; }
@@ -83,7 +90,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .gauge.bump-down .gauge-icon { animation: bumpDown 0.55s var(--ease-out); }
 @keyframes bumpUp { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-5px) scale(1.14); filter: drop-shadow(0 0 12px #fff); } 100% { transform: none; } }
 @keyframes bumpDown { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(4px) scale(0.9); } 100% { transform: none; } }
-.gauge-delta { position: absolute; top: 22px; left: 50%; font-size: 13px; font-weight: 700; pointer-events: none; opacity: 0; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); }
+.gauge-delta { position: absolute; top: 30px; left: 30%; font-size: 13px; font-weight: 700; pointer-events: none; opacity: 0; text-shadow: 0 0 8px rgba(0, 0, 0, 0.9); }
 .gauge-delta svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .gauge-delta.go-up { animation: deltaUp 0.9s var(--ease-out); }
 .gauge-delta.go-down { animation: deltaDown 0.9s var(--ease-out); }
@@ -172,7 +179,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .reply { font-style: italic; font-size: 15.5px; line-height: 1.3; color: #fff7e8; text-shadow: 0 1px 3px #000, 0 0 12px #000, 0 0 26px rgba(0, 0, 0, 0.95); opacity: 0; transform: translateY(6px); transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out); text-wrap: balance; }
 .reply.show { opacity: 1; transform: none; transition-duration: 0.3s; }
 .hint { font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--ui); text-shadow: 0 1px 10px #000, 0 0 20px rgba(0, 0, 0, 0.95); opacity: 0; transition: opacity 0.5s; text-wrap: balance; }
-.hint.show { opacity: 1; animation: hintPulse 2.4s ease-in-out infinite; }
+.hint.show { opacity: 1; padding: 7px 13px; border-radius: 12px; background: rgba(6, 5, 10, 0.74); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui) 30%, transparent); }
 @keyframes hintPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
 
 /* ------------------------------------------------------------------ pied */
@@ -208,7 +215,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .banner .big { font-family: var(--title); font-weight: 700; font-size: clamp(30px, 9vw, 64px); letter-spacing: 0.09em; line-height: 1.05; color: #fff6e4; text-shadow: 0 0 40px color-mix(in srgb, var(--ui) 70%, transparent); }
 .banner .sub { margin-top: 10px; font-size: 16px; font-style: italic; color: var(--dim); text-wrap: balance; }
 .banner .note { margin-top: 12px; font-size: 14.5px; font-weight: 600; color: var(--ui); text-wrap: balance; }
-.gauge-wind { position: absolute; right: 1px; top: 15px; width: 13px; height: 13px; opacity: 0; transition: opacity 0.6s; }
+.gauge-wind { position: absolute; right: -6px; top: 22px; width: 13px; height: 13px; opacity: 0; transition: opacity 0.6s; }
 .gauge-wind.on { opacity: 0.95; animation: windPulse 2.2s ease-in-out infinite; }
 .gauge-wind svg { width: 100%; height: 100%; fill: none; stroke: var(--ui); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--ui)); }
 @keyframes windPulse { 0%, 100% { transform: translateY(0); opacity: 0.95; } 50% { transform: translateY(-2px); opacity: 0.55; } }
@@ -284,6 +291,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .tile-opts span:last-child { text-align: left; }
 .tile-syn { margin-top: 5px; font-size: 12px; font-weight: 600; color: var(--ui); }
 .reward-actions { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 16px; }
+.reward-actions.dock { position: sticky; bottom: calc(-1 * max(20px, env(safe-area-inset-bottom))); width: calc(100% + 40px); margin: 10px -20px 0; padding: 14px 20px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(5, 4, 9, 0), rgba(5, 4, 9, 0.96) 34%); z-index: 2; }
 
 .wonder-emblem { width: min(56vw, 250px); aspect-ratio: 1; margin-top: 18px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 225, 170, 0.4), 0 0 90px -6px var(--ui); animation: wonderIn 1.1s var(--ease-out) both; }
 .wonder-emblem canvas { width: 100%; height: 100%; display: block; }
@@ -299,7 +307,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ui); o
 .chip-detail b { color: var(--ink); }
 
 /* fin */
-.end-cause { font-family: var(--title); font-weight: 700; font-size: clamp(38px, 12vw, 88px); letter-spacing: 0.1em; padding-left: 0.1em; line-height: 1; text-align: center; margin: 10px 0 0; color: #fff6e4; text-shadow: 0 0 50px color-mix(in srgb, var(--ui) 60%, transparent); animation: logoIn 1.4s var(--ease-out) both; }
+.end-cause { font-family: var(--title); font-weight: 700; font-size: clamp(28px, 9vw, 88px); letter-spacing: 0.06em; padding-left: 0.06em; max-width: 100%; overflow-wrap: anywhere; line-height: 1; text-align: center; margin: 10px 0 0; color: #fff6e4; text-shadow: 0 0 50px color-mix(in srgb, var(--ui) 60%, transparent); animation: logoIn 1.4s var(--ease-out) both; }
 .screen.defeat .end-cause { color: #ffd9cf; text-shadow: 0 0 50px rgba(255, 80, 50, 0.55); }
 .end-text { max-width: 540px; text-align: center; font-size: 17px; line-height: 1.4; font-style: italic; color: rgba(246, 238, 223, 0.86); margin: 14px 0 0; text-wrap: balance; text-shadow: 0 1px 10px #000; }
 .end-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; margin-top: 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); text-shadow: 0 1px 8px #000; }
@@ -341,8 +349,9 @@ input[type='range']::-moz-range-thumb { width: 22px; height: 22px; border: 0; bo
 /* ------------------------------------------------------------------ grand écran */
 @media (min-width: 760px) and (min-height: 600px) {
   :root { --card-w: min(460px, 56vw, calc((100dvh - 330px) * 0.7)); }
-  .gauge { width: 76px; }
-  .gauge-icon { width: 46px; height: 46px; }
+  .gauge { width: 84px; }
+  .gauge-icon { width: 36px; height: 36px; }
+  .meter { height: 50px; width: 10px; }
   .gauge-label { font-size: 10.5px; }
   #hud { padding-top: 18px; gap: 34px; }
   .reply { font-size: 17px; }

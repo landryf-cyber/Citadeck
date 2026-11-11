@@ -13,7 +13,7 @@ export const tutorial = [
   card({
     id: 't_jauges', title: 'Le Cercle', kind: 'tutorial', oneShot: true,
     text: 'La tribu vous regarde. Elle attend que vous décidiez quelque chose.',
-    tutorial: 'Pendant le geste, les jauges touchées s’allument. Flèche haute : ça monte. Basse : ça baisse.',
+    tutorial: 'Pendant le geste, des flèches annoncent l’effet : vers le haut ou le bas, une à trois selon la force.',
     left: opt('Chasser plus loin', D(7, -6), 'Le gibier est loin. Les gardes aussi.'),
     right: opt('Faire des outils', D(-5, 0, 0, 7), 'Des éclats de silex. Les premiers bijoux.'),
     art: { motif: 'ring' },
@@ -21,7 +21,7 @@ export const tutorial = [
   card({
     id: 't_zero', title: 'Le Vieux', kind: 'tutorial', oneShot: true,
     text: 'Le vieux dit : « Trop de tout tue aussi sûrement que pas assez. »',
-    tutorial: 'Une jauge à 0 ou à 100, et la partie s’arrête. Gardez-les au milieu.',
+    tutorial: 'Chaque barre a deux zones rouges : le danger. Tout en bas ou tout en haut, la partie s’arrête.',
     left: opt('Il radote', D(0, 6, -4), 'On l’a fait taire. Ça rassure.'),
     right: opt('Il a raison', D(0, -4, 6), 'On l’a écouté. Ça inquiète.'),
     art: { motif: 'moon' },

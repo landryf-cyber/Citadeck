@@ -90,7 +90,7 @@ export const era0 = [
     id: 'e0_anciens', title: 'La Toux', kind: 'era', era: 0,
     text: 'Les anciens toussent. Ce sont eux qui savent où poussent les baies. Et lesquelles tuent.',
     left: opt('Les soigner', D(-6, 0, -3, -4), 'Deux ont survécu. Ils ont oublié la moitié.'),
-    right: opt('Apprendre vite', D(0, -5, -7, 0), 'Les jeunes ont retenu les baies. Pas lesquelles tuent.'),
+    right: opt('Garder les remèdes', D(0, -5, -7, 0), 'Les anciens sont partis. Avec la moitié de ce qu’on savait.'),
     art: { motif: 'leaf' },
   }),
 ];

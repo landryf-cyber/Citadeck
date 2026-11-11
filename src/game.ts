@@ -272,10 +272,29 @@ export class Game {
     this.cardView.enabled = true;
     this.audio.cardIn();
     const fine = matchMedia('(pointer: fine)').matches;
-    this.hint.textContent = card.tutorial ? card.tutorial + (card.id === 't_feu' && fine ? ' Au clavier : ← ou → pour pencher, la même touche pour valider.' : '') : '';
-    this.hint.classList.toggle('show', !!card.tutorial);
+    let hint = card.tutorial ? card.tutorial + (card.id === 't_feu' && fine ? ' Au clavier : ← ou → pour pencher, la même touche pour valider.' : '') : '';
+    if (!hint) hint = this.contextHint(card, !!(dep('left') || dep('right')));
+    this.hint.textContent = hint;
+    this.hint.classList.toggle('show', !!hint);
     if (card.tutorial) this.showReply('');
     this.updateFoot();
+  }
+
+  /** Aides ponctuelles, chacune montrée une seule fois par partie, quand la situation se présente. */
+  private contextHint(card: CardDef, conditional: boolean): string {
+    const s = this.state!;
+    const once = (key: string): boolean => {
+      if (s.flags.includes(`aide:${key}`)) return false;
+      s.flags.push(`aide:${key}`);
+      return true;
+    };
+    if (this.engine.inDanger(s.gauges).length > 0 && once('danger')) return 'Une barre est dans le rouge : danger, pas encore la fin. Ramenez-la vers le milieu.';
+    if (card.kind === 'rival' && once('rivale')) return `Cette carte vient de ${s.rival.name}, votre rivale. Elle en glisse dans votre deck ; vos réponses changent son humeur.`;
+    if (conditional && once('selon')) return '« Selon… » : l’issue de cette option dépend du niveau de la jauge nommée. Les flèches montrent ce qui arriverait maintenant.';
+    if (card.kind === 'consequence' && once('suite')) return 'Une suite : cette carte existe à cause d’un de vos choix passés.';
+    const kw = (card.keywords ?? []).find((k) => this.engine.keywordCount(s, k, card.id) >= 1 && [card.left.effect, card.right.effect].some((e) => (e.scale ?? []).some((x) => x.keyword === k)));
+    if (kw && once('motcle')) return `Mot-clé ${kw} : cette carte frappe plus fort, car votre deck en contient d’autres.`;
+    return '';
   }
 
   private showReply(text: string): void {
@@ -375,6 +394,10 @@ export class Game {
           break;
         case 'wonder':
           this.audio.wonder();
+          break;
+        case 'reprieve':
+          this.screens.toast('<b>Sursis.</b> Cette carte ne laissait aucune issue. Une fois par ère.', 4200);
+          this.scene.pulse(0.8);
           break;
         case 'crisisStart':
           crisisStart = ev.id;

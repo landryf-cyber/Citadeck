@@ -31,4 +31,6 @@ export const ICONS = {
   up2: '<svg viewBox="0 0 16 15"><path d="M3 8 L8 3 L13 8"/><path d="M3 13 L8 8 L13 13"/></svg>',
   down1: '<svg viewBox="0 0 16 15"><path d="M3 5 L8 10 L13 5"/></svg>',
   down2: '<svg viewBox="0 0 16 15"><path d="M3 2 L8 7 L13 2"/><path d="M3 7 L8 12 L13 7"/></svg>',
+  up3: '<svg viewBox="0 0 16 19"><path d="M3 7 L8 2 L13 7"/><path d="M3 12 L8 7 L13 12"/><path d="M3 17 L8 12 L13 17"/></svg>',
+  down3: '<svg viewBox="0 0 16 19"><path d="M3 2 L8 7 L13 2"/><path d="M3 7 L8 12 L13 7"/><path d="M3 12 L8 17 L13 12"/></svg>',
 };

@@ -286,7 +286,6 @@ export function gaugeSvg(id: string): string {
   return `<svg viewBox="0 0 40 40" aria-hidden="true">
 <defs><clipPath id="gc-${id}"><path d="${path}"/></clipPath></defs>
 <path class="g-bg" d="${path}"/>
-<g clip-path="url(#gc-${id})"><rect class="g-fill" x="0" y="0" width="40" height="40"/></g>
 <g class="g-detail">${GAUGE_DETAIL[id]}</g>
 <path class="g-line" d="${path}"/>
 </svg>`;
