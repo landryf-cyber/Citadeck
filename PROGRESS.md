@@ -58,9 +58,17 @@ P4 variété
 - [x] interface : paliers de fin, annexion au bilan, noms courts sur mobile, carte plus grande sur bureau, silhouettes des merveilles en illustration
 - [x] variantes de cartes de famille pour les ères IV et V
 - [x] mesures, tests, fusion, republication (version 7)
-## Juges — tour 2 (en cours, version 7)
-- Trois nouveaux juges : rédacteur de magazine indé (graine 5150), joueuse de roguelites (graine 7777), auteur de fiction interactive (graine 1313, postérité puis héritiers). Verdicts attendus dans `scratchpad/juges/juge-4..6.md`.
-- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
+## Juges — tour 2 (fait, version 7)
+- Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : rédacteur 7·8·7·8·8·6·7 ; joueuse de roguelites 6·5·8·7·5·6·7 ; auteur de fiction interactive 6·6·7,5·7·6·6·7. Verdicts dans `scratchpad/juges/juge-4..6.md`.
+- Trois faiblesses : (1) répétitions (mêmes cartes d'une partie à l'autre, mêmes crises aux ères I et V, cartes de système identiques, tics d'écriture) ; (2) choix illisibles ou inéquitables (gains cachés trop amples, sens des loyautés caché, options payantes moins bonnes que les gratuites, loyautés volatiles, procès sur le dernier grief) ; (3) menaces sans dents (sorties de crise gratuites, palissade détournable, dettes d'ère V jamais réclamées, triomphe et sabotage de la rivale sans effet, parties mortes après deux merveilles manquées, fin incohérente).
+## Tour 3 de corrections (en cours, copie `../citadeck-dev`, branche `tour-juges-2`)
+- [x] portraits des chefs de famille (un buste par maison et par ère, expression selon l'humeur)
+- [ ] bugs : texte de la Horde, « en toge » en 2150, plancher des Peintures, sabotage rebâti au même bilan, étiquette des transcriptions
+- [ ] menaces : sorties de crise par une famille payantes, palissade limitée aux crises, dettes soldées (saisie, échéance avant la fin), triomphe rival qui pèse, sabotage qui retarde d'une ère, merveilles qui allègent le Grand Filtre sans l'annuler, rattrapage d'une merveille manquée, dessein perdu annoncé, pas de « Greniers » après la dernière crise, stèle fidèle à la fin
+- [ ] lisibilité : type de gain affiché sans chiffre, sens de l'effet sur chaque famille, gains resserrés, payant ≥ gratuit, loyautés ±1/±2, procès sur le grief le plus grave ; mesurer « texte nécessaire »
+- [ ] répétitions : crises alternatives ères I et V, variantes des cartes de système (Créance, Caisse, plaidoiries), nouvelles cartes par ère, anti-redite renforcé, tics d'écriture
+- [ ] interface : titres sur petit écran, résultat sous la carte suivante, vide sur tablette, humeur « fanatiques » tronquée
+- [ ] mesures, tests, fusion, republication, trois nouveaux juges
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
