@@ -237,7 +237,7 @@ export class App {
       const list = el('div', 'fam-intro');
       FAMILIES.forEach((f, i) => {
         const fi = this.e.familyInfo(s, f);
-        const row = el('div', 'fi-row', `${this.famSvg(fi, 52, 0)}<div><b>${esc(fi.house)}</b> <span>${esc(fi.tag === 'Guerre' ? 'les chasseurs' : fi.tag === 'Foi' ? 'les chamanes' : fi.tag === 'Science' ? 'les sages' : 'les troqueurs')}</span><p>${esc(lines[f])}</p></div>`);
+        const row = el('div', 'fi-row', `${this.famSvg(fi, 64, 0)}<div><b>${esc(fi.house)}</b> <span>${esc(fi.tag === 'Guerre' ? 'les chasseurs' : fi.tag === 'Foi' ? 'les chamanes' : fi.tag === 'Science' ? 'les sages' : 'les troqueurs')}</span><p>${esc(lines[f])}</p></div>`);
         row.style.animationDelay = `${0.3 + i * 0.35}s`;
         list.appendChild(row);
       });
@@ -341,7 +341,7 @@ export class App {
 
   private famSvg(fi: FamilyInfo, size: number, era: number): string {
     const id = `m${fi.id}${Math.random().toString(36).slice(2, 7)}`;
-    const sp = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era, scars: fi.scars };
+    const sp = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era, scars: fi.scars, fam: fi.id };
     return `<svg class="med" viewBox="0 0 100 100" width="${size}" height="${size}"><defs><radialGradient id="${id}p" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="hsl(${fi.hue} 55% 32%)"/><stop offset="1" stop-color="hsl(${fi.hue} 45% 9%)"/></radialGradient></defs>${medallion(sp, 50, 52, 38, id)}</svg>`;
   }
 
@@ -363,7 +363,7 @@ export class App {
     const riv = this.e.familyInfo(s, fi.rivalOf);
     const veil = el('div', 'pop-veil');
     const pop = el('div', 'pop');
-    pop.innerHTML = `<div class="row" style="display:flex;gap:10px;align-items:center">${this.famSvg(fi, 54, s.era)}<div><h4>${esc(fi.house)}</h4><p class="note">${esc(fi.head)} · ${esc(fi.trade)} · ${esc(fi.mood)} (${fi.loy > 0 ? '+' : ''}${fi.loy})</p></div></div>
+    pop.innerHTML = `<div class="row" style="display:flex;gap:10px;align-items:center">${this.famSvg(fi, 72, s.era)}<div><h4>${esc(fi.house)}</h4><p class="note">${esc(fi.head)} · ${esc(fi.trade)} · ${esc(fi.mood)} (${fi.loy > 0 ? '+' : ''}${fi.loy})</p></div></div>
       <p>Domaine : ${esc(fi.tag)}, ${esc(RES_LABEL[fi.res])}. Ils méprisent ${esc(riv.house.toLowerCase().replace(/^les /, 'les '))} : les favoriser vous coûte leur amitié.</p>
       ${fi.grudge ? `<p>Ils se souviennent : <q>« ${esc(fi.grudge.label)} »</q>, ${esc(fi.grudge.date)}.</p>` : ''}
       ${fi.favor ? `<p>Ils vous savent gré : <q>« ${esc(fi.favor.label)} »</q>, ${esc(fi.favor.date)}.</p>` : ''}
@@ -391,8 +391,8 @@ export class App {
     let hue = c.art?.hue ?? (fi ? fi.hue : c.kind === 'crise' ? 8 : c.kind === 'rivale' ? this.e.rival(s).hue : c.kind === 'ruines' || c.kind === 'revenant' ? 270 : 32);
     if (c.kind === 'jalon') hue = 42;
     const spec: ArtSpec = { key: c.id + s.era, motif: c.art?.motif ?? KIND_MOTIF[c.kind] ?? (fi?.motif ?? 'star'), hue, alarm: c.kind === 'crise' || c.kind === 'trahison' };
-    if (fi) spec.speaker = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era: s.era, scars: fi.scars };
-    else if (c.kind === 'rivale') spec.speaker = { motif: 'crown', hue: this.e.rival(s).hue, mood: s.rivalRel, era: s.era, scars: 0 };
+    if (fi) spec.speaker = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era: s.era, scars: fi.scars, fam: fi.id };
+    else if (c.kind === 'rivale' || c.id === 'creance_rivale') spec.speaker = { motif: 'crown', hue: this.e.rival(s).hue, mood: s.rivalRel, era: s.era, scars: 0, fam: 'rival' };
     if (spec.speaker && spec.motif === spec.speaker.motif) spec.motif = KIND_MOTIF[c.kind] ?? 'star';
     return spec;
   }

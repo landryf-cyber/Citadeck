@@ -4,6 +4,7 @@
  * Une carte montre son sujet (le motif) et, quand quelqu'un parle, son orateur (un médaillon de famille).
  */
 import { Rng, hashString } from '../core/rng';
+import { portrait, type PortraitFam } from './portrait';
 
 let uid = 0;
 
@@ -268,7 +269,7 @@ export interface ArtSpec {
   /** teinte d'alerte (crise, trahison) */
   alarm?: boolean;
   /** l'orateur : un médaillon de famille, de rivale ou d'ancêtre */
-  speaker?: { motif: string; hue: number; mood: number; era: number; scars: number };
+  speaker?: { motif: string; hue: number; mood: number; era: number; scars: number; fam?: PortraitFam };
 }
 
 /** Médaillon d'un orateur : même langage, cadre selon l'ère, anneau selon l'humeur, cicatrices des griefs. */
@@ -290,6 +291,10 @@ export function medallion(sp: NonNullable<ArtSpec['speaker']>, cx: number, cy: n
   for (let i = 0; i < Math.min(3, sp.scars); i++) {
     const x = cx - r * 0.45 + i * r * 0.32 + rng.range(-4, 4) * k;
     scars += `<path d="M${(x - r * 0.12).toFixed(1)} ${(cy - r * 0.72).toFixed(1)} L${(x + r * 0.14).toFixed(1)} ${(cy - r * 0.38).toFixed(1)}" stroke="#ff7a5c" stroke-width="${(2.2 * k + 0.6).toFixed(1)}" stroke-linecap="round" opacity=".9"/>`;
+  }
+  if (sp.fam) {
+    return `<g>${frame}<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}p)"/>${portrait(sp.fam, sp.era, sp.mood, h, cx, cy, r, id)}` +
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${moodCol}" stroke-width="${(2.4 * k + 0.6).toFixed(1)}"/>${scars}</g>`;
   }
   return `<g>${frame}<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}p)" stroke="${moodCol}" stroke-width="${(2.4 * k + 0.6).toFixed(1)}"/>` +
     `<g transform="translate(${cx} ${cy}) scale(${(k * 0.62).toFixed(3)}) translate(-150 -98)">${motif(sp.motif, rng, st, `hsla(${h},80%,60%,.35)`, dim)}</g>${scars}</g>`;
