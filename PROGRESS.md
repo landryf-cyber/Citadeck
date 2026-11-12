@@ -91,8 +91,13 @@ P4 variété
 - [x] tribut en début d'ère (même la dernière), sabotage d'une merveille rivale ; cartes graves sans chute ; répliques variées ; carte plus large sur bureau
 - [x] mesures (E14, profil « distrait »), tests (27), README, DECISIONS 41-46
 - [x] republication (version 10)
-## Juges — tour 5 (le dernier, en cours, version 10)
-- Trois nouveaux juges ; verdicts attendus dans `scratchpad/juges/juge-13..15.md`. Ensuite : message final (si une note reste sous 8, l'expliquer).
+## Juges — tour 5 (le dernier, fait, version 10)
+- Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : éditeur indé 6·6·8·7·7·6·6 ; streameuse de stratégie 7·6·8·7·6·7·7 ; joueur mobile 7·6·8·8·6·7·7. Verdicts dans `scratchpad/juges/juge-13..15.md`.
+- Cinq tours atteints : la consigne s'arrête là. Les notes sous 8 sont expliquées dans le message final et dans EXPERIENCES (E15).
+## Après le dernier tour (fait, version 11 publiée)
+- [x] palissade jamais sur une cession choisie, révoltes annoncées avant le bilan, bilan après une disette, pertes impayables qui coûtent, dette rivale ignorée à sec ou à la dernière ère, entretien et usure annoncés, nom de cité distinct des ruines
+- [x] mesures finales (E15), 27 tests, performance (pire moyenne 37 i/s au palier 2, profil mobile sans GPU), aucune erreur de console sur le parcours complet
+- [x] version 11 publiée (page hébergée) ; branche poussée
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
@@ -100,7 +105,7 @@ P4 variété
 3. Avocat du diable sur le jeu fini ; mesures finales (`npm run sim -- 200`, `npm run campaign -- 10`)
 4. 3 passes DA captures (mobile/bureau, dont animations), relecture de tous les textes, cas limites, perf
 5. Trois juges indépendants (notes ≥ 8 sur 7 critères, 5 tours max)
-6. Déploiement : `npm run single` → page hébergée https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (V2 publiée en version 5 le 12/11 ; republier après chaque tour de corrections) ; message final
+6. Déploiement : `npm run single` → page hébergée https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (version 11, finale, le 12/11) ; message final
 
 ## Dépôt
 - Branche `claude/inspiring-cerf-jcrkjo` poussée sur GitHub le 12/11 (l'accès a été rétabli). Le déploiement GitHub Pages ne se déclenche que sur `main` ; publication courante : page hébergée.
