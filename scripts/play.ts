@@ -64,7 +64,8 @@ function card(s: GameState): void {
   P(v.text);
   v.options.forEach((o, i) => {
     const bits = [
-      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : 'gratuit',
+      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss ? '' : 'gratuit',
+      o.loss ? `perte ${bag(o.loss)}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
       o.families.length ? `concerne ${o.families.map((f) => capitalize(e.c.families[f].house[s.era])).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
@@ -93,6 +94,8 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'bet') parts.push(`pari ${x.win ? 'réussi' : 'raté'} (${Math.round(x.chance * 100)} %)`);
     if (x.type === 'jalon') parts.push(`★ MERVEILLE BÂTIE : ${x.name}`);
     if (x.type === 'card+' && e.card(x.id).kind === 'decouverte') parts.push(`découverte : ${e.card(x.id).title}`);
+    if (x.type === 'passive') parts.push(`vos merveilles et découvertes rapportent ${bag(x.bag, '+')}`);
+    if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) parts.push(`la rivale ${x.delta < 0 ? 'perd' : 'achève'} ${x.name} (${x.count}/5)`);
   }
   if (parts.length) P(`  (${parts.join(' · ')})`);
   const bil: string[] = [];
@@ -101,10 +104,10 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'defect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} passent chez la rivale, avec un quartier.`);
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
     if (x.type === 'income') bil.push(`Une famille dévouée apporte ${bag(x.bag, '+')}.`);
-    if (x.type === 'decay') bil.push(`Usure : -${x.armee} Armée, -${x.tresor} Trésor.`);
+    if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);
     if (x.type === 'famine') bil.push('FAMINE : un quartier se vide.');
-    if (x.type === 'rivalJalon') bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
+    if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
   }
   if (bil.length) P(`=== BILAN DE L’ÈRE\n  ${bil.join('\n  ')}`);
   const cr = ev.find((x) => x.type === 'crisis') as { name: string } | undefined;

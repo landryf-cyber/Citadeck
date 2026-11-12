@@ -122,7 +122,7 @@ export const engineCards = [
   card({ id: 'jalon', kind: 'jalon', title: 'Le Jalon', text: '', options: [], art: { motif: 'tower' } }),
   card({ id: 'decouverte', kind: 'decouverte', title: 'Que découvrir ?', text: 'Les savants proposent trois pistes. Une seule sera suivie. Les autres iront chez {rival}.', options: [], art: { motif: 'scroll' } }),
   card({ id: 'croissance', kind: 'croissance', title: 'Les Greniers débordent', text: 'Assez de vivres pour fonder un nouveau quartier. Ou pour tenir le prochain hiver, qui sera long. Ils le sont tous.', options: [], art: { motif: 'house' } }),
-  card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation : {citation}, {quand}. « Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),
+  card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation. {objet}, {quand} : vous avez dit {citation}. {depuis}« Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),
   card({
     id: 'ruines', kind: 'ruines', scale: true, title: 'Les Ruines de {ancienne}', art: { motif: 'skull' },
     text: 'Sous la colline dorment les restes de {ancienne}, tombée par {cause}. Sur une stèle, leurs derniers mots : « {testament} ».',

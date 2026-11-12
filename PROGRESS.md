@@ -20,12 +20,12 @@ Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md`
 
 ## En cours — corrections issues de l'éditeur et du joueur A
 P1 bugs et indicateurs trompeurs
-- [ ] cartes de découverte : leurs propres options n'apparaissent jamais (seul « Rien de nouveau ») — branche `decouverte` de `baseOptions`
-- [ ] pertes de ressources cachées affichées « gratuit » (La Charte : −7 Trésor) → afficher les pertes directes comme coût
-- [ ] rivale qui perd une merveille annoncée « achève » ; revenu des merveilles étiqueté « famille dévouée » (événement distinct)
-- [ ] réplique « le quartier brûle » alors qu'une merveille l'a sauvé → complément de réplique
-- [ ] procès : rejuge la même faute, cite des choix de procès et des libellés sans contexte, toujours la même ère → exclure les rouages, préférer l'ancien, marquer « jugé », citer le titre ; verdicts dans la voix de chaque famille ; procès seulement si loyauté ≤ −1
-- [ ] effets en cascade (rivalité) non annoncés par les pastilles ; options dont l'exigence est un souvenir absent (chars sans roue) → masquer
+- [x] cartes de découverte : leurs propres options n'apparaissent jamais (seul « Rien de nouveau ») — branche `decouverte` de `baseOptions`
+- [x] pertes de ressources cachées affichées « gratuit » (La Charte : −7 Trésor) → afficher les pertes directes comme coût
+- [x] rivale qui perd une merveille annoncée « achève » ; revenu des merveilles étiqueté « famille dévouée » (événement distinct)
+- [x] réplique « le quartier brûle » alors qu'une merveille l'a sauvé → complément de réplique
+- [x] procès : rejuge la même faute, cite des choix de procès et des libellés sans contexte, toujours la même ère → exclure les rouages, préférer l'ancien, marquer « jugé », citer le titre ; verdicts dans la voix de chaque famille ; procès seulement si loyauté ≤ −1
+- [x] effets en cascade (rivalité) non annoncés par les pastilles ; options dont l'exigence est un souvenir absent (chars sans roue) → masquer
 P2 clarté
 - [ ] présage : réserves actuelles, seuils chiffrés de la crise à venir, d'où vient la Science/Guerre/Culture et combien on en a
 - [ ] merveille bâtie : une phrase (réplique), pas seulement ★

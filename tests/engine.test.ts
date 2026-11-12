@@ -56,3 +56,52 @@ describe('moteur V2', () => {
     }
   }, 60000);
 });
+
+describe('corrections après relecture', () => {
+  it('une découverte jouée comme dilemme propose ses propres options', () => {
+    const s = e.newGame(5, { dessein: 'etoiles' });
+    s.deck.push('d_ecriture');
+    s.phase = 'saison';
+    s.prompt = { card: 'd_ecriture' };
+    const v = e.view(s)!;
+    expect(v.options.map((o) => o.label)).toEqual(['Tout noter', 'Noter les dettes']);
+  });
+
+  it('un procès ne cite jamais un rouage ni deux fois la même décision', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const rng = new Rng(seed);
+      const s = e.newGame(seed, { dessein: content.desseins[seed % 3].id });
+      const quoted: number[] = [];
+      let g = 0;
+      while (s.phase !== 'fin' && g++ < 400) {
+        if (s.prompt?.card === 'proces') {
+          const q = s.prompt.quote!;
+          expect(q).toBeGreaterThanOrEqual(0);
+          const k = content.cards[s.history[q].card].kind;
+          expect(['proces', 'hommage', 'carrefour', 'croissance', 'jalon', 'presage']).not.toContain(k);
+          expect(quoted).not.toContain(q);
+          const ev = e.act(s, chooseIndex(e, s, PROFILES[seed % PROFILES.length], rng));
+          if (s.mem.includes(`juge_${q}`)) quoted.push(q);
+          void ev;
+          continue;
+        }
+        e.act(s, chooseIndex(e, s, PROFILES[seed % PROFILES.length], rng));
+      }
+    }
+  });
+
+  it('une perte de ressources certaine est affichée, jamais « gratuite »', () => {
+    for (const c of Object.values(content.cards)) {
+      for (const o of c.options) {
+        if (!o.effect.gain || !Object.values(o.effect.gain).some((n) => (n ?? 0) < 0)) continue;
+        const s = e.newGame(3, { dessein: 'empire' });
+        s.phase = 'saison';
+        s.prompt = { card: c.id };
+        if (c.qui) continue;
+        const v = e.view(s)!;
+        const ov = v.options.find((x) => x.label === o.label.replace(/\{[^}]+\}/g, (m) => m));
+        if (ov && !o.label.includes('{')) expect(ov.loss, `${c.id} · ${o.label}`).toBeTruthy();
+      }
+    }
+  });
+});

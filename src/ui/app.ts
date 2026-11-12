@@ -420,8 +420,9 @@ export class App {
   private optButton(o: OptionView, i: number, v: View): HTMLButtonElement {
     const s = this.s!;
     const b = el('button', 'opt');
-    const costs = Object.keys(o.cost).length
-      ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('')
+    const lossChips = o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '';
+    const costs = Object.keys(o.cost).length || lossChips
+      ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
@@ -496,6 +497,7 @@ export class App {
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
       if (x.type === 'rival') chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'}</span>`);
+      if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
     }
     if (reply) after.appendChild(el('p', 'reply', esc(reply)));
     if (chips.length) after.appendChild(el('div', 'fx', chips.join('')));
@@ -615,7 +617,7 @@ export class App {
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
-      if (x.type === 'rivalJalon') lines.push({ cls: 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} achèvent <b>${esc(x.name)}</b> (${x.count}/5).` });
+      if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
     }
     if (!lines.length) return Promise.resolve();
     return new Promise((done) => {

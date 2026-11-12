@@ -111,7 +111,7 @@ export type Ev =
   | { type: 'jalon'; era: number; name: string }
   | { type: 'jalonMissed'; era: number; name: string }
   | { type: 'rival'; delta: number; value: number }
-  | { type: 'rivalJalon'; count: number; name: string }
+  | { type: 'rivalJalon'; count: number; name: string; delta: number }
   | { type: 'bet'; win: boolean; chance: number }
   | { type: 'reply'; text: string }
   | { type: 'saison'; saison: number; route: string }
@@ -124,6 +124,7 @@ export type Ev =
   | { type: 'upkeep'; amount: number }
   | { type: 'decay'; armee: number; tresor: number }
   | { type: 'income'; bag: Bag }
+  | { type: 'passive'; bag: Bag }
   | { type: 'end'; result: NonNullable<GameState['result']> };
 
 export interface OptionView {
@@ -138,6 +139,8 @@ export interface OptionView {
   families: FamilyId[];
   /** l'acte aura une suite (sablier) */
   later: boolean;
+  /** pertes de ressources certaines (affichées comme un coût, déjà incluses dans l'effet) */
+  loss?: Bag;
   warn?: string;
   /** pari : chance affichée */
   odds?: number;
@@ -367,7 +370,15 @@ export class Engine {
   /** Options effectives de l'invite (routes, procès, découvertes et cartes « qui ? » sont construites ici). */
   /** Les options d'une carte ; si aucune n'est jouable, une issue de secours (jamais de blocage). */
   options(s: GameState, p: Prompt = s.prompt!): Option[] {
-    const opts = this.baseOptions(s, p);
+    // une option liée à un souvenir absent n'est pas proposée (pas de chars sans la roue)
+    const opts = this.baseOptions(s, p).filter((o) => {
+      const c = o.req;
+      if (!c) return true;
+      if (c.mem && !s.mem.includes(c.mem)) return false;
+      if (c.notMem && s.mem.includes(c.notMem)) return false;
+      if (c.card && !s.deck.includes(c.card)) return false;
+      return true;
+    });
     if (opts.some((o) => this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req))) return opts;
     const card = this.card(p.card);
     if (card.kind === 'crise') {
@@ -386,8 +397,8 @@ export class Engine {
         return { label: name, effect: {} };
       });
     }
-    if (card.kind === 'decouverte') {
-      const opts: Option[] = (p.recruits ?? []).map((id) => {
+    if (card.kind === 'decouverte' && p.recruits) {
+      const opts: Option[] = p.recruits.map((id) => {
         const d = this.card(id);
         return { label: d.title, cost: { savoir: d.price ?? 0 }, effect: { addCard: [id] } };
       });
@@ -438,6 +449,7 @@ export class Engine {
       extra.citation = h ? `« ${h.label} »` : '« rien de précis, mais tout »';
       extra.quand = h ? h.date : 'depuis toujours';
       extra.objet = h ? h.title : 'votre règne';
+      extra.depuis = !h || h.era === s.era ? '' : h.era === s.era - 1 ? 'Cela date de l’ère précédente. ' : `Cela remonte à ${ERA_NAMES[h.era].charAt(0).toLowerCase()}${ERA_NAMES[h.era].slice(1)}. `;
       extra.plaignant = this.c.families[p.plaintiff].head[s.era];
       extra.maison = capitalize(this.c.families[p.plaintiff].house[s.era]);
       header = 'Le Procès';
@@ -494,7 +506,12 @@ export class Engine {
     let later = false;
     const walk = (e: Effect | undefined) => {
       if (!e) return;
-      for (const f of Object.keys(e.loy ?? {}) as FamilyId[]) if (e.loy![f]) fams.add(f);
+      for (const f of Object.keys(e.loy ?? {}) as FamilyId[]) {
+        if (!e.loy![f]) continue;
+        fams.add(f);
+        // une faveur appuyée froisse la famille rivale : elle est concernée aussi
+        if (e.loy![f]! >= 2 && s.fam[this.c.rivalries[f]]?.state === 'presente') fams.add(this.c.rivalries[f]);
+      }
       if (e.sched?.length) later = true;
       if (e.famState) fams.add(e.famState.id);
       walk(e.then);
@@ -517,6 +534,11 @@ export class Engine {
       warn: o.warn ? fill(o.warn, s, this.c) : undefined,
     };
     if (o.effect.bet) v.odds = this.betChance(s, o.effect.bet);
+    const g = o.effect.gain;
+    if (g && RES.some((r) => (g[r] ?? 0) < 0)) {
+      v.loss = {};
+      for (const r of RES) if ((g[r] ?? 0) < 0) v.loss[r] = -g[r]!;
+    }
     if (card.kind === 'carrefour') {
       const r = this.c.routes.find((x) => x.id === p.routes![i])!;
       v.ref = r.id;
@@ -529,7 +551,10 @@ export class Engine {
       v.ref = d.id;
       v.detail = fill(d.gift ?? '', s, this.c);
     }
-    if (card.kind === 'proces' && p.qui?.[i]) v.families = [p.qui[i], p.plaintiff!];
+    if (card.kind === 'proces' && p.qui?.[i]) {
+      v.families = [p.qui[i], p.plaintiff!];
+      v.detail = `${capitalize(this.c.families[p.qui[i]].house[s.era])} : ${this.familyInfo(s, p.qui[i]).mood}`;
+    }
     if (card.kind === 'jalon' && o.effect.jalon) {
       const j = o.effect.jalon === 'alt' ? this.jalonAltOf(s, s.era) : this.dessein(s).jalons[s.era];
       if (j) {
@@ -658,6 +683,7 @@ export class Engine {
     }
     // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
     if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
+    if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) reply = `${reply} Pourtant, le quartier tient : une merveille l’a protégé.`;
     if (card.arc) {
       if (!s.arcs.open.includes(card.arc)) s.arcs.open.push(card.arc);
       if (card.finale && !s.arcs.done.includes(card.arc)) s.arcs.done.push(card.arc);
@@ -743,8 +769,10 @@ export class Engine {
       ev.push({ type: 'rival', delta: e.rival, value: s.rivalRel });
     }
     if (e.rivalJalon) {
+      const before = s.rivalJalons;
       s.rivalJalons = Math.max(0, Math.min(5, s.rivalJalons + e.rivalJalon));
-      ev.push({ type: 'rivalJalon', count: s.rivalJalons, name: this.rival(s).jalons[Math.max(0, s.rivalJalons - 1)] });
+      const d = s.rivalJalons - before;
+      if (d) ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: d, name: this.rival(s).jalons[Math.max(0, d < 0 ? before - 1 : s.rivalJalons - 1)] });
     }
     if (e.famState) {
       s.fam[e.famState.id].state = e.famState.state;
@@ -857,7 +885,7 @@ export class Engine {
     for (const p of this.passives(s)) if (p.type === 'income') inc[p.res] = (inc[p.res] ?? 0) + p.amount;
     if (Object.keys(inc).length) {
       for (const k of Object.keys(inc) as Res[]) s.res[k] += inc[k]!;
-      ev.push({ type: 'income', bag: inc });
+      ev.push({ type: 'passive', bag: inc });
     }
   }
 
@@ -1026,7 +1054,7 @@ export class Engine {
     // la rivale avance son propre dessein, sauf si on l'en a empêchée
     if (!s.mem.includes(`rival_freine_${s.era}`) && s.fam && this.c.rivals.length) {
       s.rivalJalons = Math.min(5, s.rivalJalons + 1);
-      ev.push({ type: 'rivalJalon', count: s.rivalJalons, name: this.rival(s).jalons[s.rivalJalons - 1] });
+      ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
     const steps = ['croissance', 'proces'];
     if (s.era < ERAS - 1) steps.push('decouverte');
@@ -1040,7 +1068,7 @@ export class Engine {
     if (step === 'proces') {
       const fams = this.present(s);
       // la famille la plus lésée : loyauté basse et un grief précis dans le journal
-      const angry = fams.filter((f) => s.fam[f].loy <= 0 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+      const angry = fams.filter((f) => s.fam[f].loy <= -1 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
       if (angry) {
         const others = fams.filter((f) => f !== angry).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
         return { card: 'proces', plaintiff: angry, quote: this.worstAct(s, angry), qui: others };
@@ -1067,13 +1095,24 @@ export class Engine {
   }
 
   /** La décision qui a le plus blessé une famille (index dans l'historique). */
+  /** Une décision de fond (pas un rouage : procès, carrefour, chantier…), pas encore jugée. */
+  private citable(s: GameState, i: number): boolean {
+    const h = s.history[i];
+    const k = this.c.cards[h.card]?.kind;
+    if (!k || ['proces', 'hommage', 'carrefour', 'croissance', 'jalon', 'presage'].includes(k) || h.card === 'decouverte') return false;
+    return !s.mem.includes(`juge_${i}`);
+  }
+
+  /** Le pire grief d'une famille : le plus lourd, et de préférence le plus ancien (elles ont de la mémoire). */
   worstAct(s: GameState, f: FamilyId): number {
     let best = -1;
-    let worst = 0;
+    let top = 0;
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
-      if (d < 0 && (d < worst || d === worst)) {
-        worst = d;
+      if (d >= 0 || !this.citable(s, i)) return;
+      const score = -d * 10 + (s.era - h.era) * 7;
+      if (score >= top) {
+        top = score;
         best = i;
       }
     });
@@ -1085,8 +1124,10 @@ export class Engine {
     let top = 0;
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
-      if (d >= top && d > 0) {
-        top = d;
+      if (d <= 0 || !this.citable(s, i)) return;
+      const score = d * 10 + (s.era - h.era) * 7;
+      if (score >= top) {
+        top = score;
         best = i;
       }
     });
@@ -1095,22 +1136,30 @@ export class Engine {
 
   private trialOptions(s: GameState, p: Prompt): Option[] {
     const pl = p.plaintiff!;
+    const judged = p.quote !== undefined && p.quote >= 0 ? [`juge_${p.quote}`] : [];
+    const P = `{H:${pl}}`;
+    // chaque famille plaide dans sa voix ; l'issue dépend de ce qu'elle pense de vous
+    const WIN: Record<FamilyId, string> = {
+      ourk: `{F:ourk} plaide. {F:ourk} tape sur la table. Le juge est convaincu ; la table, moins. ${P} repartent apaisés, par prudence.`,
+      sel: `{F:sel} plaide en prenant le ciel à témoin. Le ciel ne dit rien, ce qui vaut acquittement. ${P} repartent en grommelant.`,
+      brume: `{F:brume} plaide avec des schémas. Personne ne comprend, tout le monde est convaincu. ${P} réclament une copie des schémas.`,
+      troc: `{F:troc} plaide, puis propose un arrangement à l’amiable. ${P} repartent avec un reçu et un sourire forcé.`,
+    };
     const opts: Option[] = (p.qui ?? []).map((adv) => {
       const loy = s.fam[adv].loy;
-      const name = `{F:${adv}}`;
       const plead: Effect =
         loy >= 1
-          ? { loy: { [pl]: 2, [adv]: -1 }, reply: `${name} plaide avec talent. ${'{H:' + pl + '}'} repartent apaisés, en grommelant.` }
+          ? { loy: { [pl]: 2, [adv]: -1 }, mem: judged, reply: WIN[adv] }
           : loy === 0
-            ? { loy: { [pl]: 1 }, gain: { tresor: -3 }, reply: `${name} plaide sans conviction. Un arrangement est trouvé. Il coûte.` }
-            : { loy: { [pl]: -1, [adv]: -1 }, reply: `${name} plaide… contre vous. Personne n’avait vérifié.` };
+            ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: `{F:${adv}} plaide sans conviction. Un arrangement est trouvé, à vos frais.` }
+            : { loy: { [pl]: -1, [adv]: -1 }, reply: `{F:${adv}} plaide… contre vous. Personne n’avait pensé à vérifier ce que {H:${adv}} vous reprochaient.` };
       return { label: `Défendu par {F:${adv}}`, effect: plead };
     });
     const r = this.c.families[pl].res;
     opts.push({
       label: 'Plaider coupable',
       cost: { [r]: 3 + s.era },
-      effect: { loy: { [pl]: 2 }, reply: `Vous payez réparation. ${'{H:' + pl + '}'} encadrent le reçu.` },
+      effect: { loy: { [pl]: 2 }, mem: judged, reply: `Vous payez réparation. ${P} encadrent le reçu. Ils l’accrochent à côté des autres.` },
     });
     return opts;
   }

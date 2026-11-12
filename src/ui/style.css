@@ -152,6 +152,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .chip.r-vivres { color: #d8e99b; } .chip.r-armee { color: #ffa98f; } .chip.r-savoir { color: #9fd3ff; } .chip.r-tresor { color: #ffe08a; }
 .chip.short { color: #ff8a6e !important; box-shadow: inset 0 0 0 1px rgba(255, 110, 80, 0.6); }
+.chip.loss { background: rgba(60, 12, 8, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 120, 90, 0.35); }
 .chip.free { color: var(--faint); font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; background: none; box-shadow: none; }
 .fdot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px hsl(var(--h) 70% 65%); background: hsla(var(--h), 60%, 30%, 0.6); }
 .fdot svg { width: 18px; height: 18px; overflow: visible; }
