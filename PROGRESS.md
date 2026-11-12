@@ -70,9 +70,15 @@ P4 variété
 - [x] interface : présage allégé (merveilles manquées, tribut), humeur « fervents », réponse rattachée à son choix, carte agrandie sur tablette
 - [x] mesures (E12), tests (24), README, DECISIONS 25-32
 - [x] republication (version 8, 12/11), captures (mobile, bureau, tablette, petit écran, scène, planches)
-## Juges — tour 3 (en cours, version 8)
-- Trois nouveaux juges : journaliste jeux mobiles (graine 9090), autrice de jeux de société (graine 4321), joueur occasionnel d'histoires interactives (graine 6006). Verdicts attendus dans `scratchpad/juges/juge-7..9.md`.
-- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
+## Juges — tour 3 (fait, version 8)
+- Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : journaliste mobile 6·6·7·7·7·6·6 ; autrice de jeux de société 6,5·6·7,5·7,5·5,5·6,5·7 ; joueuse occasionnelle 7·6·8·7·6·6·6. Verdicts dans `scratchpad/juges/juge-7..9.md`.
+- Trois faiblesses : (1) l'affichage ment (« gratuit » qui consomme, flèches sous-estimées, crédit au montant et à l'échéance faux, perte gratuite à stock vide, options dominées) ; (2) filets qui dissolvent les dilemmes et fin sans adversaire (palissade à 0 Armée, plancher des Peintures, Culture jamais bloquante, Trésor sans usage, famine forfaitaire, tribut absent, Verdict gratuit) ; (3) ères coulées dans le même moule, anachronismes, trahisons revues, illustrations génériques.
+## Tour 4 de corrections (en cours, copie `../citadeck-dev`)
+- [x] (préparé pendant le tour 3) vingt nouveaux événements, variantes réécrites
+- [ ] affichage honnête : dépense des options à seuil, flèches exactes (mépris compris), ampleur des gains (+, ++, +++), crédit à montant fixe et compte à rebours, perte = coût, vocabulaire, coquilles, options dominées
+- [ ] filets et fin : palissade payante, Peintures qui réconcilient au lieu d'un plancher, merveilles hors du compte des mots-clés, famine proportionnelle et disette (acheter des Vivres), tribut dès cinq merveilles rivales, Verdict qui coûte
+- [ ] moule : chantier ouvert dès la fin de la première saison, trahisons et cartes vues écartées, anachronismes, réponse lisible, flèches plus grandes, silhouette d'ère dans les illustrations
+- [ ] mesures, tests, fusion, republication, trois nouveaux juges (tour 4)
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
