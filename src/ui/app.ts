@@ -575,7 +575,8 @@ export class App {
       void this.feedback(ev, this.e.view(s)!);
     };
     this.openScreen('soft presage', (inner) => {
-      inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2><p class="sub">${esc(p.subtitle)}</p>`;
+      inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2><p class="sub">${esc(p.subtitle)}</p>
+        <div class="presage-res"><span class="chip">${ICON.house}<b>${s.quartiers}</b>&nbsp;quartiers</span>${bagChips(s.res)}</div>`;
       if (p.legacy) {
         inner.appendChild(el('div', 'panel legacy', `<h3>L’héritage de ${esc(p.legacy.from)}</h3>
           ${p.legacy.testament ? `<p>Sur leur stèle : <q>« ${esc(p.legacy.testament)} »</q></p>` : ''}
@@ -584,10 +585,13 @@ export class App {
       const stars = `<span class="stars">${[0, 1, 2, 3, 4].map((i) => `<i class="${s.jalons[i] ? 'on' : ''}"></i>`).join('')}</span>`;
       const jal = p.jalon
         ? `<p>Cette ère, on peut bâtir <b>${esc(p.jalon.name)}</b> : ${esc(p.jalon.text)}</p><div class="row">${bagChips(p.jalon.cost)}${p.jalon.req ? `<span class="note">· exige ${esc(p.jalon.req)}</span>` : ''}</div><p class="note">${esc(p.jalon.gift)}</p>
+          ${p.tag ? `<p class="${p.tag.total >= p.tag.need ? 'note' : 'warnline'}">${esc(p.tag.tag)} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${esc(p.tag.parts.join(', '))})` : ''}. On en gagne avec ${esc(p.tag.how)}.</p>` : ''}
           ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}${p.alt.req ? `<span class="note">· exige ${esc(p.alt.req)}</span>` : ''}</div><p class="note">${esc(p.alt.gift)}</p>` : ''}`
         : '<p class="note">Le jalon de cette ère est déjà debout.</p>';
       inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise.</p>`));
-      inner.appendChild(el('div', 'panel crisis', `<h3>La crise de l’ère · ${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>
+      const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
+      const fams = p.needs.families.length ? `<p class="note">Ce qui aide aussi : ${esc(p.needs.families.join(', '))}.</p>` : '';
+      inner.appendChild(el('div', 'panel crisis', `<h3>La crise de l’ère · ${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${fams}
         ${p.envy ? `<p class="warnline">Vos ${p.built} merveille${p.built > 1 ? 's' : ''} attire${p.built > 1 ? 'nt' : ''} les regards : la crise sera ${p.envy} % plus dure.</p>` : ''}`));
       const rv = this.e.rival(s);
       inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>

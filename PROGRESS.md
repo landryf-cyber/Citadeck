@@ -27,8 +27,8 @@ P1 bugs et indicateurs trompeurs
 - [x] procès : rejuge la même faute, cite des choix de procès et des libellés sans contexte, toujours la même ère → exclure les rouages, préférer l'ancien, marquer « jugé », citer le titre ; verdicts dans la voix de chaque famille ; procès seulement si loyauté ≤ −1
 - [x] effets en cascade (rivalité) non annoncés par les pastilles ; options dont l'exigence est un souvenir absent (chars sans roue) → masquer
 P2 clarté
-- [ ] présage : réserves actuelles, seuils chiffrés de la crise à venir, d'où vient la Science/Guerre/Culture et combien on en a
-- [ ] merveille bâtie : une phrase (réplique), pas seulement ★
+- [x] présage : réserves actuelles, seuils chiffrés de la crise à venir, d'où vient la Science/Guerre/Culture et combien on en a
+- [x] merveille bâtie : une phrase (réplique), pas seulement ★
 P3 textes
 - [ ] grammaire : « des les », rivales au pluriel (Ligue d'Ombre), genres (amirale Ourk-7, Monseigneur Salin, BRUME), {RIVAL}, « Un vieux légionnaires », « On lui a pris », dates « en l'an »
 - [ ] une seule accroche par carte de famille (souvenir OU humeur, en alternance, souvenirs filtrés par le ton) ; tics (« techniquement », « prix d'ami », « le ciel est formel », « coffre plein de plans »)

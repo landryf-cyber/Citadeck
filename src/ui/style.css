@@ -243,6 +243,8 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .fi-row p { margin: 3px 0 0; font-size: 14.5px; font-style: italic; color: rgba(246, 238, 223, 0.92); line-height: 1.3; }
 
 /* présage */
+.presage-res { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.presage-res .chip { background: rgba(8, 6, 12, 0.7); }
 .presage .big { font-size: clamp(30px, 9vw, 54px); }
 .wonder-line { display: flex; gap: 10px; align-items: center; }
 .wonder-line canvas, .wonder-line svg { width: 64px; height: 64px; border-radius: 12px; flex: none; }

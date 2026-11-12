@@ -47,10 +47,13 @@ function hud(s: GameState): void {
 function presage(s: GameState): void {
   const p = e.presageInfo(s);
   P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date}) — ${p.subtitle}`);
+  P(`Vous avez : ${s.quartiers} quartiers, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
   if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}`);
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
+  if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
+  P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
   P(`Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
   P('Options : 1. En route');
 }

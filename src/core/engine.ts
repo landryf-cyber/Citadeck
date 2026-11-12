@@ -61,6 +61,10 @@ export interface PresageInfo {
   legacy?: { from: string; label?: string; testament?: string; heirs: boolean };
   /** vivres consommés en fin d'ère */
   upkeep: number;
+  /** ce dont la crise aura besoin, au plus */
+  needs: { bag: Bag; families: string[] };
+  /** le mot-clé qu'exige la merveille de l'ère : combien, d'où */
+  tag?: { tag: Tag; need: number; total: number; parts: string[]; how: string };
 }
 
 export interface FamilyInfo {
@@ -298,6 +302,54 @@ export class Engine {
     return n;
   }
 
+  /** D'où vient un mot-clé (Science, Guerre…) : pour l'expliquer au joueur. */
+  tagSources(s: GameState, tag: Tag): { total: number; parts: string[]; how: string } {
+    const parts: string[] = [];
+    const deck = s.deck.filter((id) => this.c.cards[id]?.tags?.includes(tag)).map((id) => this.c.cards[id].title);
+    if (deck.length) parts.push(`${deck.length} découverte${deck.length > 1 ? 's' : ''} (${deck.join(', ')})`);
+    for (const f of this.present(s)) if (this.c.families[f].tag === tag && s.fam[f].loy >= 1) parts.push(`${capitalize(this.c.families[f].house[s.era])}, qui vous aiment`);
+    const j = this.dessein(s).tag === tag ? s.jalons.filter(Boolean).length : 0;
+    if (j) parts.push(`${j} merveille${j > 1 ? 's' : ''} du dessein`);
+    if (tag === 'Culture') {
+      const dv = this.present(s).filter((f) => s.fam[f].loy >= 2).length;
+      if (dv) parts.push(`${dv} famille${dv > 1 ? 's' : ''} dévouée${dv > 1 ? 's' : ''}`);
+    }
+    let bonus = 0;
+    for (const p of this.passives(s)) if (p.type === 'tagBonus' && p.tag === tag) bonus += p.amount;
+    if (bonus) parts.push(`+${bonus} d’une merveille`);
+    const fam = FAMILIES.find((f) => this.c.families[f].tag === tag);
+    const how = tag === 'Culture'
+      ? 'les découvertes de Culture, chaque merveille du dessein, et chaque famille dévouée (+2)'
+      : `les découvertes de ${tag}${fam ? `, ${this.c.families[fam].house[s.era]} quand ils vous aiment (+1)` : ''}${this.dessein(s).tag === tag ? ', et chaque merveille du dessein' : ''}`;
+    return { total: this.tagCount(s, tag), parts, how };
+  }
+
+  /** Ce que la crise de l'ère exigera, au plus, selon les options (seuils et coûts, à l'intensité actuelle). */
+  crisisNeeds(s: GameState): { bag: Bag; families: string[] } {
+    const bag: Bag = {};
+    const families = new Set<string>();
+    const k = this.crisisK(s);
+    const take = (b: Bag | undefined) => {
+      if (!b) return;
+      for (const r of RES) if ((b[r] ?? 0) > (bag[r] ?? 0)) bag[r] = b[r];
+    };
+    const walk = (e: Effect | undefined) => {
+      if (!e) return;
+      take(e.if?.res);
+      walk(e.then);
+      walk(e.else);
+    };
+    for (const id of this.c.crises[s.era].cards) {
+      for (const o of this.card(id).options.map((x) => scaleOption(x, 0, k))) {
+        take(o.cost);
+        take(o.req?.res);
+        walk(o.effect);
+        if (o.req?.fam?.min !== undefined) families.add(`${this.c.families[o.req.fam.id].house[s.era]} ${o.req.fam.min >= 2 ? 'dévoués' : 'loyaux'}`);
+      }
+    }
+    return { bag, families: [...families] };
+  }
+
   check(s: GameState, c: Cond | undefined): boolean {
     if (!c) return true;
     if (c.res) for (const r of RES) if ((c.res[r] ?? -Infinity) > s.res[r]) return false;
@@ -335,7 +387,7 @@ export class Engine {
     if (!c) return undefined;
     const parts: string[] = [];
     if (c.res) for (const r of RES) if (c.res[r] !== undefined) parts.push(`${c.res[r]} ${RES_LABEL[r]}`);
-    if (c.tags) for (const t of TAGS) if (c.tags[t]) parts.push(`${c.tags[t]} ${t}`);
+    if (c.tags) for (const t of TAGS) if (c.tags[t]) parts.push(`${c.tags[t]} ${t} (vous : ${this.tagCount(s, t)})`);
     if (c.fam) {
       const h = capitalize(this.c.families[c.fam.id].house[s.era]);
       if (c.fam.min !== undefined) parts.push(c.fam.min >= 2 ? `${h} dévoués` : `${h} loyaux`);
@@ -417,8 +469,8 @@ export class Engine {
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
       const alt = this.jalonAltOf(s, s.era);
-      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true } }];
-      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' } });
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.name} est debout. On vient de loin pour la voir ; {rival} viennent surtout pour la mesurer. ${j.gift}` }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `${alt.name} est debout. Personne n’avait jamais vu ça, et {rival} non plus. ${alt.gift}` });
       opts.push({ label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' });
       return opts;
     }
@@ -610,6 +662,11 @@ export class Engine {
       rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
       legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
       upkeep: Math.ceil(s.quartiers * TUNING.upkeep),
+      needs: this.crisisNeeds(s),
+      tag: j.req?.tags && !s.jalons[s.era] ? (() => {
+        const t = (Object.keys(j.req!.tags!) as Tag[])[0];
+        return { tag: t, need: j.req!.tags![t]!, ...this.tagSources(s, t) };
+      })() : undefined,
     };
   }
 
