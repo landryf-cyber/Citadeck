@@ -99,3 +99,29 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     se paie en Trésor (ressource qui s'érode), tombait à 14 % de grandes victoires contre 46 % pour l'empire.
 32. **Des visages plutôt que des pictogrammes** : chaque chef de famille a un portrait par ère (fourrure, casque
     à cimier, képi, cornette, écran de BRUME, haut-de-forme), dont l'expression suit l'humeur.
+33. **L'affichage ne ment plus (tour 4 des juges).** Une option à seuil montre ce qu'elle consomme si elle tient ;
+    les flèches donnent l'effet exact sur chaque famille, contrecoup du mépris compris (▼3 et non ▼▼) ; les gains
+    ont une ampleur (+, ++, +++) mais pas de montant ; un crédit annonce son prix exact et son échéance (trois
+    cartes, ou la suivante en crise), avec un compte à rebours sous le Trésor ; une perte plus grosse que la
+    réserve coûte un cran de loyauté à la famille de cette ressource. Le bot qui ne lit que l'interface reste à
+    1 % de survie contre 90 % pour le lecteur : le texte reste nécessaire.
+34. **Payer est un investissement.** À l'assemblage, une option payante sans suite cachée rapporte au moins un
+    point de plus que la meilleure option gratuite de sa carte ; l'écart se partage entre l'option payante (plus)
+    et la gratuite (moins), pour ne pas gonfler l'économie (tout donner à la payante menait à 99 % de survie).
+35. **Des filets qui coûtent.** Palissade, observatoire et vaccin rachètent la première perte subie de l'ère contre
+    des réserves (Armée, Savoir, Vivres) : à sec, ils ne protègent rien. Les Peintures de la grotte ne posent plus
+    de plancher (qui faisait d'une famille hostile un souffre-douleur gratuit) : elles font remonter d'un cran les
+    familles hostiles à chaque bilan.
+36. **Les merveilles ne comptent plus pour les mots-clés** (elles rendaient les exigences de Culture, de Science
+    et de Guerre automatiques) ; les seuils de Science et de Guerre baissent d'un cran pour compenser.
+37. **La famine prévient et se proportionne.** Avant le bilan, si les greniers ne suffiront pas, une carte le dit
+    et propose d'acheter du grain au prix fort (2 Trésor par Vivre manquant, un usage au Trésor qui s'accumulait)
+    ou de réquisitionner chez les Sel ; un petit manque fait grogner les familles, un grand vide un quartier.
+38. **La rivale triomphe dès ses cinq merveilles**, même payées par vos dettes, et réclame alors son tribut ; la
+    réponse finale au Grand Filtre (ou au Verdict) coûte aussi aux bâtisseurs.
+39. **Moins de moule.** Le chantier ouvre dès la fin de la première saison si la merveille est à portée (bâtir tôt
+    rapporte ses revenus plus tôt, mais appauvrit la seconde saison) ; la première trahison n'est pas celle de la
+    partie précédente ; l'anti-redite couvre les deux dernières parties ; une découverte n'est proposée que pour
+    l'ère où elle sera jouée (plus de philosophe antique en 1810).
+40. **Une silhouette de l'ère dans chaque illustration**, des portraits modelés, des étiquettes lisibles sur
+    l'image, une réponse sur fond sombre : la beauté était le critère le plus bas des trois derniers juges.

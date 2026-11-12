@@ -56,7 +56,10 @@ const NECK = 'M43 60 L43 71 L57 71 L57 60 Z';
 const HEAD = 'M31.5 45 Q31.5 25.5 50 25.5 Q68.5 25.5 68.5 45 Q68.5 63.5 50 65.5 Q31.5 63.5 31.5 45 Z';
 
 function bust(p: Pal, cloth = p.dark): string {
-  return P(SHOULDERS, cloth, p.st, 1.6) + P(NECK, p.skin, p.st, 1.4) + P(HEAD, p.skin, p.st, 1.7);
+  // une ombre sous le menton et un reflet sur la joue : le visage prend du volume
+  return P(SHOULDERS, cloth, p.st, 1.6) + P(NECK, p.skin, p.st, 1.4) + P(HEAD, p.skin, p.st, 1.7)
+    + `<path d="M36 56 Q50 68 64 56 Q60 64.5 50 65.3 Q40 64.5 36 56 Z" fill="#000" opacity=".22"/>`
+    + `<ellipse cx="41.5" cy="36" rx="6" ry="4" fill="#fff" opacity=".07" transform="rotate(-25 41.5 36)"/>`;
 }
 
 // ------------------------------------------------------------------------------- Ourk : la guerre
@@ -266,7 +269,7 @@ export function portrait(fam: PortraitFam, era: number, mood: number, hue: numbe
   const h = hue;
   const p: Pal = {
     st: `hsl(${h} 85% 84%)`,
-    skin: `hsl(${h} 28% 26%)`,
+    skin: `hsl(${h} 30% 30%)`,
     dark: `hsl(${h} 45% 13%)`,
     acc: `hsl(${h} 90% 64%)`,
     pale: `hsl(${h} 35% 80%)`,

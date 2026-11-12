@@ -131,6 +131,8 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .card-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .card-head { position: absolute; left: 14px; right: 14px; top: 10px; display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 240, 215, 0.88); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95); }
 .card-head .from { color: #ffd59a; }
+.card-head > span { background: rgba(8, 6, 12, 0.55); padding: 2px 6px; border-radius: 6px; position: relative; z-index: 2; }
+.card-head > span:empty { display: none; }
 .card-body { padding: 2px 16px 12px; text-align: center; }
 .card-title { font-family: var(--title); font-weight: 700; font-size: clamp(19px, 5.4vw, 24px); line-height: 1.1; letter-spacing: 0.03em; margin: 0; color: #fff4de; text-shadow: 0 0 20px rgba(255, 205, 130, 0.35); text-wrap: balance; }
 .card-speaker { margin: 3px 0 0; font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--dim); font-style: italic; }

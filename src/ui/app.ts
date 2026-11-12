@@ -393,7 +393,7 @@ export class App {
     const fi = fam ? this.e.familyInfo(s, fam) : undefined;
     let hue = c.art?.hue ?? (fi ? fi.hue : c.kind === 'crise' ? 8 : c.kind === 'rivale' ? this.e.rival(s).hue : c.kind === 'ruines' || c.kind === 'revenant' ? 270 : 32);
     if (c.kind === 'jalon') hue = 42;
-    const spec: ArtSpec = { key: c.id + s.era, motif: c.art?.motif ?? KIND_MOTIF[c.kind] ?? (fi?.motif ?? 'star'), hue, alarm: c.kind === 'crise' || c.kind === 'trahison' };
+    const spec: ArtSpec = { key: c.id + s.era, motif: c.art?.motif ?? KIND_MOTIF[c.kind] ?? (fi?.motif ?? 'star'), hue, alarm: c.kind === 'crise' || c.kind === 'trahison', era: s.era };
     if (fi) spec.speaker = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era: s.era, scars: fi.scars, fam: fi.id };
     else if (c.kind === 'rivale' || c.id === 'creance_rivale' || c.id === 'tribut') spec.speaker = { motif: 'crown', hue: this.e.rival(s).hue, mood: s.rivalRel, era: s.era, scars: 0, fam: 'rival' };
     if (spec.speaker && spec.motif === spec.speaker.motif) spec.motif = KIND_MOTIF[c.kind] ?? 'star';

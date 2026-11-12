@@ -200,4 +200,55 @@ describe('pas de redite', () => {
     e.applyEffect(s, card, { if: { quartiers: { min: 99 } }, else: { quartiers: -1, cause: 'test' } }, new Rng(1), ev);
     expect(s.quartiers).toBe(q - 1);
   });
+
+  it('une merveille ne rachète un quartier que contre des réserves : à sec, elle ne protège rien', () => {
+    const s = e.newGame(15, { dessein: 'empire' });
+    s.jalons = [true, false, false, false, false];
+    const card = content.cards.creance;
+    const q = s.quartiers;
+    s.res.armee = 0;
+    e.applyEffect(s, card, { if: { quartiers: { min: 99 } }, else: { quartiers: -1, cause: 'test' } }, new Rng(1), []);
+    expect(s.quartiers).toBe(q - 1);
+    s.res.armee = 20;
+    s.shieldUsed = false;
+    e.applyEffect(s, card, { if: { quartiers: { min: 99 } }, else: { quartiers: -1, cause: 'test' } }, new Rng(1), []);
+    expect(s.quartiers).toBe(q - 1);
+    expect(s.res.armee).toBeLessThan(20);
+  });
+
+  it('le crédit annonce un prix exact, et la créance coûte ce prix', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const rng = new Rng(seed);
+      const s = e.newGame(seed, { dessein: content.desseins[seed % 3].id });
+      let g = 0;
+      while (s.phase !== 'fin' && g++ < 400) {
+        const v = e.view(s)!;
+        const k = v.options.findIndex((o) => o.enabled && o.label.includes('(à crédit)'));
+        if (k >= 0) {
+          const price = Number(/la note : (\d+) Trésor/.exec(v.options[k].detail ?? '')?.[1]);
+          expect(price).toBeGreaterThan(0);
+          e.act(s, k);
+          for (let h = 0; h < 6 && s.phase !== 'fin'; h++) {
+            const w = e.view(s)!;
+            if (/^creance/.test(w.card.id)) {
+              expect(w.options[0].cost.tresor).toBe(price);
+              return;
+            }
+            e.act(s, chooseIndex(e, s, PROFILES[0], rng));
+          }
+          return;
+        }
+        e.act(s, chooseIndex(e, s, PROFILES[0], rng));
+      }
+    }
+  });
+
+  it('une option à seuil ne se dit jamais gratuite si elle consomme des réserves', () => {
+    const s = e.newGame(16, { dessein: 'posterite' });
+    s.phase = 'crise';
+    s.prompt = { card: 'x0_horde' };
+    const v = e.view(s)!;
+    const hold = v.options.find((o) => o.label === 'Tenir les murs')!;
+    expect(hold.spend?.armee).toBeGreaterThan(0);
+  });
 });

@@ -270,6 +270,46 @@ export interface ArtSpec {
   alarm?: boolean;
   /** l'orateur : un médaillon de famille, de rivale ou d'ancêtre */
   speaker?: { motif: string; hue: number; mood: number; era: number; scars: number; fam?: PortraitFam };
+  /** l'ère : une silhouette de la cité de ce temps en bas de l'illustration */
+  era?: number;
+}
+
+/** La cité de l'ère en ombre chinoise, au pied de l'illustration (huttes, temples, châteaux, usines, tours). */
+function skyline(era: number, rng: Rng, h: number): string {
+  const dark = `hsla(${h}, 55%, 42%, .30)`;
+  const lit = `hsla(${(h + 30) % 360}, 95%, 72%, .55)`;
+  let s = '';
+  let x = -4;
+  let lights = '';
+  const base = 112;
+  while (x < 304) {
+    const w = 10 + rng.int(0, 14);
+    const top = base - (era === 4 ? 16 + rng.int(0, 26) : era === 3 ? 12 + rng.int(0, 12) : era === 2 ? 10 + rng.int(0, 16) : era === 1 ? 9 + rng.int(0, 9) : 6 + rng.int(0, 7));
+    if (era === 0) {
+      // huttes et tentes
+      s += rng.chance(0.5) ? `<path d="M${x} ${base} L${x + w / 2} ${top} L${x + w} ${base} Z"/>` : `<path d="M${x} ${base} Q${x + w / 2} ${top - 4} ${x + w} ${base} Z"/>`;
+    } else if (era === 1) {
+      // temples à fronton et colonnes
+      s += `<rect x="${x}" y="${top}" width="${w}" height="${base - top}"/>` + (rng.chance(0.5) ? `<path d="M${x - 2} ${top} L${x + w / 2} ${top - 6} L${x + w + 2} ${top} Z"/>` : '');
+    } else if (era === 2) {
+      // tours crénelées et flèches
+      s += `<rect x="${x}" y="${top}" width="${w}" height="${base - top}"/>`;
+      if (rng.chance(0.4)) s += `<path d="M${x} ${top} L${x + w / 2} ${top - 12} L${x + w} ${top} Z"/>`;
+      else for (let k = 0; k < w - 2; k += 4) s += `<rect x="${x + k}" y="${top - 3}" width="2.4" height="3"/>`;
+    } else if (era === 3) {
+      // usines à toits en dents de scie, cheminées
+      s += `<path d="M${x} ${base} V${top} l${w / 2} -5 v5 l${w / 2} -5 V${base} Z"/>`;
+      if (rng.chance(0.5)) s += `<rect x="${x + w - 4}" y="${top - 16}" width="3" height="16"/><circle cx="${x + w - 2}" cy="${top - 21}" r="4" fill="hsla(${h},20%,60%,.18)"/>`;
+    } else {
+      // tours de verre et antennes
+      s += `<rect x="${x}" y="${top}" width="${w}" height="${base - top}" rx="1.5"/>`;
+      if (rng.chance(0.35)) s += `<rect x="${x + w / 2 - 0.6}" y="${top - 10}" width="1.2" height="10"/>`;
+    }
+    for (let k = 0; k < 3; k++) if (era >= 1 && rng.chance(0.45)) lights += `<rect x="${(x + 2 + rng.range(0, w - 4)).toFixed(1)}" y="${(top + 3 + rng.range(0, Math.max(1, base - top - 6))).toFixed(1)}" width="1.6" height="1.6" fill="${lit}"/>`;
+    if (era === 0 && rng.chance(0.25)) lights += `<circle cx="${(x + w / 2).toFixed(1)}" cy="${base - 2}" r="2.2" fill="hsla(30,100%,60%,.6)"/>`;
+    x += w + rng.int(0, 4);
+  }
+  return `<g fill="${dark}">${s}</g>${lights}<rect y="${base}" width="300" height="${130 - base}" fill="${dark}"/>`;
 }
 
 /** Médaillon d'un orateur : même langage, cadre selon l'ère, anneau selon l'humeur, cicatrices des griefs. */
@@ -336,6 +376,7 @@ ${rays}${dots}
 <circle cx="${sx}" cy="${cy}" r="58" fill="none" stroke="hsla(${h},70%,78%,.16)" stroke-width="1"/>
 <rect width="300" height="130" fill="url(#${id}h)"/>
 <g transform="translate(${sx} ${cy}) scale(.62) translate(-150 -98)">${motif(a.motif, rng, st, `url(#${id}m)`, dim)}</g>
+${a.era !== undefined ? skyline(a.era, new Rng(hashString(a.key + 'sky')), h) : ''}
 ${sp ? medallion(sp, 62, 78, 34, id) : ''}
 <rect width="300" height="130" fill="url(#${id}f)"/>
 </svg>`;

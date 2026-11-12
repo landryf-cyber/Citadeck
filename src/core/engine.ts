@@ -11,7 +11,7 @@ import {
   type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 23;
+export const SAVE_VERSION = 24;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */

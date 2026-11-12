@@ -48,9 +48,11 @@ async function jump(page: Page, cond: string, opts: { seed?: number; meta?: bool
       }
       engine.act(s, best);
     }
+    // une graine qui n'atteint pas l'état voulu ne touche pas à l'interface : on essaie la suivante
+    if (!test(s, engine)) return false;
     app.s = s;
     app.enterGame(false);
-    return test(s, engine);
+    return true;
   }, [cond, opts] as const);
 }
 
@@ -107,7 +109,7 @@ async function main(): Promise<void> {
     await jump(page, "s.era === 2 && s.phase === 'crise'", { seed: 21, dessein: 'posterite' });
     await page.waitForTimeout(1500);
     await shot(page, vp.name, '12-ere3-crise');
-    await jump(page, "s.phase === 'finere' && s.prompt && s.prompt.card === 'proces'", { seed: 5 });
+    for (const seed of [5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24]) if (await jump(page, "s.phase === 'finere' && s.prompt && s.prompt.card === 'proces'", { seed })) break;
     await page.waitForTimeout(1500);
     await shot(page, vp.name, '13-proces');
     await jump(page, "s.era === 3 && s.phase === 'saison'", { seed: 33, dessein: 'empire' });

@@ -20,9 +20,10 @@ npm run dev
 Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 
 - **Une carte = un dilemme.** On choisit une option (toucher, cliquer, ou touches 1 à 4). Le **coût** d'une
-  option est affiché, ainsi que le genre de ce qu'elle rapporte (+Vivres, +Trésor…) ; les montants, les
-  souvenirs et les suites sont dans le texte. Les pastilles disent quelles familles y gagnent (▲) ou y
-  perdent (▼), le sablier qu'il y aura une suite.
+  option est affiché, ainsi que ce qu'elle consomme si elle tient un seuil, et le genre et l'ampleur de ce
+  qu'elle rapporte (+ un peu, ++ bien, +++ beaucoup) ; les montants exacts, les souvenirs et les suites sont
+  dans le texte. Les pastilles disent de combien chaque famille y gagne (▲) ou y perd (▼), le sablier qu'il y
+  aura une suite. Un crédit annonce son prix et son échéance ; le compte à rebours s'affiche sous le Trésor.
 - **La cité, ce sont ses quartiers.** À zéro quartier, elle tombe. Quatre réserves se dépensent : Vivres,
   Armée, Savoir, Trésor.
 - **Une ère** : un présage (la merveille à bâtir, la crise qui vient, ce qui en protège), deux saisons où l'on
@@ -77,8 +78,9 @@ card({
 }),
 ```
 
-- `cost` est affiché au joueur ; de `gain`, seul le genre de ressource l'est (pas le montant) ; de `loy`
-  (loyautés), seulement le sens (▲ ▼) : le texte doit dire le reste.
+- `cost` est affiché au joueur ; de `gain`, le genre et l'ampleur (pas le montant exact) ; de `loy`
+  (loyautés), l'effet exact (▲ ▼, avec le contrecoup sur la famille rivale) : le texte dit le reste. Une option
+  payante sans suite cachée est automatiquement rendue au moins aussi rentable que l'option gratuite de la carte.
 - `mem` crée un souvenir : la décision exacte et sa date sont gardées. Plus tard, une carte peut la citer avec
   `{Q:moulin_troc}` (la phrase entre guillemets) et `{D:moulin_troc}` (sa date), ou n'apparaître que si le
   souvenir existe (`cond: { mem: 'moulin_troc' }`).
