@@ -87,7 +87,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .fam .fn { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .fam .fh { font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fam .fh .short { display: none; }
-.wonder-art { position: absolute; inset: 0; display: flex; justify-content: center; align-items: stretch; background: #07060b; }
+.wonder-art { position: absolute; inset: 0; display: flex; justify-content: center; align-items: stretch; background: radial-gradient(ellipse 70% 120% at 50% 70%, hsl(38 70% 30%), hsl(38 55% 12%) 55%, #07060b); }
 .wonder-art img { height: 100%; width: auto; max-width: 50%; object-fit: cover; flex: 1; }
 .fam .fm { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fam .pips { display: flex; gap: 2px; }
