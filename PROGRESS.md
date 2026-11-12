@@ -69,7 +69,10 @@ P4 variété
 - [x] répétitions : crises alternatives aux ères I et V, trois cartes de créance, trahisons qui s'aggravent (8 cartes), plaidoiries variées, 8 variantes de familles (Antiquité, Moyen Âge), anti-redite élargi aux crises et variantes, tics allégés
 - [x] interface : présage allégé (merveilles manquées, tribut), humeur « fervents », réponse rattachée à son choix, carte agrandie sur tablette
 - [x] mesures (E12), tests (24), README, DECISIONS 25-32
-- [ ] republication (version 8), captures, trois nouveaux juges (tour 3)
+- [x] republication (version 8, 12/11), captures (mobile, bureau, tablette, petit écran, scène, planches)
+## Juges — tour 3 (en cours, version 8)
+- Trois nouveaux juges : journaliste jeux mobiles (graine 9090), autrice de jeux de société (graine 4321), joueur occasionnel d'histoires interactives (graine 6006). Verdicts attendus dans `scratchpad/juges/juge-7..9.md`.
+- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
