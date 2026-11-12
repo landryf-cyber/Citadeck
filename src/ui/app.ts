@@ -561,6 +561,7 @@ export class App {
     this.scene.setSnapshot(snapshot(this.e, s), { eraDuration: 3.4 });
     this.renderHud();
     document.getElementById('stage')!.innerHTML = '';
+    (this.root.querySelector('.after') as HTMLElement).innerHTML = '';
     await this.banner(`Ère ${ROMAN[era]}`, ERA_NAMES[era], '', ERA_SUBTITLES[era]);
   }
 
@@ -683,7 +684,8 @@ export class App {
     return new Promise((done) => {
       const dead = s.result?.type === 'defaite';
       document.body.classList.add('cinema');
-      const cap = el('div', 'cinema-cap', `<div class="over">${esc(s.name)}</div><p>${esc(s.history[0]?.date ?? '')} — ${esc(s.history[s.history.length - 1]?.date ?? '')}</p><span>Toucher pour passer</span>`);
+      const short = (d: string) => d.replace(' avant le Calendrier', ' av. C.');
+      const cap = el('div', 'cinema-cap', `<div class="over">${esc(s.name)}</div><p>De l’${esc(short(s.history[0]?.date ?? 'an 9 200 avant le Calendrier'))}<br>à l’${esc(short(s.history[s.history.length - 1]?.date ?? ''))}</p><span>Toucher pour passer</span>`);
       document.body.appendChild(cap);
       this.scene.setMood({ dead: false, crisis: false, danger: 0 });
       this.setEraColor(0);
