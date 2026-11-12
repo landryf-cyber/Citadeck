@@ -44,7 +44,9 @@ P4 variété
 - [x] D. fin de partie : mesurer les choix imposés par ère ; seuils de crise des ères III-V abaissés ; entretien allégé
 - [x] E. une crise alternative par ère (II à IV), tirée par la graine
 - [x] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
-Ensuite : republier, puis trois juges.
+- [x] republié (version 6)
+## Juges — tour 1 (en cours)
+- 3 agents juges indépendants lancés (critique, designer de roguelites, scénariste) ; dossier `scratchpad/juges/` (LISEZMOI + verdicts juge-1..3.md). Si une note < 8 : corriger les trois faiblesses les plus lourdes, republier, nouveaux juges (5 tours max).
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
