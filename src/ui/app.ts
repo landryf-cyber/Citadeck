@@ -622,7 +622,7 @@ export class App {
       // une merveille manquée n'est pas perdue : elle se rattrape au bilan, plus cher
       const missed = this.e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
       const miss = missed.length ? `<p class="warnline">Manquée${missed.length > 1 ? 's' : ''} : ${esc(missed.join(', '))}. Au bilan de l’ère, vous pourrez ${missed.length > 1 ? 'en rattraper une' : 'la rattraper'}, plus cher.</p>` : '';
-      const rule = s.era === 0 ? '<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>' : '';
+      const rule = s.era === 0 ? '<p class="note">Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>' : '';
       inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${miss}${rule}${nxt}`));
       const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
       const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
@@ -966,7 +966,7 @@ export class App {
 
   private cardHints(v: View): void {
     if (v.kind === 'carrefour') this.hint('carrefour', 'Deux <b>saisons</b> par ère. Choisissez où les passer : chaque route mène à une famille, ou vers l’inconnu. Les familles qu’on ne visite pas se vexent.');
-    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché, et le genre de gain (+). Les montants, non : ils sont dans le texte. Les flèches des pastilles disent quelle famille y gagne ou y perd.');
+    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché, et ce qui rentre : + un peu, ++ bien, +++ beaucoup. Les montants exacts sont dans le texte. Les flèches disent de combien chaque famille y gagne ou y perd.');
     if (v.kind === 'famille') this.hint('famille', 'Les familles <b>se souviennent</b>. Ce que vous décidez ici, leurs descendants vous le reprocheront ou vous en remercieront, citation à l’appui.');
     if (v.kind === 'proces') this.hint('proces', 'Le <b>procès</b> : la famille la plus lésée cite votre pire décision contre elle. Choisissez bien votre avocat.');
     if (v.kind === 'jalon') this.hint('jalon', 'Le <b>chantier</b> : bâtir rapproche du dessein, mais chaque merveille attire la convoitise. La crise suivante sera plus dure.');
