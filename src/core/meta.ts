@@ -255,7 +255,8 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   else if (enemy && s.fam[enemy].loy <= -1) lines.push(`${H(enemy)} ne lui ont jamais pardonné.`);
   else lines.push('Aucune famille ne l’a vraiment aimée. Ni haïe. C’est pire.');
   if (gone.length) lines[lines.length - 1] += ` ${capitalize(listFr(gone.map((f) => e.c.families[f].house[s.era])))} sont partis chez ${e.rival(s).name}.`;
-  const shadow = s.rivalJalons >= 5 && !s.result?.ending ? `, dans l’ombre de ${e.rival(s).name}` : '';
+  const rn = e.rival(s).name;
+  const shadow = s.rivalJalons >= 5 && !s.result?.ending ? `, dans l’ombre ${rn.startsWith('les ') ? `des ${rn.slice(4)}` : `de ${rn}`}` : '';
   const rk = s.result?.rank;
   const end = s.result?.type === 'victoire' ? `${rk === 'triomphe' ? 'Triomphe, dessein accompli' : rk === 'victoire' ? 'Victoire, quatre merveilles debout' : 'A survécu'}${rk === 'survie' ? shadow : ''}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
   lines.push(testament ? `${end} Derniers mots : « ${testament} »` : end);

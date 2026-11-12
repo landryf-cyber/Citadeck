@@ -123,10 +123,11 @@ export function polish(text: string): string {
     .replace(/\b([dD])e les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
     .replace(/\b([dD]e|[qQ]ue) (?=[AEIOUÉÈÊ][a-zéèêàâîôûç])/g, (_m, w: string) => `${w.slice(0, -1)}’`)
     .replace(/(^|[\s'’(«])([àÀ]) les (?=[A-ZÉÈ])/g, (_m, p: string, a: string) => p + (a === 'à' ? 'aux ' : 'Aux '))
+    .replace(/\b([aA])ux les (?=[A-ZÉÈ])/g, (_m, a: string) => `${a}ux `)
     .replace(/\b([dD])e le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'du ' : 'Du '))
     .replace(/(^|[\s'’(«])([àÀ]) le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, p: string, a: string) => p + (a === 'à' ? 'au ' : 'Au '));
   // majuscule en début de texte, après une ponctuation forte, après un guillemet ouvrant
-  out = out.replace(/(^|[.!?…]\s+|«\s?)([a-zàâçéèêëîïôûùüÿœ])/g, (_m, pre: string, ch: string) => pre + ch.toUpperCase());
+  out = out.replace(/(^|[.!?…]\s+|«\s?|[.!?…]\s*»\s+)([a-zàâçéèêëîïôûùüÿœ])/g, (_m, pre: string, ch: string) => pre + ch.toUpperCase());
   return out;
 }
 

@@ -253,7 +253,7 @@ export const moreEncounters = [
   card({
     id: 'r_brume_fin', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'comet', hue: 205 },
     title: 'La Fin du monde',
-    text: '{F:brume} a calculé la date de la fin du monde. C’est mardi. Il voudrait l’annoncer. {F:sel} voudrait l’annoncer aussi, mais elle avait prévu jeudi. Elles ne sont pas d’accord sur le jour.',
+    text: '{F:brume} a calculé la date de la fin du monde. C’est mardi. Il voudrait l’annoncer. {F:sel} voudrait l’annoncer aussi, mais elle avait prévu jeudi. Les deux ne sont pas d’accord sur le jour.',
     options: [
       { label: 'Annoncer mardi', effect: { gain: $('S3'), loy: { brume: 1, sel: -1 } }, reply: 'Mardi passe. {F:brume} trouve une erreur de retenue. Ce sera dans trois cents ans. Il est un peu déçu.' },
       { label: 'Annoncer jeudi', effect: { gain: $('V3'), loy: { sel: 1, brume: -1 } }, reply: 'Jeudi passe. Les dons au temple ont doublé mercredi. {F:sel} parle d’un report, pas d’une erreur.' },

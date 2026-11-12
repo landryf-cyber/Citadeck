@@ -162,7 +162,7 @@ export const engineCards = [
     text: '{F:troc} revient avec la note. Elle est plus épaisse. « Nous avons ajouté les frais de la première, et les frais de rédaction de la seconde. » L’huissier salue : il commence à se sentir chez lui.',
     options: [
       { label: 'Payer, en grinçant', cost: $('T7'), effect: { loy: { troc: 1 } }, reply: 'Vous payez. {F:troc} vous offre un calendrier, avec les échéances déjà entourées.' },
-      { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la seconde créance des Troc' }, reply: 'Un quartier de plus passe aux {H:troc}. Ils le rebaptisent « Quartier de la Confiance ». Il y a un péage.' },
+      { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la seconde créance des Troc' }, reply: 'Un quartier de plus passe aux mains de {H:troc}. Ils le rebaptisent « Quartier de la Confiance ». Il y a un péage.' },
       { label: 'Refuser de payer', effect: { loy: { troc: -2 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 3 }] }, reply: 'Vous refusez encore. {F:troc} soupire comme on soupire sur un mauvais placement, et part vendre votre dette à {rival}, avec une remise.' },
     ],
   }),
