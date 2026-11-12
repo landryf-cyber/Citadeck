@@ -153,7 +153,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .opt-req.ko { color: #ff9a84; }
 .opt-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
 .opt-cost { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
-.opt-meta { display: flex; gap: 4px; align-items: center; }
+.opt-meta { display: flex; gap: 8px; align-items: center; }
 .chip { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px 2px 4px; border-radius: 8px; font-size: 13px; font-weight: 800; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); font-variant-numeric: tabular-nums; }
 .chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .chip.r-vivres { color: #d8e99b; } .chip.r-armee { color: #ffa98f; } .chip.r-savoir { color: #9fd3ff; } .chip.r-tresor { color: #ffe08a; }
