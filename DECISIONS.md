@@ -74,3 +74,28 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     débloque qu'avec un dessein accompli.
 24. **Une découverte du mot-clé du dessein est toujours proposée** en fin d'ère quand il en reste : le fil
     rouge ne dépend pas du tirage.
+25. **Les menaces mordent (tour 3 des juges).** Les sorties de crise offertes par une famille dévouée coûtent une
+    ressource et ne servent qu'une fois par partie ; la palissade et l'observatoire parent une perte subie (seuil
+    raté, pari perdu, bilan), pas un sacrifice choisi ; une créance refusée se revend à la rivale, et les
+    créances montent d'un ton (Créance, Seconde Créance, Saisie) ; à la dernière ère, l'huissier attend
+    derrière la porte. Le triomphe de la rivale n'est plus soldé par des applaudissements : elle réclame un
+    tribut à chaque fin d'ère. Un sabotage la retarde d'une ère entière. Au Grand Filtre, les merveilles
+    réduisent le prix des réponses sans l'annuler.
+26. **Une merveille manquée se rattrape.** Le « Chantier oublié » revient à la seconde saison d'une ère
+    suivante, plus cher (×1,15 à l'échelle de l'ère) : on peut le payer, mais on arrive plus pauvre au chantier
+    de l'ère et à sa crise. Placé d'abord au bilan, juste après la crise, il n'était presque jamais payable.
+    Une partie n'est plus morte après deux merveilles manquées ; le présage dit ce qui reste à rattraper.
+27. **On montre le sens, pas le montant.** Après deux tours de juges qui jugeaient les choix « à l'aveugle »,
+    chaque option affiche le genre de ressource qu'elle rapporte (+Vivres) et le sens de l'effet sur chaque
+    famille (▲ ▼, doublé pour un effet appuyé). Les montants, les souvenirs, les suites et les conditions
+    restent dans le texte. Le bot qui ne voit que l'interface reste à 2 % de survie contre 81 % pour le lecteur.
+28. **Le procès choisit le grief le plus grave** : une dette reniée ou un affront personnel pèse plus qu'un
+    blâme de crise, et à gravité égale l'ancien l'emporte ; les plaidoiries changent d'un procès à l'autre.
+29. **Les récidives ne se répètent pas.** La deuxième trahison d'une famille la fait passer chez la rivale, la
+    troisième la fait faire sécession, chacune avec sa carte ; les créances aussi ont trois cartes.
+30. **Une crise alternative à chaque ère** (le Grand Hiver, l'Éveil des machines s'ajoutent), et la partie
+    suivante écarte la crise et les variantes de cartes de famille vues à la précédente.
+31. **Les merveilles de la postérité coûtent moins cher** : sans les sorties de crise gratuites, ce dessein, qui
+    se paie en Trésor (ressource qui s'érode), tombait à 14 % de grandes victoires contre 46 % pour l'empire.
+32. **Des visages plutôt que des pictogrammes** : chaque chef de famille a un portrait par ère (fourrure, casque
+    à cimier, képi, cornette, écran de BRUME, haut-de-forme), dont l'expression suit l'humeur.

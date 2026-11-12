@@ -20,8 +20,9 @@ npm run dev
 Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 
 - **Une carte = un dilemme.** On choisit une option (toucher, cliquer, ou touches 1 à 4). Le **coût** d'une
-  option est affiché ; ce qu'elle rapporte, et ce que les familles en penseront, est dans le texte. Les
-  pastilles indiquent seulement quelles familles sont concernées, le sablier qu'il y aura une suite.
+  option est affiché, ainsi que le genre de ce qu'elle rapporte (+Vivres, +Trésor…) ; les montants, les
+  souvenirs et les suites sont dans le texte. Les pastilles disent quelles familles y gagnent (▲) ou y
+  perdent (▼), le sablier qu'il y aura une suite.
 - **La cité, ce sont ses quartiers.** À zéro quartier, elle tombe. Quatre réserves se dépensent : Vivres,
   Armée, Savoir, Trésor.
 - **Une ère** : un présage (la merveille à bâtir, la crise qui vient, ce qui en protège), deux saisons où l'on
@@ -76,8 +77,8 @@ card({
 }),
 ```
 
-- `cost` est affiché au joueur ; `gain`, `loy` (loyautés) et `quartiers` ne le sont pas : le texte doit les
-  laisser deviner.
+- `cost` est affiché au joueur ; de `gain`, seul le genre de ressource l'est (pas le montant) ; de `loy`
+  (loyautés), seulement le sens (▲ ▼) : le texte doit dire le reste.
 - `mem` crée un souvenir : la décision exacte et sa date sont gardées. Plus tard, une carte peut la citer avec
   `{Q:moulin_troc}` (la phrase entre guillemets) et `{D:moulin_troc}` (sa date), ou n'apparaître que si le
   souvenir existe (`cond: { mem: 'moulin_troc' }`).
