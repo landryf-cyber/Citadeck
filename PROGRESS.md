@@ -80,9 +80,16 @@ P4 variété
 - [x] moule : chantier ouvert dès la fin de la première saison, trahisons et cartes des deux dernières parties écartées, découvertes de la bonne ère, anachronismes, réponse lisible, flèches plus grandes, silhouette d'ère, portraits modelés
 - [x] mesures (E13), tests (27), README, DECISIONS 33-40
 - [x] republication (version 9, 12/11), captures (mobile, bureau, tablette, petit écran, scène, planches)
-## Juges — tour 4 (en cours, version 9)
-- Trois nouveaux juges : critique d'un grand site de jeux (graine 1212), optimisatrice qui cherche à casser le jeu (graine 3434), romancière qui joue dans le bus (graine 5656). Verdicts attendus dans `scratchpad/juges/juge-10..12.md`.
-- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
+## Juges — tour 4 (fait, version 9)
+- Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : critique 7·7·7,5·7,5·7,5·6,5·6,5 ; optimisatrice 7·5·8·7·5·6·7 ; romancière 6·6·7·7·6·6·7. Verdicts dans `scratchpad/juges/juge-10..12.md`.
+- Les trois humains perdent ou survivent sans dessein (le bot lecteur, qui voit les effets exacts, survit à 90 %).
+- Trois faiblesses : (1) spirale de déclin (seuils de crise hors d'atteinte, crise = choix du bouc émissaire, famille au plancher sacrifiable gratis) ; (2) crédit exploitable (moins cher que le comptant, prêts des hostiles, cascade de créances) et affichage encore inexact (ampleur relative à l'ère, présage ≠ chantier, effets incertains sans « ? », rattrapage « au bilan », palissade et trahisons) ; (3) répétitions et prose monocorde, rivale sans enjeu après son triomphe, coquilles, vide sur bureau.
+## Tour 5 de corrections (le dernier, copie `../citadeck-dev`)
+- [ ] crises atteignables (intensité allégée), plus de bouc émissaire gratuit, plus d'occasions de regagner un quartier
+- [ ] crédit : jamais moins cher que le comptant, pas de prêt d'une famille hostile, un crédit à la fois, refus qui coûte
+- [ ] affichage : fourchettes chiffrées, prix identiques au présage et au chantier, « ? » pour les effets incertains, prix exact des rachats, palissade contre trahisons et créances, textes d'aide exacts, pluriels
+- [ ] tribut pendant l'ère (même la dernière), contester la rivale ; quelques cartes graves sans chute ; variantes de répliques ; carte plus large sur bureau
+- [ ] mesures, tests, fusion, republication, trois nouveaux juges (tour 5, le dernier)
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
