@@ -16,11 +16,12 @@ import { crisisAltCards, crisisAlts } from './crises2';
 import { familyAltCards, familyAltRecalls } from './familyAlts';
 import { variantCards, variantRecalls } from './variants';
 import { betrayalCards } from './betrayals';
+import { moreEventCards } from './events2';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards, ...variantCards, ...betrayalCards,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards, ...variantCards, ...betrayalCards, ...moreEventCards,
 ];
 
 // hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
@@ -54,7 +55,7 @@ for (const id of ['ev_fete_ours', 'ev_amants', 'ev_heritier', 'ev_general_eveque
   if (c) c.echo = true;
 }
 
-const events = [...eventCards, ...moreEvents, ...echoEvents];
+const events = [...eventCards, ...moreEvents, ...echoEvents, ...moreEventCards];
 
 /** les rencontres supplémentaires rejoignent leur route */
 const extraEnc: Record<string, string[]> = {
