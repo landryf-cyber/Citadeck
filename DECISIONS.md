@@ -59,3 +59,18 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     30 minutes), plus adaptée au téléphone.
 18. **Une rivale qui triomphe se voit.** Quand elle achève ses cinq merveilles, une carte « Le Triomphe de
     {rivale} » oblige à réagir (applaudir, saboter, bouder).
+19. **Un acquittement ne pardonne rien.** Gagner un procès grâce à un avocat ami clôt l'affaire sans rendre la
+    loyauté perdue ; seule la réparation payante (« Plaider coupable ») efface la rancune. Avant, les procès
+    gagnés améliorent la loyauté du plaignant : la rancune ne tenait pas (E10).
+20. **Les grandes oscillations sont réservées aux actes marquants.** Hors cartes de famille, de crise et
+    d'échos, une décision ne déplace une loyauté que d'un cran.
+21. **Des crises alternatives tirées par la graine** (le Grand Incendie, le Schisme, le Krach, pour les ères
+    II à IV), annoncées au présage comme les autres : une crise reste préparable, mais plus connue d'avance.
+22. **La mémoire change les options, pas seulement le texte.** Huit options n'existent que si un souvenir
+    précis existe (le clan peint en rouge face à la Horde, la quarantaine sur les navires de Trokos…) ;
+    à l'inverse, une option qui suppose un souvenir absent n'est pas proposée.
+23. **Des fins qui disent ce qui a été atteint** : « Dessein accompli », « Survie · dessein inachevé »,
+    « Survie, dans l'ombre de la rivale » (si elle a achevé ses cinq merveilles), défaite. L'Âge de fer ne se
+    débloque qu'avec un dessein accompli.
+24. **Une découverte du mot-clé du dessein est toujours proposée** en fin d'ère quand il en reste : le fil
+    rouge ne dépend pas du tirage.
