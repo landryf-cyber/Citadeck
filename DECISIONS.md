@@ -19,8 +19,9 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
    0 % du temps, un lecteur 85 %.
 4. **Le glissement gauche/droite disparaît** au profit d'options touchées (deux à quatre) : le jeu a des
    dilemmes à trois voies, des routes, des avocats, des paris. Touches 1 à 4 au clavier.
-5. **L'envie des merveilles** : chaque merveille bâtie rend les crises suivantes 25 % plus dures (annoncé
-   dans le présage). Sans cela, tout miser sur le dessein dominait (E5-E6).
+5. **La gloire se paie en entretien, pas en crises impossibles.** Chaque merveille coûte 2 Vivres par ère
+   (annoncé au présage et au bilan) et rend les crises 15 % plus dures. Une première version faisait payer
+   40 % de crise par merveille : les joueurs l'ont vécue comme une punition de la réussite (E9).
 6. **Le dessein n'est accompli qu'avec la cinquième merveille.** Finir l'ère V sans elle, c'est « survivre ».
    La fin nomme donc honnêtement ce qui a été atteint.
 7. **Le testament lègue quelque chose.** À la fin, trois derniers mots possibles, générés depuis la partie
@@ -51,3 +52,10 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     tomber en quelques secondes. Le moteur est déterministe (testé).
 15. **Publication hors GitHub** : l'écriture vers GitHub est refusée à cette session (push 403). Le jeu est
     publié en page hébergée (un seul fichier HTML) ; le workflow Pages reste prêt.
+16. **Le sacrifice en crise.** Chaque carte de crise à seuil propose de sauver le quartier au prix de −3 de
+    loyauté d'une famille (impossible si elle vous en veut déjà). La crise devient un choix sur ce dont les
+    familles se souviendront, et il y a toujours au moins deux options jouables.
+17. **Trois cartes par saison.** Une partie passe d'environ 70 à environ 60 décisions pour un joueur (25 à
+    30 minutes), plus adaptée au téléphone.
+18. **Une rivale qui triomphe se voit.** Quand elle achève ses cinq merveilles, une carte « Le Triomphe de
+    {rivale} » oblige à réagir (applaudir, saboter, bouder).

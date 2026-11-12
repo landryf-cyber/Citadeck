@@ -53,8 +53,10 @@ function presage(s: GameState): void {
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
-  P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
-  P(`Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
+  P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
+  P(`En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}.`);
+  if (p.nextJalon) P(`À l’ère suivante : ${p.nextJalon.name}${p.nextJalon.req ? `, qui exigera ${p.nextJalon.req}` : ''}.`);
+  P(p.rival.count >= 5 ? `Rivale : ${p.rival.name} ont achevé leur grand dessein. Relations : ${p.rival.rel}.` : `Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
   P('Options : 1. En route');
 }
 
@@ -67,8 +69,9 @@ function card(s: GameState): void {
   P(v.text);
   v.options.forEach((o, i) => {
     const bits = [
-      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss ? '' : 'gratuit',
+      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss || o.lossQ ? '' : 'gratuit',
       o.loss ? `perte ${bag(o.loss)}` : '',
+      o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
       o.families.length ? `concerne ${o.families.map((f) => capitalize(e.c.families[f].house[s.era])).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
@@ -91,7 +94,7 @@ function feedback(s: GameState, ev: Ev[]): void {
   for (const x of ev) if (x.type === 'loy') loy.set(x.family, (loy.get(x.family) ?? 0) + x.delta);
   for (const [f, d] of loy) if (d) parts.push(`${capitalize(e.c.families[f].house[s.era])} ${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}`);
   for (const x of ev) {
-    if (x.type === 'quartiers' && x.delta) parts.push(`${x.delta > 0 ? '+' : ''}${x.delta} quartier${x.delta < 0 ? ` (${x.cause})` : ''}`);
+    if (x.type === 'quartiers' && x.delta) parts.push(`${x.delta > 0 ? '+' : ''}${x.delta} quartier${Math.abs(x.delta) > 1 ? 's' : ''}${x.delta < 0 ? ` (${x.cause})` : ''}`);
     if (x.type === 'quartiers' && x.shielded) parts.push(`perte évitée par une merveille (${x.cause})`);
     if (x.type === 'sched') parts.push('cela aura des suites');
     if (x.type === 'bet') parts.push(`pari ${x.win ? 'réussi' : 'raté'} (${Math.round(x.chance * 100)} %)`);
@@ -140,6 +143,7 @@ if (a0 === 'new') {
   s = e.newGame(seed, setup);
   P(`Nouvelle civilisation : ${s.name}. Dessein : ${e.dessein(s).name}. Origine : ${e.c.origins.find((o) => o.id === s!.origin)?.name}. Rivale : ${e.rival(s).name}.`);
   if (s.ruins.length) P(`Sur la colline : les ruines de ${s.ruins.map((x) => x.name).join(', ')}.`);
+  { const d = e.dessein(s); P(`Les merveilles du dessein exigent ${d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ')} de ${d.tag} (découvertes, famille amie, merveilles bâties).`); }
   card(s);
 } else if (!s) {
   P('Aucune partie en cours. Lancez « new ».');

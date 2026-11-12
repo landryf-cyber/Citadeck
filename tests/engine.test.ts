@@ -105,3 +105,28 @@ describe('corrections après relecture', () => {
     }
   });
 });
+
+describe('honnêteté des indicateurs', () => {
+  it('toute famille touchée par une option est annoncée par une pastille', () => {
+    const bad: string[] = [];
+    for (const c of Object.values(content.cards)) {
+      if (!c.options.length || ['presage', 'carrefour', 'jalon', 'croissance', 'proces'].includes(c.kind) || c.qui) continue;
+      for (const loy of [0, 1, -1]) {
+        const s = e.newGame(11, { dessein: 'empire' });
+        s.era = c.eras?.[0] ?? 1;
+        for (const f of ['ourk', 'sel', 'brume', 'troc'] as const) s.fam[f].loy = loy;
+        s.res = { vivres: 60, armee: 60, savoir: 60, tresor: 60 };
+        s.phase = 'saison';
+        s.prompt = { card: c.id };
+        const v = e.view(s)!;
+        e.options(s, s.prompt).forEach((o, i) => {
+          const cl = JSON.parse(JSON.stringify(s));
+          const ev: import('../src/core/engine').Ev[] = [];
+          e.applyEffect(cl, e.card(c.id), o.effect, new Rng(i + 1), ev);
+          for (const x of ev) if (x.type === 'loy' && !v.options[i].families.includes(x.family)) bad.push(`${c.id} · ${o.label} : ${x.family}`);
+        });
+      }
+    }
+    expect([...new Set(bad)]).toEqual([]);
+  });
+});

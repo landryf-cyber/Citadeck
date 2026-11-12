@@ -13,7 +13,7 @@ Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md`
 - V1 retirée (historique git), arborescence aplatie, README et DECISIONS à jour
 - Tests : contenu, moteur (pas de blocage, déterminisme, gabarits résolus), méta, rejeu — `npm test`
 - Captures : `npm run shots` (mobile + bureau, ~19 écrans) ; perf : `npm run perf -- 2` ; scène seule : `npx tsx scripts/scene.ts` ; planches d'animation : `npx tsx scripts/film.ts` (à réparer : le saut vers le chantier)
-- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E7 (`TUNING crisisK 1.3, envie 0.4, entretien 1.8, gains ×0.8`)
+- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E9 (`TUNING crisisK 2, envie 0.15, entretien 2 + 2 par merveille, gains ×0.95, 3 cartes par saison`)
 - Joueur en mode texte pour testeurs : `npx tsx scripts/play.ts new <dossier> [dessein] [origine] [graine]`
 - Introduction des quatre familles au premier lancement ; ruines et rivale lisibles sur la crête ; sons du procès et des ruines
 - Rapport de l'éditeur (agent) : `scratchpad/rapport-editeur.md` ; notes du joueur A (arrêté par la limite d'usage) : `scratchpad/notesA.txt`
@@ -35,7 +35,8 @@ P3 textes
 - [x] cartes : Comète (Mère Sel/Sélènè, éclipse), Canons (fondre les cloches), titre « Troc et Fils », Loterie et Suffrage (options dominantes), gains d'Armée injustifiés (espion, ambassadeur), Carrefour (promesses)
 P4 variété
 - [x] suites liées aux souvenirs toujours tirées (priorité) ; variantes d'âge de pierre par famille ; voix propres à chaque rivale ; deux cartes de l'éditeur (Quarantième Génération, Brevet de la roue)
-Ensuite : relancer les joueurs A et B (limite d'usage levée vers 2 h 10 UTC) via SendMessage, mesures, captures.
+- [x] retours des joueurs A et B (6/10 chacun) : sacrifices en crise, entretien des merveilles, exigences annoncées, triomphe de la rivale, 3 cartes par saison (E9)
+Ensuite : captures et passe DA, avocat du diable, juges.
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir

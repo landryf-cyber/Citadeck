@@ -13,9 +13,9 @@ import {
 
 export const SAVE_VERSION = 21;
 export const ERAS = 5;
-export const SAISON_CARDS = 4;
+export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.4, iron: 1.2, upkeep: 1.8, gain: 0.8 };
+export const TUNING = { crisisK: 2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 2, gain: 0.95, cards: 3, wonderUpkeep: 2 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -61,10 +61,15 @@ export interface PresageInfo {
   legacy?: { from: string; label?: string; testament?: string; heirs: boolean };
   /** vivres consommés en fin d'ère */
   upkeep: number;
-  /** ce dont la crise aura besoin, au plus */
+  /** ce dont la crise aura besoin, au plus ; et si l'on bâtit la merveille avant */
   needs: { bag: Bag; families: string[] };
+  needsIfBuilt?: Bag;
+  /** part de l'entretien due aux merveilles */
+  wonderUpkeep: number;
   /** le mot-clé qu'exige la merveille de l'ère : combien, d'où */
   tag?: { tag: Tag; need: number; total: number; parts: string[]; how: string };
+  /** la merveille de l'ère suivante, pour préparer */
+  nextJalon?: { name: string; req?: string };
 }
 
 export interface FamilyInfo {
@@ -145,6 +150,8 @@ export interface OptionView {
   later: boolean;
   /** pertes de ressources certaines (affichées comme un coût, déjà incluses dans l'effet) */
   loss?: Bag;
+  /** quartiers perdus à coup sûr */
+  lossQ?: number;
   warn?: string;
   /** pari : chance affichée */
   odds?: number;
@@ -410,7 +417,7 @@ export class Engine {
     }
     if (c.card) parts.push(this.c.cards[c.card]?.title ?? c.card);
     if (c.quartiers?.min) parts.push(`${c.quartiers.min} quartiers`);
-    if (c.jalons) parts.push(`${c.jalons} jalons bâtis`);
+    if (c.jalons) parts.push(`${c.jalons} merveilles bâties`);
     return parts.length ? parts.join(', ') : undefined;
   }
 
@@ -483,7 +490,7 @@ export class Engine {
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
       const alt = this.jalonAltOf(s, s.era);
-      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.name} est debout. On vient de loin pour la voir ; {rival} viennent surtout pour la mesurer. ${j.gift}` }];
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.name} est debout. On vient de loin pour l’admirer ; {rival} viennent surtout prendre des mesures. ${j.gift}` }];
       if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `${alt.name} est debout. Personne n’avait jamais vu ça, et {rival} non plus. ${alt.gift}` });
       opts.push({ label: 'Pas cette fois', effect: {}, reply: [
         'Les plans retournent dans un coffre. Le coffre est plein de plans.',
@@ -588,7 +595,7 @@ export class Engine {
       label: fill(o.label, s, this.c),
       cost,
       affordable,
-      req: o.reqLabel ?? this.condLabel(s, o.req),
+      req: o.reqLabel ? fill(o.reqLabel, s, this.c) : this.condLabel(s, o.req),
       reqOk,
       enabled: affordable && reqOk,
       families: [...fams],
@@ -596,6 +603,7 @@ export class Engine {
       warn: o.warn ? fill(o.warn, s, this.c) : undefined,
     };
     if (o.effect.bet) v.odds = this.betChance(s, o.effect.bet);
+    if ((o.effect.quartiers ?? 0) < 0 && !o.effect.if) v.lossQ = -o.effect.quartiers!;
     const g = o.effect.gain;
     if (g && RES.some((r) => (g[r] ?? 0) < 0)) {
       v.loss = {};
@@ -639,7 +647,7 @@ export class Engine {
     const pickM = (a: string[]) => a[(s.era + s.seed) % a.length];
     const mood = loy <= -2 ? pickM(m.hostile) : loy === -1 ? pickM(m.cold) : loy === 1 ? pickM(m.warm) : loy >= 2 ? pickM(m.devoted) : '';
     // un souvenir d'une ère passée, accordé à l'humeur (une rancune ne se montre pas chez qui vous adore)
-    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era
+    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && [1, 3, 4].includes(s.era - (s.memo[r.mem]?.era ?? s.era))
       && (r.tone !== 'neg' || loy <= 0) && (r.tone !== 'pos' || loy >= 0));
     const recall = rec.length ? rec[(s.era + s.seed) % rec.length].line : '';
     // une seule accroche : le souvenir une ère sur deux, l'humeur sinon (ou ce qui existe)
@@ -650,6 +658,11 @@ export class Engine {
 
   rival(s: GameState) {
     return this.c.rivals.find((r) => r.id === s.rival) ?? this.c.rivals[0];
+  }
+
+  /** Ce que la cité mange en fin d'ère : ses quartiers, et l'entretien de ses merveilles. */
+  upkeepOf(s: GameState): number {
+    return Math.ceil(s.quartiers * TUNING.upkeep) + Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep);
   }
 
   /** Ce que le présage annonce au début d'une ère : le jalon, la crise, l'envie, l'héritage. */
@@ -676,8 +689,11 @@ export class Engine {
       envy: built > 0 ? Math.round((k - 1) * 100) : 0,
       rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
       legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
-      upkeep: Math.ceil(s.quartiers * TUNING.upkeep),
+      upkeep: this.upkeepOf(s),
       needs: this.crisisNeeds(s),
+      needsIfBuilt: s.jalons[s.era] ? undefined : this.crisisNeeds({ ...s, jalons: s.jalons.map((b, i) => b || i === s.era) }).bag,
+      wonderUpkeep: Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep),
+      nextJalon: s.era < 4 ? { name: d.jalons[s.era + 1].name, req: this.condLabel(s, d.jalons[s.era + 1].req) } : undefined,
       tag: j.req?.tags && !s.jalons[s.era] ? (() => {
         const t = (Object.keys(j.req!.tags!) as Tag[])[0];
         return { tag: t, need: j.req!.tags![t]!, ...this.tagSources(s, t) };
@@ -959,7 +975,7 @@ export class Engine {
         s.pool = s.pool.filter((x) => x !== fc);
       }
     }
-    while (pile.length < SAISON_CARDS && s.pool.length) pile.push(s.pool.shift()!);
+    while (pile.length < TUNING.cards && s.pool.length) pile.push(s.pool.shift()!);
     s.pile = pile;
     ev.push({ type: 'saison', saison: s.saison, route: routeId });
     // revenu des découvertes et merveilles, à chaque saison
@@ -1074,6 +1090,7 @@ export class Engine {
 
   private startEraEnd(s: GameState, rng: Rng, ev: Ev[]): void {
     s.phase = 'finere';
+    let rivalTriumph = false;
     // révoltes des familles ulcérées
     for (const f of this.present(s)) {
       if (s.fam[f].loy <= -3) {
@@ -1119,7 +1136,7 @@ export class Engine {
       ev.push({ type: 'decay', armee: da, tresor: dt });
     }
     // la cité mange
-    const upkeep = Math.ceil(s.quartiers * TUNING.upkeep);
+    const upkeep = this.upkeepOf(s);
     if (s.res.vivres >= upkeep) {
       s.res.vivres -= upkeep;
       ev.push({ type: 'upkeep', amount: upkeep });
@@ -1137,8 +1154,9 @@ export class Engine {
     if (!s.mem.includes(`rival_freine_${s.era}`) && s.fam && this.c.rivals.length) {
       s.rivalJalons = Math.min(5, s.rivalJalons + 1);
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
+      if (s.rivalJalons >= 5 && !s.spent.includes('triomphe')) rivalTriumph = true;
     }
-    const steps = ['croissance', 'proces'];
+    const steps = rivalTriumph ? ['triomphe', 'croissance', 'proces'] : ['croissance', 'proces'];
     if (s.era < ERAS - 1) steps.push('decouverte');
     s.steps = steps;
   }
@@ -1160,6 +1178,7 @@ export class Engine {
       return null;
     }
     if (step === 'jalon') return { card: 'jalon' };
+    if (step === 'triomphe') return { card: 'triomphe' };
     if (step === 'decouverte') {
       const next = s.era + 1;
       const pool = this.c.discoveries.filter((id) => {

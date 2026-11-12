@@ -206,7 +206,7 @@ export const discoveryCards = [
   }),
   card({
     id: 'd_droit', lock: 'droit', kind: 'decouverte', scale: true, eras: [2, 3], tags: ['Foi'], art: { motif: 'scales', hue: 44 }, price: 4,
-    passive: [{ type: 'loyalty', family: 'all', floor: -2 }], gift: 'Aucune loyauté ne descend sous −2 : plus de révolte. Les procès continuent.',
+    passive: [{ type: 'discount', res: 'tresor', amount: 1 }], gift: 'Tous les coûts en Trésor baissent de 1 : les juristes négocient pour vous. Compte pour la Foi.',
     title: 'Le Droit',
     text: 'Des juges, des codes, des robes noires. Vous avez eu tant de procès que la justice s’est organisée autour de vous. Reste à savoir pour qui elle travaille.',
     options: [

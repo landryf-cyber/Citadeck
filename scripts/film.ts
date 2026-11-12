@@ -32,8 +32,13 @@ async function sheet(page: Page, imgs: string[], cols: number, name: string, lab
   console.log(`shots/film-${vpName}-${name}.png`);
 }
 
-async function jumpTo(page: Page, cond: string, seed: number): Promise<void> {
-  await page.evaluate(([c, sd]) => {
+async function jumpTo(page: Page, cond: string, seed0: number): Promise<void> {
+  for (let seed = seed0; seed < seed0 + 12; seed++) if (await tryJump(page, cond, seed)) return;
+  throw new Error(`cible jamais atteinte : ${cond}`);
+}
+
+async function tryJump(page: Page, cond: string, seed: number): Promise<boolean> {
+  const ok = await page.evaluate(([c, sd]) => {
     const { app, engine } = (window as any).__citadeck;
     const test = new Function('s', `return (${c});`) as (s: any) => boolean;
     const s = engine.newGame(sd, { dessein: 'posterite' });
@@ -51,10 +56,13 @@ async function jumpTo(page: Page, cond: string, seed: number): Promise<void> {
       });
       engine.act(s, best);
     }
+    if (!test(s)) return false;
     app.s = s;
     app.enterGame(false);
+    return true;
   }, [cond, seed] as const);
-  await page.waitForTimeout(1600);
+  if (ok) await page.waitForTimeout(1600);
+  return ok;
 }
 
 async function main(): Promise<void> {

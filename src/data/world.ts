@@ -124,6 +124,17 @@ export const engineCards = [
   card({ id: 'jalon', kind: 'jalon', title: 'Le Jalon', text: '', options: [], art: { motif: 'tower' } }),
   card({ id: 'decouverte', kind: 'decouverte', title: 'Que découvrir ?', text: 'Les savants proposent trois pistes. Une seule sera suivie. Les autres iront chez {rival}.', options: [], art: { motif: 'scroll' } }),
   card({ id: 'croissance', kind: 'croissance', title: 'Les Greniers débordent', text: 'Assez de vivres pour fonder un nouveau quartier. Ou pour tenir le prochain hiver, qui sera long. Ils le sont tous.', options: [], art: { motif: 'house' } }),
+  card({
+    id: 'triomphe', kind: 'rivale', oneShot: true, scale: true, title: 'Le Triomphe de {rival}', speaker: '{Reine}', art: { motif: 'crown', hue: 268 },
+    text: '{Rival} ont achevé leur grand dessein. {Reine} vous invite à la cérémonie, au premier rang, « pour que vous voyiez bien ». Toute la vallée regarde ce que vous allez faire.',
+    options: [
+      { label: 'Applaudir', cost: $('T3'), effect: { rival: 2, loy: { troc: 1 } }, reply: 'Vous applaudissez, très fort. {Reine} remarque que vous applaudissez faux, et vous remercie quand même.' },
+      { label: 'Saboter la cérémonie', cost: $('A3'), effect: { rival: -2, bet: { chance: 0.5, per: { tag: 'Guerre', bonus: 0.1 },
+        win: { rivalJalon: -1, loy: { ourk: 1 }, reply: 'Le monument s’effondre pendant le discours. {Reine} finit son discours quand même, sur les gravats.' },
+        lose: { quartiers: -1, cause: 'les représailles de {rival}', reply: 'Les saboteurs sont pris. {Rival} répondent. Un quartier en paie le prix.' } } } },
+      { label: 'Ne pas y aller', effect: { loy: { ourk: -1, sel: -1, brume: -1, troc: -1 } }, reply: 'Vous restez chez vous. La vallée vous trouve petit. Vos familles aussi, et elles le disent.' },
+    ],
+  }),
   card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation. {objet}, {quand} : vous avez dit {citation}. {depuis}« Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),
   card({
     id: 'ruines', kind: 'ruines', scale: true, title: 'Les Ruines de {ancienne}', art: { motif: 'skull' },

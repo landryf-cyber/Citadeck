@@ -162,7 +162,9 @@ export class App {
           <div class="label">Le grand dessein</div>`;
         const tiles = el('div', 'tiles');
         for (const d of this.e.c.desseins) {
-          const t = el('button', `tile${d.id === dessein ? ' sel' : ''}`, `<em>${esc(d.tag === 'Science' ? 'Science' : d.tag === 'Guerre' ? 'Guerre' : 'Culture')} · 5 merveilles</em><b>${esc(d.name)}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span>`);
+          const reqs = d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ');
+          const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux, merveilles' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux, merveilles' : 'découvertes de Culture, familles dévouées, merveilles';
+          const t = el('button', `tile${d.id === dessein ? ' sel' : ''}`, `<em>${esc(d.tag)} · 5 merveilles</em><b>${esc(d.name)}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span><span class="req-line">Les merveilles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>`);
           t.addEventListener('click', () => {
             dessein = d.id;
             this.audio.ui();
@@ -420,7 +422,8 @@ export class App {
   private optButton(o: OptionView, i: number, v: View): HTMLButtonElement {
     const s = this.s!;
     const b = el('button', 'opt');
-    const lossChips = o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '';
+    const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
+      + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '');
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
@@ -491,7 +494,7 @@ export class App {
       chips.push(`<span class="chip fam ${d > 0 ? 'up' : 'down'}">${esc(h)} <b>${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}</b></span>`);
     }
     for (const x of ev) {
-      if (x.type === 'quartiers' && x.delta) chips.push(`<span class="chip q${x.delta > 0 ? ' gain' : ''}">${ICON.house}<b>${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}</b>&nbsp;${x.delta < 0 ? `quartier · ${esc(x.cause)}` : 'quartier'}</span>`);
+      if (x.type === 'quartiers' && x.delta) chips.push(`<span class="chip q${x.delta > 0 ? ' gain' : ''}">${ICON.house}<b>${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}</b>&nbsp;${Math.abs(x.delta) > 1 ? 'quartiers' : 'quartier'}${x.delta < 0 ? ` · ${esc(x.cause)}` : ''}</span>`);
       if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">Une merveille vous protège : ${esc(x.cause)} évitée</span>`);
       if (x.type === 'sched') chips.push(`<span class="chip note">${ICON.hourglass}&nbsp;Cela aura des suites</span>`);
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
@@ -588,15 +591,17 @@ export class App {
           ${p.tag ? `<p class="${p.tag.total >= p.tag.need ? 'note' : 'warnline'}">${esc(p.tag.tag)} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${esc(p.tag.parts.join(', '))})` : ''}. On en gagne avec ${esc(p.tag.how)}.</p>` : ''}
           ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}${p.alt.req ? `<span class="note">· exige ${esc(p.alt.req)}</span>` : ''}</div><p class="note">${esc(p.alt.gift)}</p>` : ''}`
         : '<p class="note">Le jalon de cette ère est déjà debout.</p>';
-      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise.</p>`));
+      const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
+      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise.</p>${nxt}`));
       const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
+      const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
       const fams = p.needs.families.length ? `<p class="note">Ce qui aide aussi : ${esc(p.needs.families.join(', '))}.</p>` : '';
-      inner.appendChild(el('div', 'panel crisis', `<h3>La crise de l’ère · ${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${fams}
+      inner.appendChild(el('div', 'panel crisis', `<h3>La crise de l’ère · ${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${ifBuilt}${fams}
         ${p.envy ? `<p class="warnline">Vos ${p.built} merveille${p.built > 1 ? 's' : ''} attire${p.built > 1 ? 'nt' : ''} les regards : la crise sera ${p.envy} % plus dure.</p>` : ''}`));
       const rv = this.e.rival(s);
       inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
-        <p>${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
-      inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${s.res.vivres < p.upkeep ? ` (vous en avez ${s.res.vivres})` : ''}. L’Armée et le Trésor s’érodent un peu.`));
+        <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur grand dessein. Ils vous regardent de haut.` : `${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. S’ils achèvent leurs cinq merveilles, toute la vallée les regardera triompher.`} Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
+      inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}${s.res.vivres < p.upkeep ? ` (vous en avez ${s.res.vivres})` : ''}. Sans assez de Vivres : la famine, et un quartier perdu. L’Armée et le Trésor s’érodent un peu.`));
       (inner.lastChild as HTMLElement).style.cssText = 'color:var(--dim);font-size:13px;text-align:center;margin:0';
       const btns = el('div', 'btns');
       btns.appendChild(this.button('En route', go));
@@ -619,7 +624,7 @@ export class App {
       if (x.type === 'neglect') lines.push({ cls: 'bad', ico: ICON.warn, html: `${esc(H(x.family))} se sentent délaissés : vous n’êtes pas passé chez eux depuis deux ères.` });
       if (x.type === 'income') lines.push({ cls: 'good', ico: ICON.star, html: `Une famille dévouée apporte sa part : ${bagChips(x.bag, '+')}` });
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
-      if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange : ${bagChips({ vivres: x.amount }, '−')}` });
+      if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
       if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
     }
