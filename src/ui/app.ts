@@ -728,7 +728,8 @@ export class App {
       return `<li><span class="d">${esc((h?.date ?? '').replace(' avant le Calendrier', ' av. C.'))}</span><span><span class="c">−${l.amount} quartier : ${esc(l.cause)}</span></span>${why ? `<span class="w">${why}</span>` : ''}</li>`;
     }).join('');
     this.openScreen('veil end', (inner) => {
-      inner.innerHTML = `<div class="over">${r.type === 'defaite' ? `Défaite · ${esc(ERA_NAMES[s.era])}` : r.ending ? 'Dessein accompli' : 'Survie'}</div>
+      const shadow = r.type === 'victoire' && !r.ending && s.rivalJalons >= 5;
+      inner.innerHTML = `<div class="over">${r.type === 'defaite' ? `Défaite · ${esc(ERA_NAMES[s.era])}` : r.ending ? 'Dessein accompli' : shadow ? `Survie, dans l’ombre de ${esc(this.e.rival(s).name)}` : 'Survie · dessein inachevé'}</div>
         <h2 class="big">${esc(s.name)}</h2><p class="epitaph">${esc(ep)}</p>
         <div class="panel"><div class="row" style="justify-content:space-between"><span>Ère atteinte : <b>${ROMAN[s.era]}</b></span><span>Merveilles : <b>${r.jalons}/5</b></span><span>Rivale : <b>${s.rivalJalons}/5</b></span></div></div>
         ${losses ? `<div class="panel"><h3>${r.type === 'defaite' ? 'Ce qui l’a perdue' : 'Ses blessures'}</h3><ul class="losses">${losses}</ul></div>` : ''}`;

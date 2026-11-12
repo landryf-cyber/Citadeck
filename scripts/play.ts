@@ -124,7 +124,7 @@ function feedback(s: GameState, ev: Ev[]): void {
 
 function end(s: GameState): void {
   const r = s.result!;
-  P(`=== FIN : ${r.type === 'defaite' ? `${s.name} est tombée (${ERA_NAMES[s.era]})` : r.ending ? 'Dessein accompli' : 'Survie'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
+  P(`=== FIN : ${r.type === 'defaite' ? `${s.name} est tombée (${ERA_NAMES[s.era]})` : r.ending ? 'Dessein accompli' : s.rivalJalons >= 5 ? `Survie, dans l’ombre de ${e.rival(s).name}` : 'Survie, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
   P(`Épitaphe : ${epitaph(e, s)}`);
   for (const l of s.losses) P(`  perte : -${l.amount} quartier, ${l.cause}`);
   P('Derniers mots (choisir avec « testament N ») :');

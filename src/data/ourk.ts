@@ -64,7 +64,7 @@ export const ourkCards = [
       { label: 'Envoyer la troupe', cost: $('A4'), warn: 'Sans 14 Armée, un quartier brûle',
         effect: { if: { res: $('A14') }, then: { loy: { ourk: -2 }, mem: ['ourk_ecrase'], reply: 'La grève est brisée. Le colonel Ourkov note la date. Les Ourkov notent toujours la date.' },
           else: { quartiers: -1, cause: 'la grève générale des Ourkov', loy: { ourk: -1 }, reply: 'La troupe a rejoint la grève. Le quartier des usines aussi, en flammes.' } } },
-      { label: 'S’excuser pour le mammouth', effect: { loy: { ourk: 1 }, gain: $('A2'), mem: ['ourk_excuses'] },
+      { label: 'S’excuser pour le mammouth', cost: $('T4 V3'), effect: { loy: { ourk: 2 }, mem: ['ourk_excuses'] },
         reply: 'Le colonel accepte les excuses au nom de l’ancêtre. Il garde les fusils. Par sentiment.' },
     ],
   }),

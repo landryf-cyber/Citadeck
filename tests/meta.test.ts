@@ -132,3 +132,14 @@ describe('rejouer une partie', () => {
     expect(snaps.length).toBeGreaterThan(8);
   });
 });
+
+describe('écrans à partager', () => {
+  it('épitaphes, chroniques, testaments et causes ne gardent aucun gabarit, sur de nombreuses parties', () => {
+    const profiles = ['lecteur', 'gourmand', 'prudent', 'aléatoire'].map((n) => PROFILES.find((p) => p.name === n)!);
+    for (let seed = 1; seed <= 60; seed++) {
+      const s = finalState(content, profiles[seed % 4], seed * 13);
+      const texts = [epitaph(e, s), ...chronicleLines(e, s, 'Mot.'), ...testaments(e, s).flatMap((t) => [t.text, t.legacy.label]), ...s.losses.map((l) => l.cause)];
+      for (const t of texts) expect(t, `graine ${seed}`).not.toMatch(/[{}]|undefined|NaN| des les | de les | à les /);
+    }
+  });
+});

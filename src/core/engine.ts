@@ -15,7 +15,7 @@ export const SAVE_VERSION = 21;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 2, gain: 0.95, cards: 3, wonderUpkeep: 2 };
+export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.7, gain: 0.95, cards: 3, wonderUpkeep: 1.5 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -605,6 +605,11 @@ export class Engine {
     };
     if (o.effect.bet) v.odds = this.betChance(s, o.effect.bet);
     if ((o.effect.quartiers ?? 0) < 0 && !o.effect.if) v.lossQ = -o.effect.quartiers!;
+    const lq = o.effect.bet?.lose?.quartiers ?? 0;
+    if (lq < 0) v.risk = [v.risk, `En cas d’échec : −${-lq} quartier${lq < -1 ? 's' : ''}`].filter(Boolean).join(' · ');
+    const rj = o.effect.rivalJalon ?? 0;
+    if (rj > 0) v.risk = [v.risk, `${capitalize(this.rival(s).name)} avancent d’une merveille`].filter(Boolean).join(' · ');
+    if (rj < 0 && !o.effect.bet) v.detail = [v.detail, `${capitalize(this.rival(s).name)} perdent une merveille`].filter(Boolean).join(' · ');
     const g = o.effect.gain;
     if (g && RES.some((r) => (g[r] ?? 0) < 0)) {
       v.loss = {};
@@ -621,6 +626,10 @@ export class Engine {
       const d = this.card(p.recruits[i]);
       v.ref = d.id;
       v.detail = fill(d.gift ?? '', s, this.c);
+    }
+    if (card.kind === 'croissance' && o.effect.quartiers) {
+      const after = Math.ceil((s.quartiers + o.effect.quartiers) * TUNING.upkeep) + Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep);
+      v.detail = `Ensuite, la cité mangera ${after} Vivres par ère (contre ${this.upkeepOf(s)}).`;
     }
     if (card.kind === 'proces' && p.qui?.[i]) {
       v.families = [p.qui[i], p.plaintiff!];
@@ -759,6 +768,7 @@ export class Engine {
     const memBefore = new Set(s.mem);
     const date = eraDate(s.era, s.turn - (s.eraStart ?? 0));
     const titleNow = this.view(s)?.title ?? card.title;
+    const alts = this.options(s, p).filter((x) => this.affordable(s, this.costOf(s, x.cost)) && this.check(s, x.req)).length;
     // payer
     for (const r of RES) s.res[r] -= view.cost[r] ?? 0;
 
@@ -772,7 +782,11 @@ export class Engine {
     }
     // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
     if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
-    if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) reply = `${reply} Pourtant, le quartier tient : une merveille l’a protégé.`;
+    if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) {
+      reply = ev.some((x) => x.type === 'quartiers' && x.delta < 0)
+        ? `${reply} Une merveille a épargné un quartier ; pas l’autre.`
+        : `${reply} Pourtant, le quartier tient : une merveille l’a protégé.`;
+    }
     if (card.arc) {
       if (!s.arcs.open.includes(card.arc)) s.arcs.open.push(card.arc);
       if (card.finale && !s.arcs.done.includes(card.arc)) s.arcs.done.push(card.arc);
@@ -792,6 +806,7 @@ export class Engine {
       title: v?.title ?? card.title,
       choice: index,
       label: view.label,
+      alts,
       reply: reply ? fill(reply, s, this.c, this.ruinExtras(s)) : undefined,
       loy,
       from: p.from,
@@ -890,6 +905,10 @@ export class Engine {
   }
 
   changeQuartiers(s: GameState, d: number, cause: string, cardId: string, ev: Ev[]): void {
+    if (cause.includes('{')) {
+      const filled = fill(cause, s, this.c, this.ruinExtras(s));
+      cause = /^[a-zà-ÿ]/.test(cause) ? filled.charAt(0).toLowerCase() + filled.slice(1) : filled;
+    }
     if (d < 0 && !s.shieldUsed && this.passives(s).some((p) => p.type === 'shield')) {
       s.shieldUsed = true;
       d += 1;
@@ -1187,7 +1206,12 @@ export class Engine {
         return this.available(s, d) && !s.deck.includes(id) && (d.eras?.includes(next) || d.eras?.includes(s.era)) && this.check(s, d.cond);
       });
       if (!pool.length) return null;
-      return { card: 'decouverte', recruits: rng.sample(pool, Math.min(3, pool.length)) };
+      // au moins une piste du mot-clé du dessein, quand il y en a une : le fil rouge ne doit pas dépendre du tirage
+      const tag = this.dessein(s).tag;
+      const mine = pool.filter((id) => this.c.cards[id].tags?.includes(tag));
+      const first = mine.length ? [rng.pick(mine)] : [];
+      const rest = rng.sample(pool.filter((id) => !first.includes(id)), Math.min(3, pool.length) - first.length);
+      return { card: 'decouverte', recruits: rng.shuffle([...first, ...rest]) };
     }
     return null;
   }
@@ -1241,17 +1265,22 @@ export class Engine {
     const judged = p.quote !== undefined && p.quote >= 0 ? [`juge_${p.quote}`] : [];
     const P = `{H:${pl}}`;
     // chaque famille plaide dans sa voix ; l'issue dépend de ce qu'elle pense de vous
-    const WIN: Record<FamilyId, string> = {
-      ourk: `{F:ourk} plaide. {F:ourk} tape sur la table. Le juge est convaincu ; la table, moins. ${P} repartent apaisés, par prudence.`,
-      sel: `{F:sel} plaide en prenant le ciel à témoin. Le ciel ne dit rien, ce qui vaut acquittement. ${P} repartent en grommelant.`,
-      brume: `{F:brume} plaide avec des schémas. Personne ne comprend, tout le monde est convaincu. ${P} réclament une copie des schémas.`,
-      troc: `{F:troc} plaide, puis propose un arrangement à l’amiable. ${P} repartent avec un reçu et un sourire forcé.`,
+    // un acquittement clôt l'affaire, pas la rancune : seule la réparation l'efface
+    const WIN: Record<FamilyId, string[]> = {
+      ourk: [`{F:ourk} plaide. {F:ourk} tape sur la table. Le juge est convaincu ; la table, moins. ${P} sont déboutés, et le prennent mal.`,
+        `{F:ourk} plaide en montrant ses muscles. Le tribunal acquitte, par prudence. ${P} gardent leur rancune, et un œil sur {F:ourk}.`],
+      sel: [`{F:sel} plaide en prenant le ciel à témoin. Le ciel ne dit rien, ce qui vaut acquittement. ${P} repartent en grommelant.`,
+        `{F:sel} plaide en larmes. Le juge pleure aussi. ${P} perdent, et notent que le juge était un cousin des Sel.`],
+      brume: [`{F:brume} plaide avec des schémas. Personne ne comprend, tout le monde est convaincu. ${P} perdent, et réclament une copie des schémas.`,
+        `{F:brume} démontre que l’affaire est prescrite, à trois décimales près. ${P} perdent. Ils n’oublient pas pour autant.`],
+      troc: [`{F:troc} plaide, puis achète le greffier. ${P} perdent le procès et gardent leur rancune, intacte, encadrée.`,
+        `{F:troc} trouve un vice de forme, puis un deuxième, qu’il facture. ${P} sont déboutés et jurent de revenir.`],
     };
     const opts: Option[] = (p.qui ?? []).map((adv) => {
       const loy = s.fam[adv].loy;
       const plead: Effect =
         loy >= 1
-          ? { loy: { [pl]: 2, [adv]: -1 }, mem: judged, reply: WIN[adv] }
+          ? { loy: { [adv]: -1 }, mem: judged, reply: WIN[adv][(s.era + s.turn) % 2] }
           : loy === 0
             ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: `{F:${adv}} plaide sans conviction. Un arrangement est trouvé, à vos frais.` }
             : { loy: { [pl]: -1, [adv]: -1 }, reply: `{F:${adv}} plaide… contre vous. Personne n’avait pensé à vérifier ce que {H:${adv}} vous reprochaient.` };

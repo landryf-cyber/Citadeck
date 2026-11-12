@@ -11,7 +11,7 @@
  */
 import type { Engine, Setup } from './engine';
 import { FAMILIES, RES_LABEL, type Bag, type ChronicleEntry, type FamilyId, type GameState, type Legacy, type MetaState, type Res } from './types';
-import { capitalize, eraDate, fill } from './text';
+import { capitalize, eraDate, fill, polish } from './text';
 
 export const META_VERSION = 1;
 export const CHRONICLE_MAX = 40;
@@ -85,7 +85,7 @@ export function featsOf(e: Engine, s: GameState): string[] {
   if (s.era >= 4) out.push('ere5');
   if (s.jalons.filter(Boolean).length >= 3) out.push('jalons3');
   if (s.jalons[2]) out.push(`jalon3_${s.dessein}`);
-  if (s.result?.type === 'victoire') out.push('victoire', `victoire_${s.dessein}`);
+  if (s.result?.type === 'victoire' && s.result.ending) out.push('victoire', `victoire_${s.dessein}`);
   if (s.result?.type === 'defaite') out.push('chute');
   if (s.result?.type === 'defaite' && /famine/.test(s.result.cause ?? '')) out.push('famine');
   if (s.mem.includes('ruines_fouillees')) out.push('fouille');
@@ -160,7 +160,7 @@ export function testaments(e: Engine, s: GameState): Testament[] {
     const f = familyInCause(e, cause);
     const cr = e.c.crises.find((c) => cause.toLowerCase().includes(c.name.toLowerCase().replace(/^(la|le|l’) ?/, '')));
     if (f) {
-      lesson = { text: t(pick(s, 2, [`Écoutez {H:${f}} avant qu’ils ne crient.`, `Ce n’est pas {rival} qui nous a eus. C’est {H:${f}}.`])), legacy: { label: '', gain: { [e.c.families[f].res]: 5 } } };
+      lesson = { text: t(pick(s, 2, [`Écoutez {H:${f}} avant qu’ils ne crient.`, `Ce ne sont pas {rival} qui nous ont eus. Ce sont {H:${f}}.`])), legacy: { label: '', gain: { [e.c.families[f].res]: 5 } } };
     } else if (cr) {
       lesson = { text: t(pick(s, 2, ['Le présage disait vrai. Il dit toujours vrai.', `${cr.name} reviendra. Préparez-vous mieux que nous.`])), legacy: { label: '', gain: { armee: 3, vivres: 2 } } };
     } else {
@@ -187,13 +187,15 @@ export function testaments(e: Engine, s: GameState): Testament[] {
 // ============================================================================ épitaphe et chronique
 
 const DESSEIN_SHORT: Record<string, string> = { etoiles: 'les étoiles', empire: 'la vallée', posterite: 'l’éternité' };
+/** « de » contracté : des étoiles, de la vallée, de l’éternité */
+const de = (d: string) => (d.startsWith('les ') ? `des ${d.slice(4)}` : `de ${d}`);
 
 /** Une phrase pour la stèle. */
 export function epitaph(e: Engine, s: GameState): string {
   const d = DESSEIN_SHORT[s.dessein] ?? 'tout';
   const n = s.jalons.filter(Boolean).length;
   if (s.result?.type === 'victoire' && !s.result.ending) {
-    if (n >= 3) return pick(s, 4, [`Si près de ${d}. Il manquait une merveille, et un peu de temps.`, `${n} merveilles, et ${d} à portée de main.`]);
+    if (n >= 3) return pick(s, 4, [`Si près ${de(d)}. Il manquait une merveille, et un peu de temps.`, `${n} merveilles, et ${d} à portée de main.`]);
     return pick(s, 4, ['A traversé dix mille ans sans rien bâtir de mémorable. Une performance.', `Voulait ${d}. A eu la vie sauve, ce qui n’est pas rien.`]);
   }
   if (s.result?.type === 'victoire') {
@@ -204,8 +206,8 @@ export function epitaph(e: Engine, s: GameState): string {
     }[s.dessein] ?? ['A gagné.']);
   }
   const cause = s.result?.cause ?? 'l’usure';
-  if (s.era === 0) return pick(s, 4, [`Rêvait de ${d}. N’a pas passé l’âge de pierre.`, `Voulait ${d}. A eu ${cause}, très tôt.`]);
-  if (n >= 3) return pick(s, 4, [`${n} merveilles debout, puis ${cause}.`, `Si près de ${d}. Puis ${cause}.`]);
+  if (s.era === 0) return pick(s, 4, [`Rêvait ${de(d)}. N’a pas passé l’âge de pierre.`, `Voulait ${d}. A eu ${cause}, très tôt.`]);
+  if (n >= 3) return pick(s, 4, [`${n} merveilles debout, puis ${cause}.`, `Si près ${de(d)}. Puis ${cause}.`]);
   return pick(s, 4, [`Voulait ${d}, eut ${cause}.`, `Visait ${d}. ${capitalize(cause)} l’a visée d’abord.`]);
 }
 
@@ -217,6 +219,7 @@ function turningPoint(e: Engine, s: GameState): number {
     const k = e.card(h.card).kind;
     // les décisions de fond, pas les rouages (procès, hommages, chantiers…)
     if (['carrefour', 'presage', 'croissance', 'decouverte', 'jalon', 'proces', 'hommage', 'trahison', 'ruines', 'revenant', 'crise'].includes(k)) return;
+    if (h.alts !== undefined && h.alts < 2) return;
     const w = Object.values(h.loy ?? {}).reduce((a, v) => a + Math.abs(v ?? 0), 0) + (h.quartiers ? Math.abs(h.quartiers) * 2 : 0);
     if (w > top) {
       top = w;
@@ -251,9 +254,10 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   else if (enemy && s.fam[enemy].loy <= -1) lines.push(`${H(enemy)} ne lui ont jamais pardonné.`);
   else lines.push('Aucune famille ne l’a vraiment aimée. Ni haïe. C’est pire.');
   if (gone.length) lines[lines.length - 1] += ` ${capitalize(listFr(gone.map((f) => e.c.families[f].house[s.era])))} sont partis chez ${e.rival(s).name}.`;
-  const end = s.result?.type === 'victoire' ? `${s.result.ending ? 'Dessein accompli' : 'A survécu'}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
+  const shadow = s.rivalJalons >= 5 && !s.result?.ending ? `, dans l’ombre de ${e.rival(s).name}` : '';
+  const end = s.result?.type === 'victoire' ? `${s.result.ending ? 'Dessein accompli' : 'A survécu'}${shadow}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
   lines.push(testament ? `${end} Derniers mots : « ${testament} »` : end);
-  return lines.map((l) => l.replace(/\s{2,}/g, ' '));
+  return lines.map((l) => polish(l.replace(/\s{2,}/g, ' ')));
 }
 
 function listFr(xs: string[]): string {

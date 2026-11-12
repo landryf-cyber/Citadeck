@@ -13,7 +13,7 @@ Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md`
 - V1 retirée (historique git), arborescence aplatie, README et DECISIONS à jour
 - Tests : contenu, moteur (pas de blocage, déterminisme, gabarits résolus), méta, rejeu — `npm test`
 - Captures : `npm run shots` (mobile + bureau, ~19 écrans) ; perf : `npm run perf -- 2` ; scène seule : `npx tsx scripts/scene.ts` ; planches d'animation : `npx tsx scripts/film.ts` (à réparer : le saut vers le chantier)
-- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E9 (`TUNING crisisK 1.3, envie 0.15, entretien 2 + 2 par merveille, gains ×0.95, 3 cartes par saison`)
+- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E10 (`TUNING crisisK 1.3, envie 0.15, entretien 1.7 + 1.5 par merveille, gains ×0.95, 3 cartes par saison`)
 - Joueur en mode texte pour testeurs : `npx tsx scripts/play.ts new <dossier> [dessein] [origine] [graine]`
 - Introduction des quatre familles au premier lancement ; ruines et rivale lisibles sur la crête ; sons du procès et des ruines
 - Rapport de l'éditeur (agent) : `scratchpad/rapport-editeur.md` ; notes du joueur A (arrêté par la limite d'usage) : `scratchpad/notesA.txt`
@@ -38,10 +38,10 @@ P4 variété
 - [x] retours des joueurs A et B (6/10 chacun) : sacrifices en crise, entretien des merveilles, exigences annoncées, triomphe de la rivale, 3 cartes par saison (E9)
 - [x] passe DA animations (planches `scripts/film.ts`), écran « Votre civilisation », V2 publiée (version 5)
 ## Tour « avocat du diable » (rapport : scratchpad/rapport-avocat.md)
-- [ ] A. bugs et risques cachés : gabarits dans les causes ({rival}), « le quartier tient » alors qu'un quartier tombe, jour décisif parmi les choix libres, risque d'échec des paris affiché, avance de la rivale annoncée, test anti-accolades sur épitaphes/chroniques
-- [ ] B. rancune : l'acquittement n'efface pas la rancune (seule la réparation payante), excuses de la grève payantes, verdicts et trahisons variés, loyautés ±1 hors cartes de famille et de crise
-- [ ] C. dessein : pas de sacrifice au Grand Filtre, « Survie » nommée comme fin médiocre (et « dans l'ombre de la rivale »), une découverte du mot-clé du dessein proposée à chaque ère
-- [ ] D. fin de partie : mesurer les choix imposés par ère ; seuils de crise des ères III-V abaissés ; entretien allégé
+- [x] A. bugs et risques cachés : gabarits dans les causes ({rival}), « le quartier tient » alors qu'un quartier tombe, jour décisif parmi les choix libres, risque d'échec des paris affiché, avance de la rivale annoncée, test anti-accolades sur épitaphes/chroniques
+- [x] B. rancune : l'acquittement n'efface pas la rancune (seule la réparation payante), excuses de la grève payantes, verdicts et trahisons variés, loyautés ±1 hors cartes de famille et de crise
+- [x] C. dessein : pas de sacrifice au Grand Filtre, « Survie » nommée comme fin médiocre (et « dans l'ombre de la rivale »), une découverte du mot-clé du dessein proposée à chaque ère
+- [x] D. fin de partie : mesurer les choix imposés par ère ; seuils de crise des ères III-V abaissés ; entretien allégé
 - [ ] E. une crise alternative par ère (II à IV), tirée par la graine
 - [ ] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
 Ensuite : republier, puis trois juges.

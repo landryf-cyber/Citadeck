@@ -81,4 +81,10 @@ const jac = (a: string[], b: string[]) => {
 console.log(`Distance entre deux histoires (cartes et choix) : ${mean(lr.slice(1, 60).map((r, i) => jac(r.path, lr[i].path))).toFixed(2)} ; souvenirs : ${mean(lr.slice(1, 60).map((r, i) => jac(r.mem, lr[i].mem))).toFixed(2)}`);
 const endings = new Map<string, number>();
 for (const r of lr.filter((x) => x.win)) endings.set(r.dessein, (endings.get(r.dessein) ?? 0) + 1);
+{
+  const rs = res.get('lecteur')!;
+  const per = [0, 1, 2, 3, 4].map((e) => rs.reduce((a, r) => a + r.perEra[e], 0));
+  const fo = [0, 1, 2, 3, 4].map((e) => rs.reduce((a, r) => a + r.forcedEra[e], 0));
+  console.log(`Choix imposés (une seule option jouable), lecteur, par ère : ${fo.map((f, i) => `${pct(f / Math.max(1, per[i]))}`).join(' · ')}`);
+}
 console.log(`Victoires du lecteur par dessein : ${[...endings.entries()].map(([k, n]) => `${k} ${n}`).join(', ')}`);

@@ -43,11 +43,11 @@ export const desseins: DesseinDef[] = [
     pitch: 'Partir. Un jour, tous. Il faudra du Savoir, et des savants qui vous aiment.',
     jalons: [
       { name: 'Le Cercle de pierres', text: 'Des pierres dressées qui annoncent les saisons.', cost: $('S5'), gift: 'Il rapporte 1 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 1 }, shape: 'cercle' },
-      { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S9 V3'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour' },
-      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S14 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome',
+      { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S8 V3'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour' },
+      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S12 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome',
         alt: { lock: 'alt_etoiles', name: 'Le Grand Télescope', text: 'Un tube de cuivre long comme une rue. On y voit {reine} se gratter le nez, de l’autre côté de la vallée.', cost: $('S12 T7'), req: { tags: { Science: 3 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'telescope' } },
-      { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S19 T8'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee' },
-      { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S22 T9 V6'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche' },
+      { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S17 T7'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee' },
+      { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S20 T8 V6'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche' },
     ],
   },
   {

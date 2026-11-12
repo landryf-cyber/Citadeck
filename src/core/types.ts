@@ -280,6 +280,8 @@ export interface HistoryEntry {
   loy?: Partial<Record<FamilyId, number>>;
   /** cartes et choix d'origine si la carte est une suite */
   from?: string;
+  /** nombre d'options jouables à ce moment (1 = choix imposé) */
+  alts?: number;
   res: Resources;
   quartiers: number;
 }

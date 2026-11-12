@@ -19,6 +19,28 @@ const all = [
   ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents,
 ];
 
+// hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
+// les grandes oscillations sont réservées aux actes marquants
+const damp = (e: import('../core/types').Effect | undefined): void => {
+  if (!e) return;
+  if (e.loy) for (const f of Object.keys(e.loy) as (keyof typeof e.loy)[]) e.loy[f] = Math.max(-1, Math.min(1, e.loy[f] ?? 0));
+  damp(e.then);
+  damp(e.else);
+  if (e.bet) {
+    damp(e.bet.win);
+    damp(e.bet.lose);
+  }
+};
+for (const c of all) if (['rencontre', 'evenement', 'rivale'].includes(c.kind) && !c.echo) for (const o of c.options) damp(o.effect);
+
+// une famille qui trahit deux fois le fait savoir
+for (const f of ['ourk', 'sel', 'brume', 'troc'] as const) {
+  const c = all.find((x) => x.id === `trahison_${f}`);
+  if (!c) continue;
+  c.text = `{?mem:trahi_${f}|Encore. {H:${f}} ne prennent même plus la peine de se cacher. |}${c.text}`;
+  for (const o of c.options) o.effect = { ...o.effect, mem: [...(o.effect.mem ?? []), `trahi_${f}`] };
+}
+
 // les suites liées à un souvenir sont toujours tirées
 for (const id of ['ev_fete_ours', 'ev_amants', 'ev_heritier', 'ev_general_eveque', 'ev_martyr', 'ev_cirque']) {
   const c = all.find((x) => x.id === id);

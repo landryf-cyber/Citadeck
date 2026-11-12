@@ -26,6 +26,9 @@ export interface RunStats {
   lines: string[];
   rivalJalons: number;
   quartiers: number;
+  /** décisions par ère, et celles où une seule option était jouable */
+  perEra: number[];
+  forcedEra: number[];
 }
 
 const DEP_RX = /\{\?(mem|loy|card|jalon|state):|\{Q:|\{D:/;
@@ -37,7 +40,7 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
   const s = e.newGame(seed, { dessein, ruins: opts.ruins });
   const st: RunStats = {
     seed, profile: p.name, dessein, win: false, era: 0, jalons: 0, decisions: 0, dependent: 0, forms: new Set(),
-    arcsOpen: 0, arcsDone: 0, trials: 0, losses: [], mem: [], path: [], lines: [], rivalJalons: 0, quartiers: 0,
+    arcsOpen: 0, arcsDone: 0, trials: 0, losses: [], mem: [], path: [], lines: [], rivalJalons: 0, quartiers: 0, perEra: [0, 0, 0, 0, 0], forcedEra: [0, 0, 0, 0, 0],
   };
   const L = (x: string) => opts.transcript && st.lines.push(x);
   L(`# ${s.name} — dessein « ${e.dessein(s).name} » — rivale : ${e.rival(s).name} — profil ${p.name}`);
@@ -57,6 +60,8 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
         || raw.options.some((o) => !!o.effect.if?.mem || !!o.effect.if?.fam)
         || (raw.kind === 'famille' && !!raw.family && e.familyLead(s, raw.family) !== '');
       if (dep) st.dependent++;
+      st.perEra[s.era]++;
+      if (v.options.filter((o) => o.enabled).length === 1) st.forcedEra[s.era]++;
       if (raw.kind === 'proces') st.trials++;
     }
     if (raw.kind === 'presage') L(`\n## Ère ${s.era + 1} — jalon : ${e.dessein(s).jalons[s.era].name} — crise : ${c.crises[s.era].name}`);
