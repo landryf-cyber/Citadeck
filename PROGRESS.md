@@ -45,8 +45,19 @@ P4 variété
 - [x] E. une crise alternative par ère (II à IV), tirée par la graine
 - [x] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
 - [x] republié (version 6)
-## Juges — tour 1 (en cours)
-- 3 agents juges indépendants lancés (critique, designer de roguelites, scénariste) ; dossier `scratchpad/juges/` (LISEZMOI + verdicts juge-1..3.md). Si une note < 8 : corriger les trois faiblesses les plus lourdes, republier, nouveaux juges (5 tours max).
+## Juges — tour 1 (fait, version 6)
+- Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : critique 6·5·7·7·7·6·7 ; designer 6·6·7·8·6·6·7 ; scénariste 7·6·6·8·6·6·7. Verdicts dans `scratchpad/juges/juge-1..3.md`.
+- Trois faiblesses : (1) impasses et enjeux sans dents ; (2) squelette répétitif ; (3) cohérence, héritage mince, illustrations génériques.
+## Tour 2 de corrections (en cours, dans la copie de travail `../citadeck-dev`, branche `tour-juges-2`, à fusionner dans la branche de travail)
+- [x] paliers de fin (triomphe, victoire, survie, chute), rivale qui annexe un quartier par ère après son triomphe, crédit quand une seule option est jouable, une perte de quartier au plus par famille et par ère
+- [ ] procès seulement pour les rancunes graves (−2), hommage une fois par famille, griefs pondérés par la gravité
+- [ ] Grand Filtre : le dessein répond dès le premier acte
+- [ ] une inauguration écrite pour chaque merveille ; fins de crise selon leur issue
+- [ ] la partie suivante écarte les cartes vues à la précédente ; les familles se souviennent de la cité précédente
+- [ ] cohérence : dette de mammouth, élisions (« d'Ourk »), « À », libellés
+- [ ] interface : paliers de fin, annexion au bilan, noms courts sur mobile, carte plus grande sur bureau, silhouettes des merveilles en illustration
+- [ ] variantes de cartes de famille pour les ères IV et V
+- [ ] mesures, tests, fusion, republication, puis trois nouveaux juges
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir

@@ -15,7 +15,7 @@ export const echoFamilyCards = [
       { label: 'Tout le clan en rouge', effect: { gain: $('A3'), loy: { ourk: 2, sel: -2 }, mem: ['ourk_rouge'] },
         reply: 'Le clan est rouge vif. Les bêtes fuient, les ennemis aussi, et Mère Sel encore plus vite.' },
       { label: 'Juste les joues', cost: $('V1'), effect: { loy: { ourk: 1 } },
-        reply: 'Ourk a des joues rouges. Il a l’air d’avoir honte. Ourk n’a jamais honte. Ourk est furieux.' },
+        reply: 'Ourk a des joues rouges. Il a l’air d’avoir honte. Ourk n’a jamais honte. Ourk trouve que ça lui va bien, finalement.' },
       { label: 'Les baies sont sacrées', effect: { gain: $('V2'), loy: { ourk: -1, sel: 1 } },
         reply: 'Ourk chasse en couleur naturelle. Il revient bredouille, et rouge quand même, de colère.' },
     ],

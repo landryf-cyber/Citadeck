@@ -43,6 +43,8 @@ export interface Cond {
   dessein?: string;
   /** au moins N jalons bâtis */
   jalons?: number;
+  /** la rivale a au moins N merveilles */
+  rivalJalons?: number;
   /** au moins une civilisation passée dans la chronique */
   /** nombre minimal de civilisations passées dans la chronique */
   ruins?: number;
@@ -100,6 +102,8 @@ export interface Option {
   warn?: string;
   effect: Effect;
   reply?: string;
+  /** option payée à crédit (générée quand il ne reste qu'un choix) */
+  credit?: boolean;
 }
 
 export type CardKind =
@@ -303,6 +307,8 @@ export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fi
 
 export interface Result {
   type: 'victoire' | 'defaite';
+  /** palier de fin : triomphe (cinq merveilles), victoire (au moins trois, et pas moins que la rivale), survie, chute */
+  rank?: 'triomphe' | 'victoire' | 'survie' | 'chute';
   ending?: 'science' | 'military' | 'culture';
   jalons: number;
   /** cause de la chute */

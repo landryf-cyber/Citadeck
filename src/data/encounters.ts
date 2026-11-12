@@ -150,7 +150,7 @@ export const encounterCards = [
     title: 'Le Déserteur',
     text: 'Un officier de {rival} déserte. Il connaît tous les secrets de {reine}. Il demande l’asile, un château, et qu’on l’appelle « Excellence ».',
     options: [
-      { label: 'Excellence, bienvenue', cost: $('T3'), effect: { gain: $('A3 S3'), rival: -1, rivalJalon: -1 }, reply: 'Grâce à lui, un chantier de {rival} s’effondre mystérieusement. Excellence sourit.' },
+      { label: 'Excellence, bienvenue', cost: $('T3'), req: { rivalJalons: 1 }, reqLabel: 'La rivale doit avoir une merveille à saboter', effect: { gain: $('A3 S3'), rival: -1, rivalJalon: -1 }, reply: 'Grâce à lui, un chantier de {rival} s’effondre mystérieusement. Excellence sourit.' },
       { label: 'Le rendre à {reine}', effect: { rival: 2 }, reply: '{Reine} vous remercie par une lettre parfumée. On n’entendra plus parler de l’officier.' },
     ],
   }),
