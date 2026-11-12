@@ -84,12 +84,15 @@ P4 variété
 - Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : critique 7·7·7,5·7,5·7,5·6,5·6,5 ; optimisatrice 7·5·8·7·5·6·7 ; romancière 6·6·7·7·6·6·7. Verdicts dans `scratchpad/juges/juge-10..12.md`.
 - Les trois humains perdent ou survivent sans dessein (le bot lecteur, qui voit les effets exacts, survit à 90 %).
 - Trois faiblesses : (1) spirale de déclin (seuils de crise hors d'atteinte, crise = choix du bouc émissaire, famille au plancher sacrifiable gratis) ; (2) crédit exploitable (moins cher que le comptant, prêts des hostiles, cascade de créances) et affichage encore inexact (ampleur relative à l'ère, présage ≠ chantier, effets incertains sans « ? », rattrapage « au bilan », palissade et trahisons) ; (3) répétitions et prose monocorde, rivale sans enjeu après son triomphe, coquilles, vide sur bureau.
-## Tour 5 de corrections (le dernier, copie `../citadeck-dev`)
-- [ ] crises atteignables (intensité allégée), plus de bouc émissaire gratuit, plus d'occasions de regagner un quartier
-- [ ] crédit : jamais moins cher que le comptant, pas de prêt d'une famille hostile, un crédit à la fois, refus qui coûte
-- [ ] affichage : fourchettes chiffrées, prix identiques au présage et au chantier, « ? » pour les effets incertains, prix exact des rachats, palissade contre trahisons et créances, textes d'aide exacts, pluriels
-- [ ] tribut pendant l'ère (même la dernière), contester la rivale ; quelques cartes graves sans chute ; variantes de répliques ; carte plus large sur bureau
-- [ ] mesures, tests, fusion, republication, trois nouveaux juges (tour 5, le dernier)
+## Tour 5 de corrections (le dernier, fait, fusionné)
+- [x] crises atteignables (intensité 1,15, convoitise 0,10, gains 1,05), pas de bouc émissaire au plus bas, hommage qui rebâtit un quartier en détresse, épreuve finale proportionnelle
+- [x] crédit : toujours plus cher que le comptant, pas de prêt des Troc hostiles, un à la fois, refus qui révolte, paiement en nature, lettre rivale qui saisit du Trésor
+- [x] affichage : fourchettes chiffrées fixes, présage aux prix du chantier, « ? » des effets incertains, prix exacts des rachats, palissade contre trahisons et dettes, textes d'aide exacts, pluriels, dettes et promesses, orateur capitalisé
+- [x] tribut en début d'ère (même la dernière), sabotage d'une merveille rivale ; cartes graves sans chute ; répliques variées ; carte plus large sur bureau
+- [x] mesures (E14, profil « distrait »), tests (27), README, DECISIONS 41-46
+- [x] republication (version 10)
+## Juges — tour 5 (le dernier, en cours, version 10)
+- Trois nouveaux juges ; verdicts attendus dans `scratchpad/juges/juge-13..15.md`. Ensuite : message final (si une note reste sous 8, l'expliquer).
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
