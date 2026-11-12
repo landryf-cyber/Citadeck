@@ -15,7 +15,7 @@ export const SAVE_VERSION = 22;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.9, cards: 3, wonderUpkeep: 1.25 };
+export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.9, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
 const scaleBag = (b: Bag | undefined, era: number): Bag | undefined => {
@@ -540,7 +540,7 @@ export class Engine {
     if (card.kind === 'jalon' && p.missed !== undefined) {
       // une merveille manquée se rattrape plus tard, plus cher : les prix ont suivi les ères
       const e = p.missed;
-      const k = 1.3 * ERA_SCALE[s.era] / ERA_SCALE[e];
+      const k = 1.15 * ERA_SCALE[s.era] / ERA_SCALE[e];
       const up = (b: Bag): Bag => { const o: Bag = {}; for (const r of Object.keys(b) as Res[]) o[r] = Math.ceil(b[r]! * k); return o; };
       const j = this.dessein(s).jalons[e];
       const alt = this.jalonAltOf(s, e);
@@ -579,7 +579,7 @@ export class Engine {
     if (card.kind === 'jalon' && p.missed !== undefined) {
       const j = this.dessein(s).jalons[p.missed];
       title = 'Le Chantier oublié';
-      text = `${j.name}, prévue pour ${ERA_NAMES[p.missed].charAt(0).toLowerCase()}${ERA_NAMES[p.missed].slice(1)}, n’a jamais été bâtie. Les plans existent encore. Les prix, eux, ont suivi les siècles. ${j.gift}`;
+      text = `On avait prévu ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)} pour ${ERA_NAMES[p.missed].charAt(0).toLowerCase()}${ERA_NAMES[p.missed].slice(1)}. Les plans dorment au coffre ; les prix, eux, ont suivi les siècles. La bâtir maintenant, c’est arriver plus pauvre au chantier de l’ère et à sa crise. ${j.gift}`;
       header = `Rattrapage · merveille ${p.missed + 1} sur 5`;
     } else if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
@@ -1104,6 +1104,8 @@ export class Engine {
       }
     }
     while (pile.length < TUNING.cards && s.pool.length) pile.push(s.pool.shift()!);
+    // une merveille manquée revient sur la table à la seconde saison : la rattraper, plus cher, ou garder ses forces
+    if (s.saison === 1 && this.missedJalon(s) >= 0) pile.push('rattrapage');
     s.pile = pile;
     ev.push({ type: 'saison', saison: s.saison, route: routeId });
     // revenu des découvertes et merveilles, à chaque saison
@@ -1211,9 +1213,16 @@ export class Engine {
     }
   }
 
+  /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */
+  missedJalon(s: GameState): number {
+    for (let e = s.era - 1; e >= 0; e--) if (!s.jalons[e]) return e;
+    return -1;
+  }
+
   private makePrompt(s: GameState, id: string, rng: Rng, from?: string): Prompt {
     const c = this.card(id);
     const p: Prompt = { card: id };
+    if (id === 'rattrapage') p.missed = this.missedJalon(s);
     if (from) p.from = from;
     if (c.qui) {
       const fams = this.present(s).filter((f) => !c.qui!.exclude?.includes(f));
@@ -1293,7 +1302,7 @@ export class Engine {
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
       if (s.rivalJalons >= 5 && !s.spent.includes('triomphe')) rivalTriumph = true;
     }
-    const steps = [...(rivalTriumph ? ['triomphe'] : tribute ? ['tribut'] : []), 'croissance', 'rattrapage', 'proces', 'decouverte'];
+    const steps = [...(rivalTriumph ? ['triomphe'] : tribute ? ['tribut'] : []), 'croissance', 'proces', 'decouverte'];
     // après la dernière crise, plus rien à fonder ni à juger : l'histoire s'arrête là
     s.steps = s.era < ERAS - 1 ? steps : [];
   }
@@ -1318,11 +1327,7 @@ export class Engine {
     if (step === 'jalon') return { card: 'jalon' };
     if (step === 'triomphe') return { card: 'triomphe' };
     if (step === 'tribut') return { card: 'tribut' };
-    if (step === 'rattrapage') {
-      // la plus récente des merveilles manquées des ères passées
-      for (let e = s.era - 1; e >= 0; e--) if (!s.jalons[e]) return { card: 'jalon', missed: e };
-      return null;
-    }
+
     if (step === 'decouverte') {
       const next = s.era + 1;
       const pool = this.c.discoveries.filter((id) => {

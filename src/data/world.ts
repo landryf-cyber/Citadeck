@@ -122,6 +122,7 @@ export const engineCards = [
   card({ id: 'presage', kind: 'presage', title: 'Présage', text: '', options: [{ label: 'En route', effect: {} }] }),
   card({ id: 'carrefour', kind: 'carrefour', title: 'Le Carrefour', text: 'Une saison commence. Où porter vos pas ?', options: [], art: { motif: 'road' } }),
   card({ id: 'jalon', kind: 'jalon', title: 'Le Jalon', text: '', options: [], art: { motif: 'tower' } }),
+  card({ id: 'rattrapage', kind: 'jalon', title: 'Le Chantier oublié', text: '', options: [], art: { motif: 'tower' } }),
   card({ id: 'decouverte', kind: 'decouverte', title: 'Que découvrir ?', text: 'Les savants proposent trois pistes. Une seule sera suivie. Les autres iront chez {rival}.', options: [], art: { motif: 'scroll' } }),
   card({ id: 'croissance', kind: 'croissance', title: 'Les Greniers débordent', text: 'Assez de vivres pour fonder un nouveau quartier. Ou pour tenir le prochain hiver, qui sera long. Ils le sont tous.', options: [], art: { motif: 'house' } }),
   card({

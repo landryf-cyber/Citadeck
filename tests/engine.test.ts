@@ -143,17 +143,14 @@ describe('pas de redite', () => {
     }
   });
 
-  it('une merveille manquée se rattrape au bilan suivant, plus cher, et compte pour le dessein', () => {
+  it('une merveille manquée se rattrape à la seconde saison d’une ère suivante, plus cher, et compte pour le dessein', () => {
     const s = e.newGame(11, { dessein: 'empire' });
     s.era = 2;
     s.jalons = [false, true, false, false, false];
     s.res = { vivres: 99, armee: 99, savoir: 99, tresor: 99 };
-    s.phase = 'finere';
-    s.steps = ['rattrapage'];
-    s.prompt = { card: 'croissance' };
-    e.act(s, 1);
-    expect(s.prompt?.card).toBe('jalon');
-    expect(s.prompt?.missed).toBe(0);
+    expect(e.missedJalon(s)).toBe(0);
+    s.phase = 'saison';
+    s.prompt = { card: 'rattrapage', missed: e.missedJalon(s) };
     const v = e.view(s)!;
     expect(v.title).toBe('Le Chantier oublié');
     const base = content.desseins.find((d) => d.id === 'empire')!.jalons[0].cost;
