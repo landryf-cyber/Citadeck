@@ -546,7 +546,8 @@ export class App {
     // les grands moments
     const jal = ev.find((x) => x.type === 'jalon') as { name: string; era: number } | undefined;
     if (jal) {
-      setTimeout(() => this.scene.sparkAt(`j${s.jalons.filter(Boolean).length - 1}`), 900);
+      // la merveille rattrapée prend sa place dans l'ordre des ères, pas forcément la dernière
+      setTimeout(() => this.scene.sparkAt(`j${s.jalons.slice(0, jal.era + 1).filter(Boolean).length - 1}`), 900);
       this.audio.wonder();
       await this.banner('Merveille bâtie', jal.name, 'gold');
     }
