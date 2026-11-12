@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --ui: rgb(255, 184, 115);
   --ink: #f6eedf;
   --dim: rgba(246, 238, 223, 0.68);

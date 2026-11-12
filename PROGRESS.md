@@ -44,7 +44,7 @@ Ensuite : captures et passe DA, avocat du diable, juges.
 3. Avocat du diable sur le jeu fini ; mesures finales (`npm run sim -- 200`, `npm run campaign -- 10`)
 4. 3 passes DA captures (mobile/bureau, dont animations), relecture de tous les textes, cas limites, perf
 5. Trois juges indépendants (notes ≥ 8 sur 7 critères, 5 tours max)
-6. Déploiement : `npm run single` → page hébergée claude.ai (URL précédente : https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom) ; message final
+6. Déploiement : `npm run single` → page hébergée https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (V2 publiée en version 5 le 12/11 ; republier après chaque tour de corrections) ; message final
 
 ## Bloqué
 - `git push` refusé (403). Publication par page hébergée.
