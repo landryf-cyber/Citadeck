@@ -202,7 +202,7 @@ export class Engine {
       version: SAVE_VERSION,
       seed,
       rng: rng.getState(),
-      name: setup.name ?? civName(seed),
+      name: setup.name ?? [0, 1, 2, 3, 4, 5].map((k) => civName(seed + k * 7919)).find((n) => !(setup.ruins ?? []).some((r) => r.name === n)) ?? civName(seed),
       origin: origin.id,
       dessein: setup.dessein,
       rival: rival.id,
@@ -1042,7 +1042,7 @@ export class Engine {
     // les gains (cachés au joueur) passent par un coefficient d'équilibrage ; les pertes restent telles qu'écrites
     if (e.gain) for (const r of RES) if (e.gain[r]) {
       // une perte plus grosse que la réserve n'est pas gratuite : la famille de cette ressource comble le trou, et s'en souvient
-      if (e.gain[r]! < 0 && !nested && s.res[r] + e.gain[r]! < 0) {
+      if (e.gain[r]! < 0 && s.res[r] + e.gain[r]! < 0) {
         const f = this.owner(r);
         if (f) this.changeLoy(s, f, -1, ev, false);
       }

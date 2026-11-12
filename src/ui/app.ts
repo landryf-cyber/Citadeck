@@ -523,7 +523,7 @@ export class App {
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
       if (x.type === 'rival') chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'}</span>`);
-      if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
+      if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
     }
     // la réponse s'affiche sous la carte suivante : on rappelle à quoi elle répond
     if (reply) after.appendChild(el('p', 'reply', `${picked ? `<span class="reply-of">${esc(v.title)} · ${esc(picked)}</span>` : ''}${esc(reply)}`));
@@ -559,7 +559,7 @@ export class App {
       await this.endFlow();
       return;
     }
-    const eraEnd = ev.some((x) => x.type === 'upkeep' || x.type === 'famine');
+    const eraEnd = ev.some((x) => x.type === 'upkeep' || x.type === 'famine' || x.type === 'disette');
     if (eraEnd) await this.showBilan(ev);
     const cr = ev.find((x) => x.type === 'crisis') as { name: string } | undefined;
     if (cr) {

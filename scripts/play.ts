@@ -107,7 +107,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'jalon') parts.push(`★ MERVEILLE BÂTIE : ${x.name}`);
     if (x.type === 'card+' && e.card(x.id).kind === 'decouverte') parts.push(`découverte : ${e.card(x.id).title}`);
     if (x.type === 'passive') parts.push(`vos merveilles et découvertes rapportent ${bag(x.bag, '+')}`);
-    if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) parts.push(`la rivale ${x.delta < 0 ? 'perd' : 'achève'} ${x.name} (${x.count}/5)`);
+    if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) parts.push(`la rivale ${x.delta < 0 ? 'perd' : 'achève'} ${x.name} (${x.count}/5)`);
   }
   if (parts.length) P(`  (${parts.join(' · ')})`);
   const bil: string[] = [];
@@ -122,7 +122,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);
     if (x.type === 'famine') bil.push(ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? 'FAMINE : une merveille rachète le quartier.' : 'FAMINE : un quartier se vide.');
     if (x.type === 'annex') bil.push(`${capitalize(x.name)} annexent un quartier (leur dessein est achevé ; ils épargnent leurs amis).`);
-    if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
+    if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
   }
   if (bil.length) P(`=== BILAN DE L’ÈRE\n  ${bil.join('\n  ')}`);
   const cr = ev.find((x) => x.type === 'crisis') as { name: string } | undefined;
