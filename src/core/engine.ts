@@ -15,7 +15,7 @@ export const SAVE_VERSION = 21;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 2, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 2, gain: 0.95, cards: 3, wonderUpkeep: 2 };
+export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 2, gain: 0.95, cards: 3, wonderUpkeep: 2 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
