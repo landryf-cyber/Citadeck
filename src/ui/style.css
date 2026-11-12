@@ -86,6 +86,9 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .fam svg.med { width: 34px; height: 34px; flex: none; overflow: visible; }
 .fam .fn { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .fam .fh { font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fam .fh .short { display: none; }
+.wonder-art { position: absolute; inset: 0; display: flex; justify-content: center; align-items: stretch; background: #07060b; }
+.wonder-art img { height: 100%; width: auto; max-width: 50%; object-fit: cover; flex: 1; }
 .fam .fm { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fam .pips { display: flex; gap: 2px; }
 .fam .pips i { width: 5px; height: 5px; border-radius: 50%; background: rgba(246, 238, 223, 0.16); }
@@ -319,10 +322,17 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 @media (min-width: 900px) {
   #hud { padding-top: 14px; }
   #stage { margin-top: 14px; }
-  :root { --card-w: 480px; }
+  :root { --card-w: 560px; }
+  .card-art { height: 150px; }
+  .card-title { font-size: 27px; }
+  .card-text { font-size: 17.5px; }
+  .opt-label { font-size: 16px; }
+  .opt { padding: 11px 12px; }
 }
 @media (max-width: 520px) {
   .stat.q small, .era-name span { display: none; }
+  .fam .fh .long { display: none; }
+  .fam .fh .short { display: inline; }
   .icon-btn.deck-btn { width: 30px; }
   .stat { padding: 4px 6px 4px 4px; font-size: 14px; gap: 3px; }
   .stat svg { width: 15px; height: 15px; }

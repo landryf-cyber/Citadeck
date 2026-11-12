@@ -48,7 +48,7 @@ function presage(s: GameState): void {
   const p = e.presageInfo(s);
   P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date}) — ${p.subtitle}`);
   P(`Vous avez : ${s.quartiers} quartiers, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
-  if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}`);
+  if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}. ${p.legacy.memory ?? ''}`);
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
@@ -113,6 +113,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);
     if (x.type === 'famine') bil.push('FAMINE : un quartier se vide.');
+    if (x.type === 'annex') bil.push(`${capitalize(x.name)} annexent un quartier (leur dessein est achevé ; ils épargnent leurs amis).`);
     if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
   }
   if (bil.length) P(`=== BILAN DE L’ÈRE\n  ${bil.join('\n  ')}`);
@@ -124,7 +125,7 @@ function feedback(s: GameState, ev: Ev[]): void {
 
 function end(s: GameState): void {
   const r = s.result!;
-  P(`=== FIN : ${r.type === 'defaite' ? `${s.name} est tombée (${ERA_NAMES[s.era]})` : r.ending ? 'Dessein accompli' : s.rivalJalons >= 5 ? `Survie, dans l’ombre de ${e.rival(s).name}` : 'Survie, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
+  P(`=== FIN : ${r.rank === 'triomphe' ? 'TRIOMPHE, dessein accompli' : r.rank === 'victoire' ? 'VICTOIRE' : r.type === 'defaite' ? `CHUTE : ${s.name} est tombée (${ERA_NAMES[s.era]})` : s.rivalJalons >= 5 ? `SURVIE, dans l’ombre de ${e.rival(s).name}` : 'SURVIE, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
   P(`Épitaphe : ${epitaph(e, s)}`);
   for (const l of s.losses) P(`  perte : -${l.amount} quartier, ${l.cause}`);
   P('Derniers mots (choisir avec « testament N ») :');
@@ -143,6 +144,7 @@ if (a0 === 'new') {
   s = e.newGame(seed, setup);
   P(`Nouvelle civilisation : ${s.name}. Dessein : ${e.dessein(s).name}. Origine : ${e.c.origins.find((o) => o.id === s!.origin)?.name}. Rivale : ${e.rival(s).name}.`);
   if (s.ruins.length) P(`Sur la colline : les ruines de ${s.ruins.map((x) => x.name).join(', ')}.`);
+  P('Victoire : 4 merveilles à la fin de l’ère V ; triomphe : les 5 ; en dessous, simple survie.');
   { const d = e.dessein(s); P(`Les merveilles du dessein exigent ${d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ')} de ${d.tag} (découvertes, famille amie, merveilles bâties).`); }
   card(s);
 } else if (!s) {

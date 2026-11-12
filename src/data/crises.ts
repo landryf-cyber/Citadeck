@@ -47,7 +47,7 @@ export const crisisCards = [
   card({
     id: 'x0_lendemain', kind: 'crise', art: { motif: 'flame', hue: 20 },
     title: 'Le Lendemain',
-    text: 'La horde est passée. Il reste des cendres, des blessés, et quatre familles qui vous regardent pour savoir à qui la faute.',
+    text: 'La horde est passée. {?lossera|Il reste des cendres, des blessés, et quatre familles qui vous regardent pour savoir à qui la faute.|Elle n’a rien pris, cette fois. Les quatre familles se disputent le mérite, et cherchent quand même un coupable, pour la peur.}',
     form: 'qui',
     qui: { count: 3, option: (f) => ({ label: `Blâmer {H:${f}}`, effect: { loy: { [f]: -2, ...Object.fromEntries((['ourk', 'sel', 'brume', 'troc'] as const).filter((x) => x !== f).map((x) => [x, 1])) }, gain: $('V2') },
       reply: `{H:${f}} sont coupables, c’est décidé. Les autres familles se sentent mieux. {H:${f}} prennent des notes. Elles seront citées.` }) },
@@ -84,7 +84,7 @@ export const crisisCards = [
   card({
     id: 'x1_maisons', kind: 'crise', art: { motif: 'house', hue: 120 },
     title: 'Les Maisons vides',
-    text: 'La fièvre a emporté des riches aussi. Leurs maisons sont vides, leurs coffres pleins. {F:troc} a déjà des clés.',
+    text: '{?lossera|La fièvre a emporté des riches aussi. Leurs maisons sont vides, leurs coffres pleins.|La fièvre est passée sans trop de morts. Quelques riches, quand même : leurs maisons sont vides, leurs coffres pleins.} {F:troc} a déjà des clés.',
     options: [
       { label: 'Tout au trésor', effect: { gain: $('T7'), loy: { sel: -1 } }, reply: 'Les coffres sont pleins. Les héritiers survivants vous détestent avec méthode.' },
       { label: 'Aux survivants', effect: { gain: $('V4'), loy: { sel: 1, troc: -1 }, quartiers: 1 }, reply: 'Les pauvres ont des maisons. Un quartier renaît, plus pauvre et plus reconnaissant.' },
@@ -173,6 +173,7 @@ export const crisisCards = [
     title: 'Le Signal',
     text: 'Les antennes captent un signal. Il répète : « Qu’êtes-vous ? » {Rival} l’ont capté aussi. {Reine} a déjà répondu, en trois pages.',
     options: [
+      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, effect: { mem: ['filtre_passe', 'signal_dessein'] }, reply: 'Vous ne répondez rien. Vos merveilles répondent pour vous, de toute leur hauteur. Le signal se tait, impressionné, et note votre nom.' },
       { label: 'Répondre avec la science', cost: $('S10'), effect: { loy: { brume: 2 }, mem: ['signal_science'] }, reply: 'Vous envoyez les décimales de pi. Le signal répond : « Et ensuite ? »' },
       { label: 'Répondre avec une chanson', cost: $('T10'), effect: { loy: { sel: 1, troc: 1 }, mem: ['signal_culture'] }, reply: 'Vous envoyez votre hymne. Le silence qui suit est poli. Très poli.' },
       { label: 'Pointer les canons', cost: $('A10'), effect: { loy: { ourk: 2 }, mem: ['signal_guerre'] }, reply: 'Vous pointez les canons vers le ciel. Le signal se tait. Il prend des notes.' },
@@ -188,7 +189,7 @@ export const crisisCards = [
       { label: 'Couvre-feu', warn: 'Sans {k:15} Armée, un quartier brûle',
         effect: { if: { res: $('A15') }, then: { gain: $('A-4'), reply: 'Couvre-feu. La fin du monde est priée de rentrer avant vingt heures.' },
           else: { quartiers: -1, cause: 'la Panique du Grand Filtre', reply: 'Le couvre-feu a été annoncé. Personne ne l’a respecté. Un quartier brûle de joie.' } } },
-      { label: 'Laisser BRUME calmer la foule', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles', effect: { loy: { sel: -3, troc: -1, brume: 1 } },
+      { label: 'Laisser BRUME calmer la foule', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles : ce sont eux qui paieront', effect: { loy: { sel: -3, troc: -1, brume: 1 } },
         reply: 'BRUME calme la foule avec des statistiques. Personne ne panique plus. Personne ne sourit plus non plus. {H:sel} trouvent ça inhumain.' },
       { label: 'Montrer nos merveilles', req: { jalons: 3 }, effect: { loy: { sel: 1, troc: 1 } },
         reply: 'On montre les merveilles. La foule se calme : on ne détruit pas ce qui est beau. Pas tout de suite.' },

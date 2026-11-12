@@ -157,6 +157,10 @@ export const echoRecalls = [
   { family: 'sel' as const, mem: 'prophetie_gravee', line: 'Elle passe chaque matin devant le rocher de la prophétie. Elle vous fait signe. Le signe veut dire « distrait ».' },
   { family: 'sel' as const, mem: 'prophetie_moquee', line: 'Elle garde un os gravé dans un coffret. Elle ne dit pas ce qui est écrit dessus. Elle sourit en le regardant.', tone: 'neg' as const },
   { family: 'brume' as const, mem: 'feu_brume', line: 'Une petite flamme brûle dans une lanterne à sa ceinture. Elle vient du premier feu de Brume. {Il:brume} ne la prête pas.', tone: 'pos' as const },
+  { family: 'ourk' as const, mem: 'heritage', line: 'Ses ancêtres gardaient déjà les murs de {ancienne}. Il compare. {ancienne} avait de plus beaux murs, et de meilleurs chefs, dit-il.' },
+  { family: 'sel' as const, mem: 'heritage', line: 'Elle prie aussi pour les morts de {ancienne}. Elle dit qu’ils vous regardent. Elle dit qu’ils prennent des notes.' },
+  { family: 'brume' as const, mem: 'heritage', line: '{Il:brume} a retrouvé les calculs de {ancienne}. Ils étaient faux à la troisième décimale. {Il:brume} vous le montre, pour que vous ne recommenciez pas.' },
+  { family: 'troc' as const, mem: 'heritage', line: 'Il possède encore des créances sur {ancienne}. Il espère que vous les honorerez, par solidarité entre civilisations.' },
   { family: 'troc' as const, mem: 'dette_ancestrale', line: 'Il a un caillou gravé dans sa poche. Il le sort parfois, le regarde, fait un calcul, et sourit.' },
 ];
 
@@ -179,6 +183,6 @@ export const memoryOptions: Record<string, import('../core/types').Option[]> = {
     reply: 'La foule lit la prophétie de Mère Sel. Tout était prévu, même la panique. On se calme, rassurés d’avoir été prévus.' }],
   x4_reponse: [{ label: 'Les dernières paroles du sage', req: { mem: 'cigue' }, effect: { loy: { brume: 1 }, mem: ['filtre_passe'] },
     reply: 'Vous envoyez les dernières paroles du philosophe empoisonné. Elles sont longues. Le signal répond : « Enfin quelqu’un qui doute. » Il s’en va.' }],
-  troc_3: [{ label: 'Rappeler la défense de mammouth', req: { mem: 'dette_ancestrale' }, effect: { gain: $('T4'), loy: { troc: -1 } },
-    reply: 'Vous rappelez à {F:troc} la défense de mammouth jamais rendue. Il pâlit, puis vous accorde des conditions d’ancêtre.' }],
+  troc_3: [{ label: 'Rembourser la défense de mammouth', req: { mem: 'dette_ancestrale' }, cost: $('T3'), effect: { loy: { troc: 2 }, unmem: ['dette_ancestrale'], mem: ['dette_soldee'] },
+    reply: 'Vous rendez enfin la défense de mammouth, avec un petit quelque chose. {F:troc} est ému : on ne l’avait jamais remboursé avec huit mille ans d’avance sur les intérêts.' }],
 };

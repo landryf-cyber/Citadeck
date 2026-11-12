@@ -11,11 +11,11 @@ import {
   type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 22;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.95, cards: 3, wonderUpkeep: 1.25 };
+export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.9, cards: 3, wonderUpkeep: 1.25 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -58,7 +58,7 @@ export interface PresageInfo {
   /** surcroît d'intensité de la crise dû aux merveilles, en % */
   envy: number;
   rival: { name: string; leader: string; count: number; next: string; rel: number };
-  legacy?: { from: string; label?: string; testament?: string; heirs: boolean };
+  legacy?: { from: string; label?: string; testament?: string; heirs: boolean; memory?: string };
   /** vivres consommés en fin d'ère */
   upkeep: number;
   /** ce dont la crise aura besoin, au plus ; et si l'on bâtit la merveille avant */
@@ -107,6 +107,8 @@ export interface Setup {
   unlocked?: string[];
   /** Âge de fer (débloqué) : crises plus dures */
   iron?: boolean;
+  /** cartes vues à la partie précédente : tirées en dernier */
+  avoid?: string[];
 }
 
 export type Ev =
@@ -174,7 +176,7 @@ export interface View {
 }
 
 const clampLoy = (v: number) => Math.max(-3, Math.min(3, v));
-const ONE_SHOT = new Set(['evenement', 'rencontre', 'rivale', 'decouverte']);
+const ONE_SHOT = new Set(['evenement', 'rencontre', 'rivale', 'decouverte', 'hommage']);
 
 export class Engine {
   constructor(public readonly c: Content) {}
@@ -209,7 +211,7 @@ export class Engine {
       deck: [...(origin.deck ?? [])],
       jalons: [false, false, false, false, false],
       rivalRel: 0,
-      rivalJalons: 0,
+      rivalJalons: 1, // la rivale a déjà dressé sa première merveille
       pool: [],
       visits: { ourk: -1, sel: -1, brume: -1, troc: -1 },
       spent: [],
@@ -227,6 +229,7 @@ export class Engine {
       unlocked: [...(setup.unlocked ?? [])],
       jalonAlt: [],
       iron: !!setup.iron,
+      avoid: [...(setup.avoid ?? [])],
     };
     this.applyLegacy(s);
     this.buildPool(s, rng);
@@ -244,14 +247,16 @@ export class Engine {
     if (lg?.gain) for (const res of RES) s.res[res] = Math.max(0, s.res[res] + (lg.gain[res] ?? 0) * k);
     if (lg?.quartiers) s.quartiers = Math.max(1, s.quartiers + lg.quartiers);
     const loy: Partial<Record<FamilyId, number>> = { ...(lg?.loy ?? {}) };
-    // les Héritiers vivent dans les murs des morts : leurs amitiés et leurs haines aussi
-    if (heirs && r.ally) loy[r.ally] = (loy[r.ally] ?? 0) + 1;
-    if (heirs && r.enemy) loy[r.enemy] = (loy[r.enemy] ?? 0) - 1;
+    // les familles se souviennent de la cité précédente : celle qui l'aimait vous fait confiance, celle qui la haïssait se méfie
+    // (doublé pour les Héritiers, qui vivent dans les murs des morts)
+    if (r.ally) loy[r.ally] = (loy[r.ally] ?? 0) + k;
+    if (r.enemy) loy[r.enemy] = (loy[r.enemy] ?? 0) - k;
     for (const f of FAMILIES) {
       const d = loy[f] ?? 0;
       if (d && s.fam[f].state === 'presente') s.fam[f].loy = Math.max(-2, Math.min(2, s.fam[f].loy + d));
     }
-    if (lg) s.mem.push('heritage');
+    s.mem.push('heritage');
+    s.memo.heritage = { label: r.testament ?? '', date: 'avant vous', title: r.name, era: -1 };
   }
 
   /** Ce que les textes peuvent dire de la civilisation précédente. */
@@ -274,6 +279,15 @@ export class Engine {
     if (!alt) return this.c.crises[s.era];
     const h = Math.abs(Math.imul(s.seed ^ (s.era * 40503), 2246822519)) >>> 0;
     return h % 2 ? alt : this.c.crises[s.era];
+  }
+
+  /** Tire n cartes en préférant celles que la partie précédente n'a pas montrées. */
+  private freshFirst(s: GameState, ids: string[], n: number, rng: Rng): string[] {
+    const avoid = s.avoid ?? [];
+    const fresh = ids.filter((id) => !avoid.includes(id));
+    const seen = ids.filter((id) => avoid.includes(id));
+    const a = rng.sample(fresh, Math.min(n, fresh.length));
+    return [...a, ...rng.sample(seen, Math.min(n - a.length, seen.length))];
   }
 
   /** Contenu verrouillé par la méta-progression. */
@@ -471,7 +485,11 @@ export class Engine {
       if (blocked.length) {
         const o = blocked.sort((a, b) => Object.values(a.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0) - Object.values(b.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0))[0];
         const lender = s.fam.troc.state === 'presente' ? 'troc' : null;
-        const effect: Effect = lender ? { ...o.effect, loy: { ...(o.effect.loy ?? {}), troc: (o.effect.loy?.troc ?? 0) - 2 } } : { ...o.effect, rival: (o.effect.rival ?? 0) - 1 };
+        // le crédit a un prix différé : une créance tombera quelques cartes plus tard (sablier)
+        const due = { card: lender ? 'creance' : 'creance_rivale', in: 3 };
+        const effect: Effect = lender
+          ? { ...o.effect, loy: { ...(o.effect.loy ?? {}), troc: (o.effect.loy?.troc ?? 0) - 1 }, sched: [...(o.effect.sched ?? []), due] }
+          : { ...o.effect, rival: (o.effect.rival ?? 0) - 1, sched: [...(o.effect.sched ?? []), due] };
         return [...opts, { ...o, label: `${o.label} (à crédit)`, cost: undefined, effect, credit: true }];
       }
     }
@@ -512,8 +530,8 @@ export class Engine {
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
       const alt = this.jalonAltOf(s, s.era);
-      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}. On vient de loin pour l’admirer ; {rival} viennent surtout prendre des mesures. ${j.gift}` }];
-      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `Le chantier est achevé : ${alt.name.charAt(0).toLowerCase()}${alt.name.slice(1)}. Personne n’avait jamais vu ça, et {rival} non plus. ${alt.gift}` });
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.built ?? `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}.`} ${j.gift}` }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `${alt.built ?? `Le chantier est achevé : ${alt.name.charAt(0).toLowerCase()}${alt.name.slice(1)}.`} ${alt.gift}` });
       opts.push({ label: 'Pas cette fois', effect: {}, reply: [
         'Les plans retournent dans un coffre. Le coffre est plein de plans.',
         'Les architectes rangent leurs maquettes. Ils les dépoussièrent chaque matin, en soupirant.',
@@ -721,7 +739,10 @@ export class Engine {
       crisis: { name: cr.name, intro: fill(cr.intro, s, this.c), protects: ((t) => t.charAt(0).toLowerCase() + t.slice(1))(fill(cr.protects, s, this.c)) },
       envy: built > 0 ? Math.round((k - 1) * 100) : 0,
       rival: { name: capitalize(rv.name), leader: capitalize(rv.leader[s.era]), count: s.rivalJalons, next: rv.jalons[Math.min(4, s.rivalJalons)], rel: s.rivalRel },
-      legacy: s.era === 0 && r0 ? { from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers' } : undefined,
+      legacy: s.era === 0 && r0 ? {
+        from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers',
+        memory: [r0.ally ? `${capitalize(this.c.families[r0.ally].house[0])} servaient ${r0.name} jusqu’au bout : ils vous font confiance d’avance.` : '', r0.enemy ? `${capitalize(this.c.families[r0.enemy].house[0])} haïssaient ${r0.name} : ils se méfient déjà de vous.` : ''].filter(Boolean).join(' ') || undefined,
+      } : undefined,
       upkeep: this.upkeepOf(s),
       needs: this.crisisNeeds(s),
       needsIfBuilt: s.jalons[s.era] ? undefined : this.crisisNeeds({ ...s, jalons: s.jalons.map((b, i) => b || i === s.era) }).bag,
@@ -960,7 +981,8 @@ export class Engine {
     // les échos du passé passent d'abord : un souvenir qui revient ne doit rien au hasard
     const echoes = events.filter((id) => this.c.cards[id].echo);
     const plain = events.filter((id) => !this.c.cards[id].echo);
-    pool.push(...echoes, ...rng.sample(plain, Math.max(0, Math.min(plain.length, 2 - Math.min(1, echoes.length)))));
+    const n = Math.max(0, Math.min(plain.length, 2 - Math.min(1, echoes.length)));
+    pool.push(...echoes, ...this.freshFirst(s, plain, n, rng));
     const bucket = s.rivalRel <= -1 ? this.c.rivalCards.hostile : s.rivalRel >= 1 ? this.c.rivalCards.friendly : this.c.rivalCards.neutral;
     const rv = bucket.filter((id) => this.available(s, this.c.cards[id]) && !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
     if (rv.length) pool.push(rng.pick(rv));
@@ -1010,7 +1032,7 @@ export class Engine {
     const pile: string[] = [];
     let enc = r.encounters.filter((id) => !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
     if (routeId === 'inconnu' && s.ruins.length && !s.spent.includes(this.c.ruinsCard) && s.era >= 1) enc = [this.c.ruinsCard];
-    if (enc.length) pile.push(rng.pick(enc));
+    if (enc.length) pile.push(...this.freshFirst(s, enc, 1, rng));
     if (r.family) {
       s.visits[r.family] = s.era;
       const fc = s.pool.find((id) => this.c.cards[id]?.family === r.family && this.c.cards[id].kind === 'famille');
@@ -1218,12 +1240,13 @@ export class Engine {
     if (step === 'proces') {
       const fams = this.present(s);
       // la famille la plus lésée : loyauté basse et un grief précis dans le journal
-      const angry = fams.filter((f) => s.fam[f].loy <= -1 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+      // un procès seulement pour une rancune grave
+      const angry = fams.filter((f) => s.fam[f].loy <= -2 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
       if (angry) {
         const others = fams.filter((f) => f !== angry).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
         return { card: 'proces', plaintiff: angry, quote: this.worstAct(s, angry), qui: others };
       }
-      const fond = fams.filter((f) => s.fam[f].loy >= 1 && this.bestAct(s, f) >= 0).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
+      const fond = fams.filter((f) => s.fam[f].loy >= 1 && this.bestAct(s, f) >= 0 && !s.spent.includes(`hommage_${f}`)).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
       if (fond) return { card: `hommage_${fond}`, quote: this.bestAct(s, fond) };
       return null;
     }
@@ -1266,7 +1289,8 @@ export class Engine {
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
       if (d >= 0 || !this.citable(s, i)) return;
-      const score = -d * 10 + (s.era - h.era) * 7;
+      // la gravité d'abord (une arrestation pèse plus qu'une médaille refusée), l'ancienneté ensuite
+      const score = -d * 15 + (s.era - h.era) * 5;
       if (score >= top) {
         top = score;
         best = i;
@@ -1331,7 +1355,8 @@ export class Engine {
     const jalons = s.jalons.filter(Boolean).length;
     if (type === 'victoire') {
       // le dessein n'est accompli qu'avec son cinquième jalon ; sinon, on a seulement survécu
-      const rank = jalons >= 5 ? 'triomphe' : jalons >= 3 && jalons >= s.rivalJalons ? 'victoire' : 'survie';
+      // victoire : quatre merveilles ; triomphe : les cinq ; en dessous, on a seulement survécu
+      const rank = jalons >= 5 ? 'triomphe' : jalons >= 4 ? 'victoire' : 'survie';
       s.result = { type, rank, ending: s.jalons[4] ? this.dessein(s).ending : undefined, jalons };
     } else {
       const last = s.losses[s.losses.length - 1];

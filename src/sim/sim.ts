@@ -29,6 +29,7 @@ export interface RunStats {
   /** décisions par ère, et celles où une seule option était jouable */
   perEra: number[];
   forcedEra: number[];
+  rank: string;
 }
 
 const DEP_RX = /\{\?(mem|loy|card|jalon|state):|\{Q:|\{D:/;
@@ -40,7 +41,7 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
   const s = e.newGame(seed, { dessein, ruins: opts.ruins });
   const st: RunStats = {
     seed, profile: p.name, dessein, win: false, era: 0, jalons: 0, decisions: 0, dependent: 0, forms: new Set(),
-    arcsOpen: 0, arcsDone: 0, trials: 0, losses: [], mem: [], path: [], lines: [], rivalJalons: 0, quartiers: 0, perEra: [0, 0, 0, 0, 0], forcedEra: [0, 0, 0, 0, 0],
+    arcsOpen: 0, arcsDone: 0, trials: 0, losses: [], mem: [], path: [], lines: [], rivalJalons: 0, quartiers: 0, perEra: [0, 0, 0, 0, 0], forcedEra: [0, 0, 0, 0, 0], rank: '',
   };
   const L = (x: string) => opts.transcript && st.lines.push(x);
   L(`# ${s.name} — dessein « ${e.dessein(s).name} » — rivale : ${e.rival(s).name} — profil ${p.name}`);
@@ -95,6 +96,7 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
     }
   }
   st.win = s.result?.type === 'victoire';
+  st.rank = s.result?.rank ?? '';
   st.era = s.era;
   st.jalons = s.jalons.filter(Boolean).length;
   st.arcsOpen = s.arcs.open.length;

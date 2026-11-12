@@ -164,7 +164,7 @@ export class App {
         for (const d of this.e.c.desseins) {
           const reqs = d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ');
           const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux, merveilles' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux, merveilles' : 'découvertes de Culture, familles dévouées, merveilles';
-          const t = el('button', `tile${d.id === dessein ? ' sel' : ''}`, `<em>${esc(d.tag)} · 5 merveilles</em><b>${esc(d.name)}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span><span class="req-line">Les merveilles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>`);
+          const t = el('button', `tile${d.id === dessein ? ' sel' : ''}`, `<em>${esc(d.tag)} · 5 merveilles</em><b>${esc(d.name)}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span><span class="req-line">Victoire : 4 merveilles ; triomphe : les 5. Elles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>`);
           t.addEventListener('click', () => {
             dessein = d.id;
             this.audio.ui();
@@ -351,8 +351,9 @@ export class App {
       .join('');
     const cls = fi.state !== 'presente' ? 'gone' : fi.loy <= -2 ? 'hostile' : fi.loy >= 2 ? 'devoted' : '';
     const short = fi.house.replace(/^Les /, '');
+    const anc = ({ ourk: 'Ourk', sel: 'Sel', brume: 'Brume', troc: 'Troc' } as Record<string, string>)[fi.id];
     return `<button class="fam ${cls}" data-f="${fi.id}" aria-label="${esc(fi.house)} : ${esc(fi.mood)}">${this.famSvg(fi, 34, this.s!.era)}
-      <span class="fn"><span class="fh">${esc(short)}</span><span class="pips">${pips}</span><span class="fm">${esc(fi.mood)}</span></span>
+      <span class="fn"><span class="fh"><span class="long">${esc(short)}</span><span class="short">${esc(anc)}</span></span><span class="pips">${pips}</span><span class="fm">${esc(fi.mood)}</span></span>
       ${fi.neglected ? `<span class="neg-mark" title="Délaissés">${ICON.warn}</span>` : ''}<span class="fdelta"></span></button>`;
   }
 
@@ -403,7 +404,8 @@ export class App {
     const head = v.header ?? (v.kind === 'famille' && fi ? fi.house : KIND_LABEL[v.kind] ?? '');
     const from = s.prompt?.from;
     const card = el('article', `card enter${v.kind === 'crise' || v.kind === 'trahison' ? ' alarm' : ''}`);
-    card.innerHTML = `<div class="card-art">${cardArt(this.artFor(v))}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
+    const art = v.kind === 'jalon' ? this.wonderArt(s) : cardArt(this.artFor(v));
+    card.innerHTML = `<div class="card-art">${art}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
       <div class="card-body"><h2 class="card-title">${esc(v.title)}</h2>${v.speaker && v.kind !== 'carrefour' ? `<p class="card-speaker">${esc(v.speaker)}</p>` : ''}<div class="card-rule"></div><p class="card-text">${rich(v.text)}</p></div>`;
     const opts = el('div', 'opts');
     v.options.forEach((o, i) => opts.appendChild(this.optButton(o, i, v)));
@@ -419,6 +421,15 @@ export class App {
       if (n >= 1 && n <= v.options.length) void this.choose(n - 1);
     };
     this.cardHints(v);
+  }
+
+  /** Le chantier montre la (ou les) silhouette(s) de la merveille, telle qu'elle se dressera dans la cité. */
+  private wonderArt(s: GameState): string {
+    const j = this.e.dessein(s).jalons[s.era];
+    const alt = this.e.jalonAltOf(s, s.era);
+    const shapes = alt ? [j.shape, alt.shape] : [j.shape];
+    const imgs = shapes.map((sh) => `<img src="${wonderIcon(sh, 38, 220).toDataURL()}" alt="">`).join('');
+    return `<div class="wonder-art">${imgs}</div>`;
   }
 
   private optButton(o: OptionView, i: number, v: View): HTMLButtonElement {
@@ -586,7 +597,8 @@ export class App {
       if (p.legacy) {
         inner.appendChild(el('div', 'panel legacy', `<h3>L’héritage de ${esc(p.legacy.from)}</h3>
           ${p.legacy.testament ? `<p>Sur leur stèle : <q>« ${esc(p.legacy.testament)} »</q></p>` : ''}
-          ${p.legacy.label ? `<p class="note">${esc(p.legacy.label)}${p.legacy.heirs ? ' (compté double : vous êtes leurs héritiers)' : ''}.</p>` : ''}`));
+          ${p.legacy.label ? `<p class="note">${esc(p.legacy.label)}${p.legacy.heirs ? ' (compté double : vous êtes leurs héritiers)' : ''}.</p>` : ''}
+          ${p.legacy.memory ? `<p class="note">${esc(p.legacy.memory)}</p>` : ''}`));
       }
       const stars = `<span class="stars">${[0, 1, 2, 3, 4].map((i) => `<i class="${s.jalons[i] ? 'on' : ''}"></i>`).join('')}</span>`;
       const jal = p.jalon
@@ -595,7 +607,7 @@ export class App {
           ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}${p.alt.req ? `<span class="note">· exige ${esc(p.alt.req)}</span>` : ''}</div><p class="note">${esc(p.alt.gift)}</p>` : ''}`
         : '<p class="note">Le jalon de cette ère est déjà debout.</p>';
       const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
-      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise.</p>${nxt}`));
+      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>${nxt}`));
       const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
       const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
       const fams = p.needs.families.length ? `<p class="note">Ce qui aide aussi : ${esc(p.needs.families.join(', '))}.</p>` : '';
@@ -629,6 +641,7 @@ export class App {
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
+      if (x.type === 'annex') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(capitalize(x.name))} annexent un quartier.</b> Leur dessein est achevé ; ils s’étendent, sauf chez leurs amis.` });
       if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
     }
     if (!lines.length) return Promise.resolve();
@@ -670,7 +683,7 @@ export class App {
       await this.banner('La chute', `${s.name} est tombée`, 'crisis');
     } else {
       this.audio.victory();
-      await this.banner(r.ending ? 'Dessein accompli' : 'La fin des temps', s.name, 'gold');
+      await this.banner(r.rank === 'triomphe' ? 'Triomphe' : r.rank === 'victoire' ? 'Victoire' : 'Survie', s.name, 'gold');
     }
     if (this.s !== s) return;
     await this.timelapse(s);
@@ -729,7 +742,8 @@ export class App {
     }).join('');
     this.openScreen('veil end', (inner) => {
       const shadow = r.type === 'victoire' && !r.ending && s.rivalJalons >= 5;
-      inner.innerHTML = `<div class="over">${r.type === 'defaite' ? `Défaite · ${esc(ERA_NAMES[s.era])}` : r.ending ? 'Dessein accompli' : shadow ? `Survie, dans l’ombre de ${esc(this.e.rival(s).name)}` : 'Survie · dessein inachevé'}</div>
+      const label = r.rank === 'triomphe' ? 'Triomphe · dessein accompli' : r.rank === 'victoire' ? `Victoire · ${r.jalons} merveilles sur 5` : r.type === 'defaite' ? `Chute · ${esc(ERA_NAMES[s.era])}` : shadow ? `Survie, dans l’ombre de ${esc(this.e.rival(s).name)}` : 'Survie · dessein inachevé';
+      inner.innerHTML = `<div class="over">${label}</div>
         <h2 class="big">${esc(s.name)}</h2><p class="epitaph">${esc(ep)}</p>
         <div class="panel"><div class="row" style="justify-content:space-between"><span>Ère atteinte : <b>${ROMAN[s.era]}</b></span><span>Merveilles : <b>${r.jalons}/5</b></span><span>Rivale : <b>${s.rivalJalons}/5</b></span></div></div>
         ${losses ? `<div class="panel"><h3>${r.type === 'defaite' ? 'Ce qui l’a perdue' : 'Ses blessures'}</h3><ul class="losses">${losses}</ul></div>` : ''}`;

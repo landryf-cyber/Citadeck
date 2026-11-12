@@ -24,7 +24,7 @@ export function newMeta(): MetaState {
 export function loadMeta(raw: unknown): MetaState {
   const m = raw as MetaState | null;
   if (!m || typeof m !== 'object' || m.version !== META_VERSION || !Array.isArray(m.chronicle)) return newMeta();
-  return { version: META_VERSION, runs: m.runs | 0, chronicle: m.chronicle, unlocked: m.unlocked ?? [], feats: m.feats ?? [] };
+  return { version: META_VERSION, runs: m.runs | 0, chronicle: m.chronicle, unlocked: m.unlocked ?? [], feats: m.feats ?? [], lastSeen: m.lastSeen ?? [] };
 }
 
 // ============================================================================ déblocages
@@ -85,7 +85,7 @@ export function featsOf(e: Engine, s: GameState): string[] {
   if (s.era >= 4) out.push('ere5');
   if (s.jalons.filter(Boolean).length >= 3) out.push('jalons3');
   if (s.jalons[2]) out.push(`jalon3_${s.dessein}`);
-  if (s.result?.type === 'victoire' && s.result.ending) out.push('victoire', `victoire_${s.dessein}`);
+  if (s.result?.rank === 'triomphe' || s.result?.rank === 'victoire') out.push('victoire', `victoire_${s.dessein}`);
   if (s.result?.type === 'defaite') out.push('chute');
   if (s.result?.type === 'defaite' && /famine/.test(s.result.cause ?? '')) out.push('famine');
   if (s.mem.includes('ruines_fouillees')) out.push('fouille');
@@ -196,17 +196,17 @@ export function epitaph(e: Engine, s: GameState): string {
   const n = s.jalons.filter(Boolean).length;
   if (s.result?.type === 'victoire' && !s.result.ending) {
     if (n >= 3) return pick(s, 4, [`Si près ${de(d)}. Il manquait une merveille, et un peu de temps.`, `${n} merveilles, et ${d} à portée de main.`]);
-    return pick(s, 4, ['A traversé dix mille ans sans rien bâtir de mémorable. Une performance.', `Voulait ${d}. A eu la vie sauve, ce qui n’est pas rien.`]);
+    return pick(s, 4, ['Elle a traversé dix mille ans sans rien bâtir de mémorable. Une performance.', `Elle voulait ${d}. Elle a eu la vie sauve, ce qui n’est pas rien.`]);
   }
   if (s.result?.type === 'victoire') {
     return pick(s, 4, {
-      etoiles: ['A touché les étoiles. Les étoiles n’ont rien dit.', 'Partie pour les étoiles. A oublié d’éteindre.'],
-      empire: ['A soumis la vallée, qui ne l’a jamais aimée.', 'A tout conquis. Puis s’est ennuyée.'],
+      etoiles: ['Elle a touché les étoiles. Les étoiles n’ont rien dit.', 'Partie pour les étoiles. A oublié d’éteindre.'],
+      empire: ['Elle a soumis la vallée, qui ne l’a jamais aimée.', 'Elle a tout conquis. Puis elle s’est ennuyée.'],
       posterite: ['Chantée pour toujours, généralement faux.', 'Inoubliable. Personne n’a essayé.'],
     }[s.dessein] ?? ['A gagné.']);
   }
   const cause = s.result?.cause ?? 'l’usure';
-  if (s.era === 0) return pick(s, 4, [`Rêvait ${de(d)}. N’a pas passé l’âge de pierre.`, `Voulait ${d}. A eu ${cause}, très tôt.`]);
+  if (s.era === 0) return pick(s, 4, [`Rêvait ${de(d)}. N’a pas passé l’âge de pierre.`, `Elle voulait ${d}. Elle a eu ${cause}, très tôt.`]);
   if (n >= 3) return pick(s, 4, [`${n} merveilles debout, puis ${cause}.`, `Si près ${de(d)}. Puis ${cause}.`]);
   return pick(s, 4, [`Voulait ${d}, eut ${cause}.`, `Visait ${d}. ${capitalize(cause)} l’a visée d’abord.`]);
 }
@@ -255,7 +255,8 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   else lines.push('Aucune famille ne l’a vraiment aimée. Ni haïe. C’est pire.');
   if (gone.length) lines[lines.length - 1] += ` ${capitalize(listFr(gone.map((f) => e.c.families[f].house[s.era])))} sont partis chez ${e.rival(s).name}.`;
   const shadow = s.rivalJalons >= 5 && !s.result?.ending ? `, dans l’ombre de ${e.rival(s).name}` : '';
-  const end = s.result?.type === 'victoire' ? `${s.result.ending ? 'Dessein accompli' : 'A survécu'}${shadow}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
+  const rk = s.result?.rank;
+  const end = s.result?.type === 'victoire' ? `${rk === 'triomphe' ? 'Triomphe, dessein accompli' : rk === 'victoire' ? 'Victoire, quatre merveilles debout' : 'A survécu'}${rk === 'survie' ? shadow : ''}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
   lines.push(testament ? `${end} Derniers mots : « ${testament} »` : end);
   return lines.map((l) => polish(l.replace(/\s{2,}/g, ' ')));
 }
@@ -303,6 +304,7 @@ export function recordRun(meta: MetaState, e: Engine, s: GameState, testament?: 
     chronicle: [entry, ...meta.chronicle].slice(0, CHRONICLE_MAX),
     unlocked: [...meta.unlocked],
     feats: [...meta.feats, ...fresh],
+    lastSeen: s.history.map((h) => h.card).filter((id) => ['evenement', 'rencontre', 'rivale'].includes(e.c.cards[id]?.kind ?? '')),
   };
   const unlocked = UNLOCKS.filter((u) => !next.unlocked.includes(u.id) && u.test(next));
   next.unlocked.push(...unlocked.map((u) => u.id));
@@ -319,5 +321,6 @@ export function nextSetup(meta: MetaState, choice: { dessein: string; origin?: s
     ruins: meta.chronicle.slice(0, 3),
     unlocked: meta.unlocked,
     iron: !!choice.iron && meta.unlocked.includes('fer'),
+    avoid: meta.lastSeen ?? [],
   };
 }

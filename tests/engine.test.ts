@@ -130,3 +130,16 @@ describe('honnêteté des indicateurs', () => {
     expect([...new Set(bad)]).toEqual([]);
   });
 });
+
+describe('pas de redite', () => {
+  it('un événement, une rencontre, une lettre ou une découverte ne se joue qu’une fois par partie', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const rng = new Rng(seed * 31);
+      const s = e.newGame(seed, { dessein: content.desseins[seed % 3].id });
+      let g = 0;
+      while (s.phase !== 'fin' && g++ < 400) e.act(s, chooseIndex(e, s, PROFILES[seed % PROFILES.length], rng));
+      const ids = s.history.map((h) => h.card).filter((id) => id !== 'decouverte' && ['evenement', 'rencontre', 'rivale', 'decouverte'].includes(content.cards[id].kind));
+      expect(ids.length, `graine ${seed}`).toBe(new Set(ids).size);
+    }
+  });
+});

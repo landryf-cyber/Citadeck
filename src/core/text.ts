@@ -79,6 +79,7 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
       else if ((m = test.match(/^state:(\w+)=(\w+)$/))) ok = s.fam[m[1] as FamilyId]?.state === m[2];
       else if ((m = test.match(/^ruins(>=|<=|>|<|=)(\d+)$/))) ok = compare(s.ruins.length, m[1], Number(m[2]));
       else if ((m = test.match(/^legacy$/))) ok = !!s.ruins[0]?.legacy;
+      else if (test === 'lossera') ok = s.losses.some((l) => l.era === s.era);
       else if ((m = test.match(/^rv:(\w+)$/))) ok = s.rival === m[1];
       else if (test === 'rivalshe') ok = !!(c.rivals.find((r) => r.id === s.rival) ?? c.rivals[0]).she;
       return ok ? yes : no;
@@ -116,6 +117,7 @@ export function polish(text: string): string {
   out = out
     .replace(/\b([dD])es les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
     .replace(/\b([dD])e les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
+    .replace(/\b([dD]e|[qQ]ue) (?=[AEIOUÉÈÊ][a-zéèêàâîôûç])/g, (_m, w: string) => `${w.slice(0, -1)}’`)
     .replace(/(^|[\s'’(«])([àÀ]) les (?=[A-ZÉÈ])/g, (_m, p: string, a: string) => p + (a === 'à' ? 'aux ' : 'Aux '))
     .replace(/\b([dD])e le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'du ' : 'Du '))
     .replace(/(^|[\s'’(«])([àÀ]) le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, p: string, a: string) => p + (a === 'à' ? 'au ' : 'Au '));

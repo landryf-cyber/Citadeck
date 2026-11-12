@@ -13,11 +13,12 @@ import { moods, recalls } from './moods';
 import { moreEncounters, moreEvents, moreRival } from './more';
 import { echoEvents, echoFamilyCards, echoRecalls, memoryOptions } from './echoes';
 import { crisisAltCards, crisisAlts } from './crises2';
+import { familyAltCards, familyAltRecalls } from './familyAlts';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards,
 ];
 
 // hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
@@ -90,7 +91,7 @@ export const content: Content = {
   ruinsCard: 'ruines',
   revenantCard: 'revenants',
   moods,
-  recalls: [...recalls, ...echoRecalls],
+  recalls: [...recalls, ...echoRecalls, ...familyAltRecalls],
 };
 
 export const CARD_COUNT = all.filter((c) => !['presage', 'carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(c.kind)).length;

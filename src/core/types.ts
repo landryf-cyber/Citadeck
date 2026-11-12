@@ -179,6 +179,8 @@ export interface Jalon {
   gift: string;
   /** silhouette dans la scène */
   shape: string;
+  /** l'inauguration, propre à chaque merveille */
+  built?: string;
   /** variante débloquée par la méta-progression (proposée au chantier) */
   alt?: Jalon & { lock: string };
 }
@@ -307,7 +309,7 @@ export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fi
 
 export interface Result {
   type: 'victoire' | 'defaite';
-  /** palier de fin : triomphe (cinq merveilles), victoire (au moins trois, et pas moins que la rivale), survie, chute */
+  /** palier de fin : triomphe (cinq merveilles), victoire (quatre), survie (moins), chute */
   rank?: 'triomphe' | 'victoire' | 'survie' | 'chute';
   ending?: 'science' | 'military' | 'culture';
   jalons: number;
@@ -371,6 +373,8 @@ export interface GameState {
   jalonAlt: number[];
   /** Âge de fer : crises plus dures */
   iron: boolean;
+  /** cartes vues à la partie précédente (tirées en dernier) */
+  avoid?: string[];
 }
 
 /** Ce qu'une civilisation morte laisse aux suivantes. */
@@ -426,4 +430,6 @@ export interface MetaState {
   unlocked: string[];
   /** faits accomplis (servent aux déblocages) */
   feats: string[];
+  /** événements, rencontres et lettres vus à la dernière partie */
+  lastSeen?: string[];
 }

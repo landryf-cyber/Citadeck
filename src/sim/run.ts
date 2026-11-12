@@ -81,6 +81,11 @@ const jac = (a: string[], b: string[]) => {
 console.log(`Distance entre deux histoires (cartes et choix) : ${mean(lr.slice(1, 60).map((r, i) => jac(r.path, lr[i].path))).toFixed(2)} ; souvenirs : ${mean(lr.slice(1, 60).map((r, i) => jac(r.mem, lr[i].mem))).toFixed(2)}`);
 const endings = new Map<string, number>();
 for (const r of lr.filter((x) => x.win)) endings.set(r.dessein, (endings.get(r.dessein) ?? 0) + 1);
+for (const n of ['lecteur', 'prudent', 'gourmand']) {
+  const rs = res.get(n)!;
+  const c = (k: string) => pct(rs.filter((r) => r.rank === k).length / rs.length);
+  console.log(`Paliers de fin (${n}) : triomphe ${c('triomphe')} · victoire ${c('victoire')} · survie ${c('survie')} · chute ${c('chute')}`);
+}
 {
   const rs = res.get('lecteur')!;
   const per = [0, 1, 2, 3, 4].map((e) => rs.reduce((a, r) => a + r.perEra[e], 0));

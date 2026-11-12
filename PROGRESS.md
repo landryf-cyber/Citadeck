@@ -13,7 +13,7 @@ Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md`
 - V1 retirée (historique git), arborescence aplatie, README et DECISIONS à jour
 - Tests : contenu, moteur (pas de blocage, déterminisme, gabarits résolus), méta, rejeu — `npm test`
 - Captures : `npm run shots` (mobile + bureau, ~19 écrans) ; perf : `npm run perf -- 2` ; scène seule : `npx tsx scripts/scene.ts` ; planches d'animation : `npx tsx scripts/film.ts` (à réparer : le saut vers le chantier)
-- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E10 (`TUNING crisisK 1.3, envie 0.15, entretien 1.5 + 1.25 par merveille, gains ×0.95, 3 cartes par saison`)
+- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E11 (`TUNING crisisK 1.4, envie 0.15, entretien 1.5 + 1.25 par merveille, gains ×0.9, 3 cartes par saison`, rivale à 1 merveille au départ)
 - Joueur en mode texte pour testeurs : `npx tsx scripts/play.ts new <dossier> [dessein] [origine] [graine]`
 - Introduction des quatre familles au premier lancement ; ruines et rivale lisibles sur la crête ; sons du procès et des ruines
 - Rapport de l'éditeur (agent) : `scratchpad/rapport-editeur.md` ; notes du joueur A (arrêté par la limite d'usage) : `scratchpad/notesA.txt`
@@ -50,13 +50,13 @@ P4 variété
 - Trois faiblesses : (1) impasses et enjeux sans dents ; (2) squelette répétitif ; (3) cohérence, héritage mince, illustrations génériques.
 ## Tour 2 de corrections (en cours, dans la copie de travail `../citadeck-dev`, branche `tour-juges-2`, à fusionner dans la branche de travail)
 - [x] paliers de fin (triomphe, victoire, survie, chute), rivale qui annexe un quartier par ère après son triomphe, crédit quand une seule option est jouable, une perte de quartier au plus par famille et par ère
-- [ ] procès seulement pour les rancunes graves (−2), hommage une fois par famille, griefs pondérés par la gravité
-- [ ] Grand Filtre : le dessein répond dès le premier acte
-- [ ] une inauguration écrite pour chaque merveille ; fins de crise selon leur issue
-- [ ] la partie suivante écarte les cartes vues à la précédente ; les familles se souviennent de la cité précédente
-- [ ] cohérence : dette de mammouth, élisions (« d'Ourk »), « À », libellés
-- [ ] interface : paliers de fin, annexion au bilan, noms courts sur mobile, carte plus grande sur bureau, silhouettes des merveilles en illustration
-- [ ] variantes de cartes de famille pour les ères IV et V
+- [x] procès seulement pour les rancunes graves (−2), hommage une fois par famille, griefs pondérés par la gravité
+- [x] Grand Filtre : le dessein répond dès le premier acte
+- [x] une inauguration écrite pour chaque merveille ; fins de crise selon leur issue
+- [x] la partie suivante écarte les cartes vues à la précédente ; les familles se souviennent de la cité précédente
+- [x] cohérence : dette de mammouth, élisions (« d'Ourk »), « À », libellés
+- [x] interface : paliers de fin, annexion au bilan, noms courts sur mobile, carte plus grande sur bureau, silhouettes des merveilles en illustration
+- [x] variantes de cartes de famille pour les ères IV et V
 - [ ] mesures, tests, fusion, republication, puis trois nouveaux juges
 
 ## Reste à faire (dans l'ordre)
