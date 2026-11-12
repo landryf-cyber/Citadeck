@@ -337,6 +337,14 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   .opt-label { font-size: 16px; }
   .opt { padding: 11px 12px; }
 }
+/* grand bureau : la carte prend plus de place, la cité reste autour */
+@media (min-width: 1200px) and (min-height: 760px) {
+  :root { --card-w: 660px; }
+  .card-art { height: 176px; }
+  .card-title { font-size: 30px; }
+  .card-text { font-size: 18.5px; }
+  .opt-label { font-size: 17px; }
+}
 /* tablette en portrait : une carte plus grande, pour ne pas laisser un ciel vide sous elle */
 @media (min-width: 700px) and (max-width: 899px) and (min-height: 1000px) {
   :root { --card-w: 620px; }

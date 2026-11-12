@@ -21,6 +21,9 @@ export interface Profile {
   risk: number;
   /** réserve visée par ressource */
   reserve: number;
+  /** bruit d'appréciation (un joueur humain ne voit pas les montants exacts) et part de choix au jugé */
+  noise?: number;
+  blind?: number;
 }
 
 export const PROFILES: Profile[] = [
@@ -31,6 +34,7 @@ export const PROFILES: Profile[] = [
   { name: 'étoiles', sight: 'reader', dessein: 'etoiles', safety: 1, ambition: 1.4, risk: 1, reserve: 4 },
   { name: 'empire', sight: 'reader', dessein: 'empire', safety: 1, ambition: 1.4, risk: 1, reserve: 4 },
   { name: 'postérité', sight: 'reader', dessein: 'posterite', safety: 1, ambition: 1.4, risk: 1, reserve: 4 },
+  { name: 'distrait', sight: 'reader', safety: 1, ambition: 1, risk: 1, reserve: 4, noise: 25, blind: 0.2 },
   { name: 'aléatoire', sight: 'random', safety: 1, ambition: 1, risk: 1, reserve: 0 },
 ];
 
@@ -90,6 +94,7 @@ export function chooseIndex(e: Engine, s: GameState, p: Profile, rng: Rng): numb
   if (p.sight === 'random') return rng.pick(enabled).i;
   if (p.sight === 'indicator') return indicatorChoice(view.options, enabled, rng);
   // lecteur : simule chaque option ; les paris sont estimés sur plusieurs tirages
+  if (p.blind && rng.next() < p.blind) return enabled[rng.int(0, enabled.length - 1)].i;
   let best = enabled[0].i;
   let bestV = -Infinity;
   for (const { o, i } of enabled) {
@@ -103,7 +108,7 @@ export function chooseIndex(e: Engine, s: GameState, p: Profile, rng: Rng): numb
     }
     let v = sum / samples;
     if (o.odds !== undefined) v -= (1 - o.odds) * 30 * (1 - Math.min(1, p.risk));
-    v += rng.range(-3, 3);
+    v += rng.range(-(p.noise ?? 3), p.noise ?? 3);
     if (v > bestV) {
       bestV = v;
       best = i;

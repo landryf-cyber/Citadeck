@@ -125,3 +125,19 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     l'ère où elle sera jouée (plus de philosophe antique en 1810).
 40. **Une silhouette de l'ère dans chaque illustration**, des portraits modelés, des étiquettes lisibles sur
     l'image, une réponse sur fond sombre : la beauté était le critère le plus bas des trois derniers juges.
+41. **Calibrer pour un humain, pas pour le bot (tour 5).** Au tour 4, les trois juges humains ont perdu ou fini sans
+    dessein alors que le bot lecteur survivait à 90 % : il voit les effets exacts. Un profil « distrait » (lecteur
+    bruité, un choix sur cinq au jugé) sert désormais de repère pour la difficulté humaine. Les crises sont allégées
+    (intensité 1,15 au lieu de 1,4, convoitise 0,10), les gains remontent (1,05).
+42. **Plus de bouc émissaire gratuit** : une famille déjà au plus bas n'est plus proposée pour un blâme.
+43. **Le crédit ne peut plus être une affaire** : il coûte au moins un quart de plus que le comptant, un seul à la
+    fois, jamais prêté par des Troc hostiles ; refuser de payer les met en révolte. Une créance peut se payer en
+    nature (Vivres et Armée). La lettre de la rivale ignorée saisit du Trésor plutôt qu'un quartier.
+44. **Des fourchettes chiffrées et fixes** (« +3–5 ») plutôt qu'une ampleur relative à l'ère, que les juges ont lue
+    comme un mensonge (« +++ » valait 5 puis 14) ; « ? » sur les effets qui dépendent de l'issue ; le présage
+    annonce les prix réduits du chantier ; les rachats affichent leur prix exact ; la palissade protège aussi
+    des trahisons, des dettes et des crises (seuls les sacrifices choisis dans une affaire de famille lui échappent).
+45. **La fin garde un adversaire** : le tribut arrive au début de chaque ère, la dernière comprise, et on peut tenter
+    de saboter une merveille rivale pour l'arrêter ; l'épreuve finale est proportionnelle (un quartier à trois
+    merveilles, deux en dessous) ; un hommage peut rebâtir un quartier quand la cité n'en a plus que deux.
+46. **Quelques cartes graves sans chute** (le travail des enfants, la peste) : l'humour ne doit pas tout recouvrir.

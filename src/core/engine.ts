@@ -11,11 +11,11 @@ import {
   type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 24;
+export const SAVE_VERSION = 25;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 0.95, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 1.05, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
@@ -606,14 +606,19 @@ export class Engine {
       return opts;
     }
     if (card.kind === 'hommage') {
-      // une famille reconnaissante peut aussi rebâtir : une occasion de regagner un quartier
+      // une cité en détresse peut compter sur une famille reconnaissante pour rebâtir : une occasion de se relever
       const base = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
+      if (s.quartiers > 2) return base;
       return [...base, { label: 'Qu’ils bâtissent un quartier', effect: { quartiers: 1 }, reply: `{H:${card.family}} bâtissent un quartier à leurs frais. Ils y mettent leur nom partout, même sur les pavés.` }];
     }
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
     const opts = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
     // une créance coûte ce qui a été annoncé au moment du crédit
-    if (p.pay && /^creance/.test(card.id) && opts[0]?.cost?.tresor) return [{ ...opts[0], cost: { tresor: p.pay } }, ...opts.slice(1)];
+    if (p.pay && /^creance/.test(card.id) && opts[0]?.cost?.tresor) {
+      // on peut aussi payer en nature : du grain et des bras, un peu plus cher
+      const half = Math.ceil(p.pay * 0.6);
+      return [{ ...opts[0], cost: { tresor: p.pay } }, { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.' }, ...opts.slice(1)];
+    }
     return opts;
   }
 

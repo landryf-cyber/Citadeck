@@ -143,8 +143,8 @@ export const engineCards = [
     options: [
       { label: 'Payer le tribut', cost: $('T4'), effect: { rival: 1 }, reply: '{Reine} compte devant vous, puis vous rend une pièce : « Pour votre peine. » C’est la pièce la plus chère de votre vie.' },
       { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'le tribut de {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. On y parle déjà comme chez {rival}, avec l’accent.' },
-      { label: 'Refuser, armes à la main', warn: 'Sans {s:6} Armée, ils prennent un quartier de force',
-        effect: { rival: -1, if: { res: $('A6') }, then: { gain: $('A-2'), mem: ['tribut_refuse'], reply: 'Vos soldats tiennent la frontière. {Reine} remballe sa liste. {elle} la gardera pour l’ère prochaine.' },
+      { label: 'Refuser, armes à la main', warn: 'Sans {s:4} Armée, ils prennent un quartier de force',
+        effect: { rival: -1, if: { res: $('A4') }, then: { gain: $('A-2'), mem: ['tribut_refuse'], reply: 'Vos soldats tiennent la frontière. {Reine} remballe sa liste. {elle} la gardera pour l’ère prochaine.' },
           else: { quartiers: -1, cause: '{rival}, venus chercher leur tribut', reply: '{Rival} viennent se servir. Ils emportent un quartier, et laissent une facture pour le dérangement.' } } },
       { label: 'Saboter une de leurs merveilles', cost: $('A3'), effect: { rival: -2, bet: { chance: 0.45, per: { tag: 'Guerre', bonus: 0.1 },
         win: { rivalJalon: -1, reply: 'Une de leurs merveilles s’effondre en pleine nuit. Plus de triomphe, plus de tribut : {reine} doit tout recommencer, et vous regarde autrement.' },
@@ -184,7 +184,7 @@ export const engineCards = [
     options: [
       { label: 'Payer', cost: $('T6'), effect: { rival: 1 }, reply: '{Reine} vous remercie de votre ponctualité, avec une surprise feinte.' },
       { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'la dette envers {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. {Reine} y fait planter des fleurs, pour que vous les voyiez.' },
-      { label: 'Ignorer la lettre', warn: '{Rival} se paieront : une merveille de plus chez eux, ou un de vos quartiers s’ils les ont déjà toutes.', effect: { rival: -2, if: { rivalJalons: 5 }, then: { quartiers: -1, cause: '{rival}, qui se paient sur votre territoire', reply: '{Reine} n’a plus de merveille à bâtir : {elle} se paie en terrain. Un quartier change de drapeau, sans fleurs.' }, else: { rivalJalon: 1, reply: '{Reine} se rembourse en pierres de taille : une merveille de plus chez {rival}.' } } },
+      { label: 'Ignorer la lettre', warn: '{Rival} se paieront : une merveille de plus chez eux, ou votre Trésor s’ils les ont déjà toutes.', effect: { rival: -2, if: { rivalJalons: 5 }, then: { gain: $('T-8'), reply: '{Reine} n’a plus de merveille à bâtir : {elle} se sert dans vos coffres. Les soldats comptent devant vous, et laissent la monnaie.' }, else: { rivalJalon: 1, reply: '{Reine} se rembourse en pierres de taille : une merveille de plus chez {rival}.' } } },
     ],
   }),
   card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation. {objet}, {quand} : vous avez dit {citation}. {depuis}« Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),
