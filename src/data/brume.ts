@@ -102,7 +102,7 @@ export const brumeCards = [
   card({
     id: 'hommage_brume', kind: 'hommage', scale: true, family: 'brume', art: { motif: 'spiral' },
     title: 'La Démonstration',
-    text: '{F:brume} vous fait une démonstration. « À la décimale près, vous avez été utile : {citation}, {quand}. » Il vous offre le fruit de ses recherches.',
+    text: '{F:brume} vous fait une démonstration. {objet}, {quand} : vous aviez dit {citation}. « À la décimale près, vous avez été utile. » {Il:brume} vous offre le fruit de ses recherches.',
     options: [
       { label: 'Ses carnets', effect: { gain: $('S6') }, reply: 'Les carnets sont illisibles. C’est bon signe, dit {F:brume}.' },
       { label: 'Son invention', effect: { gain: $('A3 T3') }, reply: 'L’invention n’a explosé qu’une fois. Pendant la démonstration.' },

@@ -90,7 +90,7 @@ export const selCards = [
   card({
     id: 'hommage_sel', kind: 'hommage', scale: true, family: 'sel', art: { motif: 'eye' },
     title: 'La Bénédiction',
-    text: '{F:sel} vous bénit en public. « Le ciel se souvient : {citation}, {quand}. Le ciel vous offre quelque chose. Gratuitement. Cette fois. »',
+    text: '{F:sel} vous bénit en public. {objet}, {quand} : vous aviez dit {citation}. « Le ciel s’en souvient. Il vous offre quelque chose. Gratuitement. Cette fois. »',
     options: [
       { label: 'Des greniers bénis', effect: { gain: $('V5') }, reply: 'Les greniers sont bénis. Les rats aussi, par erreur.' },
       { label: 'Un miracle', effect: { quartiers: 1 }, reply: 'Un quartier a poussé pendant la nuit. Personne n’ose demander comment.' },

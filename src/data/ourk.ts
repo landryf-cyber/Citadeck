@@ -145,7 +145,7 @@ export const ourkCards = [
   card({
     id: 'hommage_ourk', kind: 'hommage', scale: true, family: 'ourk', art: { motif: 'fang' },
     title: 'Le Banquet des {H:ourk}',
-    text: '{F:ourk} lève sa coupe : « Ourk se souvient. {citation}, {quand}. Ourk boit à ça. » Il propose de vous offrir quelque chose. Quelque chose de lourd.',
+    text: '{F:ourk} lève sa coupe. {objet}, {quand} : vous aviez dit {citation}. « Ourk se souvient. Ourk boit à ça. » Il propose de vous offrir quelque chose. Quelque chose de lourd.',
     options: [
       { label: 'Une garde d’honneur', effect: { gain: $('A5') }, reply: 'La garde d’honneur vous suit partout. Partout.' },
       { label: 'Leurs trophées', effect: { gain: $('T4') }, reply: 'Des crânes dorés. Ils se vendent étonnamment bien.' },

@@ -89,7 +89,7 @@ export const trocCards = [
   card({
     id: 'hommage_troc', kind: 'hommage', scale: true, family: 'troc', art: { motif: 'coin' },
     title: 'Le Dividende',
-    text: '{F:troc} vous verse un dividende. « Nous n’oublions pas nos amis : {citation}, {quand}. Un excellent placement, rétrospectivement. »',
+    text: '{F:troc} vous verse un dividende. {objet}, {quand} : vous aviez dit {citation}. « Nous n’oublions pas nos amis. Un excellent placement, rétrospectivement. »',
     options: [
       { label: 'En espèces', effect: { gain: $('T7') }, reply: 'En espèces. {F:troc} a gardé la commission.' },
       { label: 'En vivres', effect: { gain: $('V6') }, reply: 'En vivres. Avec la date de péremption de {F:troc}.' },

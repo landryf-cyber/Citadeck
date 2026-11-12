@@ -537,6 +537,7 @@ export class Engine {
       const h = s.history[p.quote ?? -1];
       extra.citation = h ? `« ${h.label} »` : '« tout »';
       extra.quand = h ? h.date : 'depuis toujours';
+      extra.objet = h ? h.title : 'Votre règne';
       header = 'L’Hommage';
     }
     Object.assign(extra, this.ruinExtras(s));
