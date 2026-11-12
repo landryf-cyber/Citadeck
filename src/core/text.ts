@@ -17,6 +17,7 @@
  *   {?rival>=1|oui|non}         selon la relation avec la rivale
  *   {ruine:0}       nom d'une civilisation passée (0 = la plus récente)
  *   {?ruins>=2|oui|non}         selon le nombre de civilisations passées
+ *   {?rv:harsk|oui|non}         selon la rivale (orvandes, harsk, ombre) : chacune sa voix
  */
 import type { FamilyId, GameState } from './types';
 import type { Content } from './content';
@@ -78,6 +79,7 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
       else if ((m = test.match(/^state:(\w+)=(\w+)$/))) ok = s.fam[m[1] as FamilyId]?.state === m[2];
       else if ((m = test.match(/^ruins(>=|<=|>|<|=)(\d+)$/))) ok = compare(s.ruins.length, m[1], Number(m[2]));
       else if ((m = test.match(/^legacy$/))) ok = !!s.ruins[0]?.legacy;
+      else if ((m = test.match(/^rv:(\w+)$/))) ok = s.rival === m[1];
       else if (test === 'rivalshe') ok = !!(c.rivals.find((r) => r.id === s.rival) ?? c.rivals[0]).she;
       return ok ? yes : no;
     });

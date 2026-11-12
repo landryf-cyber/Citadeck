@@ -338,7 +338,7 @@ export const moreRival = [
   card({
     id: 'v_invitation', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'crown', hue: 268 }, speaker: '{Reine}',
     title: 'L’Invitation',
-    text: '{Reine} donne une fête et vous invite. « Venez comme vous êtes. Enfin, pas tout à fait comme vous êtes. » Il faudra un cadeau, une tenue et un sourire. Le sourire sera le plus cher.',
+    text: '{Reine} donne une fête et vous invite. {?rv:harsk|« VIENS. IL Y AURA DU SANGLIER. ET DES COMBATS. LES INVITÉS SONT LE SANGLIER, PARFOIS. »|{?rv:ombre|L’invitation indique votre place, votre menu et le sujet de conversation. Vous n’avez pas encore dit oui.|« Venez comme vous êtes. Enfin, pas tout à fait comme vous êtes. » Il faudra un cadeau, une tenue et un sourire.}}',
     options: [
       { label: 'Y aller', cost: $('T3'), effect: { rival: 2, gain: $('S2') }, reply: 'Vous dansez avec {reine}. {Elle} vous marche sur le pied, deux fois, avec précision.' },
       { label: 'Envoyer {F:ourk}', effect: { rival: -1, loy: { ourk: 2 } }, reply: '{F:ourk} a cassé un vase, un buffet et un ambassadeur. Il a trouvé la fête excellente.' },

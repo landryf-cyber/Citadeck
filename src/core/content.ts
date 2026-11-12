@@ -61,9 +61,19 @@ export function validateContent(c: Content): string[] {
       walk(card, o.effect);
       if (!o.label.includes('{?') && o.label.length > 34) errors.push(`${card.id} : option trop longue « ${o.label} »`);
     }
-    if (card.text.length > 260) errors.push(`${card.id} : texte trop long (${card.text.length})`);
+    const longest = longestVariant(card.text);
+    if (longest.length > 260) errors.push(`${card.id} : texte trop long (${longest.length})`);
     const dynamic = ['carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(card.kind);
     if (!card.qui && !dynamic && card.options.length < 1) errors.push(`${card.id} : aucune option`);
   }
   return errors;
+}
+
+/** La plus longue variante d'un texte à clauses conditionnelles (ce que le joueur peut avoir à lire). */
+export function longestVariant(text: string): string {
+  let out = text;
+  for (let guard = 0; guard < 10 && out.includes('{?'); guard++) {
+    out = out.replace(/\{\?[^{}|]+\|((?:[^{}|]|\{[^?{}|][^{}|]*\})*)(?:\|((?:[^{}]|\{[^?{}][^{}]*\})*))?\}/g, (_m, a: string, b = '') => (a.length >= b.length ? a : b));
+  }
+  return out;
 }

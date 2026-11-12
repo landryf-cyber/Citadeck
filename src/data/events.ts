@@ -216,7 +216,7 @@ export const rivalCards = [
   card({
     id: 'v_lettre', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'scroll', hue: 268 }, speaker: '{Reine}',
     title: 'Une lettre de {reine}',
-    text: '« Ma chère voisine, j’ai appris vos difficultés. Je prie pour vous. J’envoie aussi un ambassadeur, pour prier de plus près. Affectueusement. »',
+    text: '{?rv:harsk|« VOISIN. HARSK APPREND QUE TU AS DES ENNUIS. HARSK ENVOIE UN AMBASSADEUR. L’AMBASSADEUR A UNE HACHE. C’EST UN CADEAU. LA HACHE AUSSI. »|{?rv:ombre|Une lettre sans signature, posée sur votre oreiller. « Nous savons pour vos difficultés. Nous savons pour l’oreiller aussi. Un ambassadeur viendra. Il est déjà là. »|« Ma chère voisine, j’ai appris vos difficultés. Je prie pour vous. J’envoie aussi un ambassadeur, pour prier de plus près. Affectueusement. »}}',
     options: [
       { label: 'Recevoir l’ambassadeur', cost: $('V2'), effect: { rival: 1, gain: $('S2') }, reply: 'L’ambassadeur prie beaucoup, surtout près des archives.' },
       { label: 'Répondre poliment non', effect: { rival: -1, gain: $('A1') }, reply: '{Reine} vous répond qu’{elle} comprend. {Elle} ne comprend pas. Vos gardes restent à la frontière, au cas où {elle} comprendrait.' },
@@ -254,7 +254,7 @@ export const rivalCards = [
   card({
     id: 'v_ultimatum', kind: 'rivale', scale: true, eras: [1, 2, 3, 4], art: { motif: 'scroll', hue: 0 }, speaker: '{Reine}',
     title: 'L’Ultimatum',
-    text: '« Cédez la vallée ou brûlez. » La lettre est signée « {reine}, affectueusement ». Le messager attend une réponse. Il a l’air pressé, et inflammable.',
+    text: '{?rv:harsk|« CÈDE LA VALLÉE OU BRÛLE. » La lettre est gravée sur une planche. Il y a une hache plantée dedans, en guise de signature. Le messager attend, il est très grand.|{?rv:ombre|Un seul mot sur la page : « Cédez. » Au dos, l’heure exacte de votre réponse. Elle est dans dix minutes. Le messager regarde sa montre.|« Cédez la vallée ou brûlez. » La lettre est signée « {reine}, affectueusement ». Le messager attend une réponse. Il a l’air pressé, et inflammable.}}',
     options: [
       { label: 'Céder la vallée', effect: { gain: $('V-5'), rival: 2 }, reply: 'La vallée est à eux. Le messager sourit. Il repart en sifflotant votre hymne.' },
       { label: 'Brûler la lettre', cost: $('A3'), effect: { rival: -2, loy: { ourk: 2 } }, reply: '{F:ourk} brûle la lettre. Puis le messager, presque. Il repart au galop.' },
@@ -272,7 +272,7 @@ export const rivalCards = [
   card({
     id: 'v_alliance', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'ring', hue: 140 }, speaker: '{Reine}',
     title: 'L’Alliance',
-    text: '{Reine} propose une alliance. Contre qui, {elle} ne le précise pas. « Nous trouverons bien. »',
+    text: '{?rv:harsk|« HARSK VEUT ÊTRE TON AMI. CONTRE QUELQU’UN. HARSK NE SAIT PAS ENCORE QUI. HARSK TROUVERA. HARSK TROUVE TOUJOURS. »|{?rv:ombre|{Reine} propose une alliance. Le traité est déjà rédigé, avec votre réponse et votre signature. Il ne manque que votre accord, par politesse.|{Reine} propose une alliance. Contre qui, {elle} ne le précise pas. « Nous trouverons bien. »}}',
     options: [
       { label: 'Signer', cost: $('T3'), effect: { rival: 1, gain: $('A4'), mem: ['alliance'] }, reply: 'Alliés. {Elle} a déjà un ennemi en tête. Vous espérez que ce n’est pas vous.' },
       { label: 'Rester libre', effect: { gain: $('S2'), rival: -1 }, reply: 'Libre et seul. {Elle} signe avec quelqu’un d’autre, plus petit, plus docile.' },
@@ -290,7 +290,7 @@ export const rivalCards = [
   card({
     id: 'v_commerce', kind: 'rivale', scale: true, eras: [0, 1, 2, 3, 4], art: { motif: 'coin', hue: 140 }, speaker: '{Reine}',
     title: 'Le Traité de commerce',
-    text: '{Reine} propose d’ouvrir les frontières au commerce. Vos marchands applaudissent. Les siens aussi, et ils sont plus nombreux.',
+    text: '{Reine} propose d’ouvrir les frontières au commerce. {?rv:harsk|« HARSK VEND DES HACHES. TU ACHÈTES DES HACHES. TOUT LE MONDE EST CONTENT. »|{?rv:ombre|{Elle} connaît déjà le prix de tout ce que vous avez, et ce que vous seriez prêt à payer pour le reste.|Vos marchands applaudissent. Les siens aussi, et ils sont plus nombreux.}}',
     options: [
       { label: 'Ouvrir', effect: { gain: $('T5'), rival: 1, loy: { troc: 1, ourk: -1 } }, reply: 'Les marchandises circulent. Les rumeurs aussi. Elles sont toutes en sa faveur.' },
       { label: 'Taxer ses marchands', effect: { gain: $('T3'), rival: -1 }, reply: 'Ses marchands paient. {Elle} taxe les vôtres, deux fois plus. Par amitié.' },

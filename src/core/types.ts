@@ -109,6 +109,8 @@ export type CardKind =
 export type Form = 'binaire' | 'qui' | 'pari' | 'dosage' | 'route' | 'seuil' | 'choix';
 
 export interface CardDef {
+  /** écho : une suite liée à un souvenir, toujours tirée quand sa condition est remplie */
+  echo?: boolean;
   /** contenu verrouillé : n'apparaît qu'une fois débloqué (méta-progression) */
   lock?: string;
   id: string;

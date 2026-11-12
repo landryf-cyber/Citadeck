@@ -11,14 +11,21 @@ import { eventCards, rivalCards } from './events';
 import { desseins, engineCards, families, origins, rivalries, rivals, routes } from './world';
 import { moods, recalls } from './moods';
 import { moreEncounters, moreEvents, moreRival } from './more';
+import { echoEvents, echoFamilyCards, echoRecalls } from './echoes';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents,
 ];
 
-const events = [...eventCards, ...moreEvents];
+// les suites liées à un souvenir sont toujours tirées
+for (const id of ['ev_fete_ours', 'ev_amants', 'ev_heritier', 'ev_general_eveque', 'ev_martyr', 'ev_cirque']) {
+  const c = all.find((x) => x.id === id);
+  if (c) c.echo = true;
+}
+
+const events = [...eventCards, ...moreEvents, ...echoEvents];
 
 /** les rencontres supplémentaires rejoignent leur route */
 const extraEnc: Record<string, string[]> = {
@@ -53,7 +60,7 @@ export const content: Content = {
   ruinsCard: 'ruines',
   revenantCard: 'revenants',
   moods,
-  recalls,
+  recalls: [...recalls, ...echoRecalls],
 };
 
 export const CARD_COUNT = all.filter((c) => !['presage', 'carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(c.kind)).length;

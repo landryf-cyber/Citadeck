@@ -897,21 +897,31 @@ export class Engine {
       const c = this.c.cards[id];
       return this.available(s, c) && !s.spent.includes(id) && this.check(s, c.cond);
     });
-    pool.push(...rng.sample(events, Math.min(2, events.length)));
+    // les échos du passé passent d'abord : un souvenir qui revient ne doit rien au hasard
+    const echoes = events.filter((id) => this.c.cards[id].echo);
+    const plain = events.filter((id) => !this.c.cards[id].echo);
+    pool.push(...echoes, ...rng.sample(plain, Math.max(0, Math.min(plain.length, 2 - Math.min(1, echoes.length)))));
     const bucket = s.rivalRel <= -1 ? this.c.rivalCards.hostile : s.rivalRel >= 1 ? this.c.rivalCards.friendly : this.c.rivalCards.neutral;
     const rv = bucket.filter((id) => this.available(s, this.c.cards[id]) && !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
     if (rv.length) pool.push(rng.pick(rv));
     // les revenants d'une civilisation morte arrivent à la troisième ère
     if (s.era === 2 && s.ruins[0]?.grudge && !s.spent.includes(this.c.revenantCard)) pool.push(this.c.revenantCard);
-    s.pool = rng.shuffle(pool);
+    // mélangé, mais les échos d'abord : ils seront joués cette ère, quoi qu'il arrive
+    const mixed = rng.shuffle(pool);
+    s.pool = [...mixed.filter((id) => this.c.cards[id]?.echo), ...mixed.filter((id) => !this.c.cards[id]?.echo)];
   }
 
   familyCard(s: GameState, f: FamilyId): string | undefined {
-    for (const id of this.c.familyCards[f]?.[s.era] ?? []) {
+    const ids = (this.c.familyCards[f]?.[s.era] ?? []).filter((id) => {
       const c = this.c.cards[id];
-      if (c && !s.spent.includes(id) && this.check(s, c.cond)) return id;
-    }
-    return undefined;
+      return c && !s.spent.includes(id) && this.check(s, c.cond);
+    });
+    // une variante liée à un souvenir passe d'abord ; sinon, la graine choisit parmi les cartes ordinaires
+    const conditional = ids.find((id) => this.c.cards[id].cond);
+    if (conditional) return conditional;
+    if (!ids.length) return undefined;
+    const h = Math.abs(Math.imul(s.seed ^ (s.era * 7919 + FAMILIES.indexOf(f) * 104729), 2654435761)) >>> 0;
+    return ids[h % ids.length];
   }
 
   private routesFor(s: GameState, rng: Rng): string[] {
