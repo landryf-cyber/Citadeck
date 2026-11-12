@@ -635,7 +635,7 @@ export class Engine {
       text = alt
         ? `Les architectes se disputent. ${j.name} : ${j.text} ${alt.name} : ${alt.text} On ne bâtira que l’un des deux.`
         : `${j.text} ${j.gift}`;
-      header = p.early ? `Le chantier ouvre · merveille ${s.era + 1} sur 5` : `Le chantier · merveille ${s.era + 1} sur 5 · dernière chance`;
+      header = p.early ? `Chantier anticipé · ${s.era + 1} sur 5` : `Le chantier · merveille ${s.era + 1} sur 5`;
     }
     if (card.kind === 'proces' && p.plaintiff) {
       const h = s.history[p.quote ?? -1];
