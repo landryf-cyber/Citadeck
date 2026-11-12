@@ -2,10 +2,10 @@
  * L'interface V2 : un écran titre, la fondation, puis la partie (HUD, carte, retours),
  * les présages, les bilans d'ère, la chute ou la victoire, le testament et la chronique.
  */
-import { ERA_SCALE, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
+import { ERA_SCALE, GAIN_RANGES, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
 import { chronicleLines, epitaph, nextSetup, recordRun, testaments, UNLOCKS, type Testament, type Unlock } from '../core/meta';
 import { FAMILIES, RES, RES_LABEL, type ChronicleEntry, type FamilyId, type GameState, type MetaState, type Res } from '../core/types';
-import { civName, ERA_NAMES, ERA_SUBTITLES, capitalize } from '../core/text';
+import { civName, ERA_NAMES, ERA_SUBTITLES, capitalize, fill } from '../core/text';
 import type { Scene } from '../scene/scene';
 import { LOOKS, rgb } from '../scene/palette';
 import { drawElem, type DrawEnv, type Elem } from '../scene/city';
@@ -304,7 +304,7 @@ export class App {
     const dues = s.sched.filter((x) => /^creance/.test(x.card));
     const debt = dues.length ? `<span class="debt" title="Créance : ${dues.map((d) => `${d.pay ?? '?'} Trésor dans ${Math.max(1, d.at - s.turn + 1)} carte(s), ou un quartier`).join(' ; ')}">−${dues.reduce((a, d) => a + (d.pay ?? 0), 0)} ⌛${Math.max(1, Math.min(...dues.map((d) => d.at - s.turn + 1)))}</span>` : '';
     const top = `<div class="hud-top">
-      <div class="stat q${s.quartiers <= 2 ? ' low' : ''}" data-k="q" title="Quartiers : votre cité. À zéro, elle tombe.">${ICON.house}<b>${s.quartiers}</b><small>quartiers</small><span class="delta"></span></div>
+      <div class="stat q${s.quartiers <= 2 ? ' low' : ''}" data-k="q" title="Quartiers : votre cité. À zéro, elle tombe.">${ICON.house}<b>${s.quartiers}</b><small>${s.quartiers > 1 ? 'quartiers' : 'quartier'}</small><span class="delta"></span></div>
       ${RES.map((r) => `<div class="stat r-${r}${r === 'vivres' && s.res.vivres < upkeep ? ' hunger' : ''}" data-k="${r}" title="${RES_LABEL[r]}${r === 'vivres' ? ` — la cité en mangera ${upkeep} en fin d’ère` : ''}">${RES_ICON[r]}<b>${s.res[r]}</b><span class="delta"></span>${r === 'tresor' ? debt : ''}</div>`).join('')}
       <div class="hud-sp"></div>
       <div class="era-pill" title="${esc(ERA_NAMES[s.era])} : deux saisons, le chantier, la crise, le bilan"><div class="era-name"><b>${ROMAN[s.era]}</b><span>${esc(ERA_NAMES[s.era].replace(/^L’|^L'|^Le |^La /, ''))}</span></div>
@@ -446,11 +446,11 @@ export class App {
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
     // ce qui rentre : le genre et l'ampleur (+ un peu, ++ bien, +++ beaucoup), pas le montant (le texte le dit)
-    const gains = RES.filter((r) => o.gains?.[r]).map((r) => `<span class="chip gain r-${r}" title="Rapporte : ${RES_LABEL[r]} (${['', 'un peu', 'bien', 'beaucoup'][o.gains![r]!]})">${'+'.repeat(o.gains![r]!)}${RES_ICON[r]}</span>`).join('');
+    const gains = RES.filter((r) => o.gains?.[r]).map((r) => `<span class="chip gain r-${r}" title="Rapporte ${GAIN_RANGES[o.gains![r]!]} ${RES_LABEL[r]}">+${GAIN_RANGES[o.gains![r]!].replace(' à ', '–').replace(' et plus', '+')}${RES_ICON[r]}</span>`).join('');
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
       const dir = o.famDir?.[f] ?? 0;
-      const arrow = dir ? `<i class="dir ${dir > 0 ? 'up' : 'down'}">${dir > 0 ? '▲' : '▼'}${Math.abs(dir) > 1 ? Math.abs(dir) : ''}</i>` : '';
+      const arrow = dir ? `<i class="dir ${dir > 0 ? 'up' : 'down'}">${dir > 0 ? '▲' : '▼'}${Math.abs(dir) > 1 ? Math.abs(dir) : ''}</i>` : '<i class="dir unk">?</i>';
       const what = dir > 0 ? `y gagnent (+${dir})` : dir < 0 ? `y perdent (${dir})` : 'sont concernés, selon l’issue';
       return `<span class="fdot" style="--h:${d.hue}" title="${esc(capitalize(d.house[s.era]))} ${what}">${this.miniMotif(d.motif, d.hue)}${arrow}</span>`;
     }).join('');
@@ -605,7 +605,7 @@ export class App {
     };
     this.openScreen('soft presage', (inner) => {
       inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2><p class="sub">${esc(p.subtitle)}</p>
-        <div class="presage-res"><span class="chip">${ICON.house}<b>${s.quartiers}</b>&nbsp;quartiers</span>${bagChips(s.res)}</div>`;
+        <div class="presage-res"><span class="chip">${ICON.house}<b>${s.quartiers}</b>&nbsp;${s.quartiers > 1 ? 'quartiers' : 'quartier'}</span>${bagChips(s.res)}</div>`;
       if (p.legacy) {
         inner.appendChild(el('div', 'panel legacy', `<h3>L’héritage de ${esc(p.legacy.from)}</h3>
           ${p.legacy.testament ? `<p>Sur leur stèle : <q>« ${esc(p.legacy.testament)} »</q></p>` : ''}
@@ -621,7 +621,7 @@ export class App {
       const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
       // une merveille manquée n'est pas perdue : elle se rattrape au bilan, plus cher
       const missed = this.e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
-      const miss = missed.length ? `<p class="warnline">Manquée${missed.length > 1 ? 's' : ''} : ${esc(missed.join(', '))}. Au bilan de l’ère, vous pourrez ${missed.length > 1 ? 'en rattraper une' : 'la rattraper'}, plus cher.</p>` : '';
+      const miss = missed.length ? `<p class="warnline">Manquée${missed.length > 1 ? 's' : ''} : ${esc(missed.join(', '))}. À la seconde saison, vous pourrez ${missed.length > 1 ? 'en rattraper une' : 'la rattraper'}, plus cher.</p>` : '';
       const rule = s.era === 0 ? '<p class="note">Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>' : '';
       inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${miss}${rule}${nxt}`));
       const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
@@ -759,7 +759,7 @@ export class App {
           : fam
             ? `en fin d’ère : ${esc(capitalize(this.e.c.families[fam].house[l.era]))} étaient à bout${this.e.familyInfo(s, fam).grudge ? `, depuis « ${esc(this.e.familyInfo(s, fam).grudge!.label)} »` : ''}`
             : '';
-      return `<li><span class="d">${esc((h?.date ?? '').replace(' avant le Calendrier', ' av. C.'))}</span><span><span class="c">−${l.amount} quartier : ${esc(l.cause)}</span></span>${why ? `<span class="w">${why}</span>` : ''}</li>`;
+      return `<li><span class="d">${esc((h?.date ?? '').replace(' avant le Calendrier', ' av. C.'))}</span><span><span class="c">−${l.amount} ${l.amount > 1 ? 'quartiers' : 'quartier'} : ${esc(l.cause)}</span></span>${why ? `<span class="w">${why}</span>` : ''}</li>`;
     }).join('');
     this.openScreen('veil end', (inner) => {
       const shadow = r.type === 'victoire' && !r.ending && s.rivalJalons >= 5;
@@ -843,12 +843,25 @@ export class App {
       inner.appendChild(tags);
       const built = s.jalons.map((b, i) => (b ? this.e.jalonOf(s, i) : null)).filter(Boolean);
       const w = el('div', 'panel');
-      w.innerHTML = '<h3>Merveilles</h3>' + (built.length ? built.map((j) => `<p><b>${esc(j!.name)}</b> <span class="note">— ${esc(j!.gift)}</span></p>`).join('') : '<p class="note">Aucune pour l’instant.</p>');
+      w.innerHTML = '<h3>Merveilles</h3>' + (built.length ? built.map((j) => `<p><b>${esc(j!.name)}</b> <span class="note">— ${esc(fill(j!.gift, s, this.e.c))}</span></p>`).join('') : '<p class="note">Aucune pour l’instant.</p>');
       inner.appendChild(w);
       const d = el('div', 'panel');
       const disc = s.deck.map((id) => this.e.card(id)).filter((c) => c.kind === 'decouverte');
-      d.innerHTML = '<h3>Découvertes</h3>' + (disc.length ? disc.map((c) => `<p><b>${esc(c.title)}</b> <span class="note">— ${esc(c.gift ?? '')}</span></p>`).join('') : '<p class="note">Aucune. On en choisit une à la fin de chaque ère, avec du Savoir.</p>');
+      d.innerHTML = '<h3>Découvertes</h3>' + (disc.length ? disc.map((c) => `<p><b>${esc(c.title)}</b> <span class="note">— ${esc(fill(c.gift ?? '', s, this.e.c))}</span></p>`).join('') : '<p class="note">Aucune. On en choisit une à la fin de chaque ère, avec du Savoir.</p>');
       inner.appendChild(d);
+      // dettes et promesses : ce qui reviendra
+      const dues = s.sched.map((x) => {
+        const c = this.e.c.cards[x.card];
+        const n = Math.max(1, x.at - s.turn + 1);
+        return /^creance/.test(x.card) ? `Créance : ${x.pay ?? '?'} Trésor, ou un quartier, dans ${n} carte${n > 1 ? 's' : ''}` : `Une suite de « ${x.from ?? '…'} » viendra${c ? '' : ''}`;
+      });
+      if (s.mem.includes('dette_ancestrale')) dues.push('Une défense de mammouth, empruntée aux Troc à l’âge de pierre, n’a jamais été rendue.');
+      if (s.mem.includes('dette_refusee')) dues.push('Une dette refusée court toujours, quelque part chez la rivale.');
+      if (dues.length) {
+        const dd = el('div', 'panel');
+        dd.innerHTML = '<h3>Dettes et promesses</h3>' + dues.map((x) => `<p class="note">${esc(x)}</p>`).join('');
+        inner.appendChild(dd);
+      }
       const b = el('div', 'btns');
       b.appendChild(this.button('Fermer', close));
       inner.appendChild(b);
@@ -966,7 +979,7 @@ export class App {
 
   private cardHints(v: View): void {
     if (v.kind === 'carrefour') this.hint('carrefour', 'Deux <b>saisons</b> par ère. Choisissez où les passer : chaque route mène à une famille, ou vers l’inconnu. Les familles qu’on ne visite pas se vexent.');
-    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché, et ce qui rentre : + un peu, ++ bien, +++ beaucoup. Les montants exacts sont dans le texte. Les flèches disent de combien chaque famille y gagne ou y perd.');
+    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché, et ce qui rentre, en fourchette. Le montant exact se découvre au choix. Les flèches disent de combien chaque famille y gagne ou y perd ; « ? » : cela dépendra de l’issue.');
     if (v.kind === 'famille') this.hint('famille', 'Les familles <b>se souviennent</b>. Ce que vous décidez ici, leurs descendants vous le reprocheront ou vous en remercieront, citation à l’appui.');
     if (v.kind === 'proces') this.hint('proces', 'Le <b>procès</b> : la famille la plus lésée cite votre pire décision contre elle. Choisissez bien votre avocat.');
     if (v.kind === 'jalon') this.hint('jalon', 'Le <b>chantier</b> : bâtir rapproche du dessein, mais chaque merveille attire la convoitise. La crise suivante sera plus dure.');

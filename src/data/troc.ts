@@ -50,9 +50,9 @@ export const trocCards = [
     text: 'Troc et Fils emploie des enfants dans ses filatures. « Ils sont très bien payés, en bonbons. Et ils ont de petits doigts, c’est un avantage concurrentiel. »',
     options: [
       { label: 'Laisser faire', effect: { gain: $('T8'), loy: { troc: 2, sel: -2 }, mem: ['troc_enfants'] },
-        reply: 'Le tissu coule à flots. Les bonbons aussi. Les dentistes font fortune, eux aussi.' },
+        reply: 'Le tissu coule à flots. Dans les filatures, on n’entend plus que les métiers. Personne ne compte les enfants qui toussent. Personne ne vous le reprochera tout de suite.' },
       { label: 'Interdire', cost: $('T3'), effect: { gain: $('S3'), loy: { troc: -2, sel: 1, brume: 1 } },
-        reply: 'Les enfants vont à l’école. Troc et Fils emploie des adultes. Ils réclament des bonbons.' },
+        reply: 'Les enfants vont à l’école, certains pour la première fois. Troc et Fils grogne, puis embauche des adultes. Le tissu coûte plus cher. Ce n’est pas cher payé.' },
     ],
   }),
   card({

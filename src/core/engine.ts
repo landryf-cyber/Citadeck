@@ -15,8 +15,10 @@ export const SAVE_VERSION = 24;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.95, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 0.95, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
+/** fourchettes des gains affichés */
+export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
 const scaleBag = (b: Bag | undefined, era: number): Bag | undefined => {
   if (!b) return b;
@@ -152,7 +154,7 @@ export interface OptionView {
   families: FamilyId[];
   /** sens de l'effet certain sur chaque famille (+1 / −1, ±2 pour un effet appuyé) ; absent : effet incertain */
   famDir?: Partial<Record<FamilyId, number>>;
-  /** ressources gagnées à coup sûr, avec leur ampleur (1 : un peu, 2 : bien, 3 : beaucoup) ; le texte dit combien */
+  /** ressources gagnées à coup sûr, en fourchette fixe (indice dans GAIN_RANGES) ; le montant exact se découvre au choix */
   gains?: Partial<Record<Res, number>>;
   /** ce qu'une option à seuil consomme si la réserve suffit */
   spend?: Bag;
@@ -369,7 +371,7 @@ export class Engine {
     }
     let bonus = 0;
     for (const p of this.passives(s)) if (p.type === 'tagBonus' && p.tag === tag) bonus += p.amount;
-    if (bonus) parts.push(`+${bonus} d’une merveille`);
+    if (bonus) parts.push(`+${bonus} de cartes qui comptent double`);
     const fam = FAMILIES.find((f) => this.c.families[f].tag === tag);
     const how = tag === 'Culture'
       ? 'les découvertes de Culture, et chaque famille dévouée (loyauté +2 ou plus)'
@@ -511,17 +513,20 @@ export class Engine {
     const playable = opts.filter((o) => this.canPay(s, o) && this.check(s, o.req));
     const card = this.card(p.card);
     // une seule option jouable : la plus abordable des autres devient possible à crédit (chez les Troc, ou la rivale)
-    if (playable.length === 1 && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage'].includes(card.kind)) {
+    const pending = s.sched.some((x) => /^creance/.test(x.card));
+    if (playable.length === 1 && !pending && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage'].includes(card.kind)) {
       const blocked = opts.filter((o) => o.cost && !this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req));
       if (blocked.length) {
         const o = blocked.sort((a, b) => Object.values(a.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0) - Object.values(b.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0))[0];
         // les Troc ne prêtent pas pour qu'on les rattrape : contre eux, c'est la rivale qui avance la somme
-        const lender = s.fam.troc.state === 'presente' && card.family !== 'troc' ? 'troc' : null;
+        const lender = s.fam.troc.state === 'presente' && card.family !== 'troc' && s.fam.troc.loy >= -1 ? 'troc' : null;
         // le crédit a un prix différé et fixé d'avance : une créance tombera dans l'ère (sablier, compte à rebours)
         // les créances des Troc montent d'un ton à chaque fois
         const owed = s.history.filter((h) => /^creance(_\d)?$/.test(h.card)).length + s.sched.filter((x) => /^creance(_\d)?$/.test(x.card)).length;
         const dueCard = lender ? ['creance', 'creance_2', 'creance_3'][Math.min(2, owed)] : 'creance_rivale';
-        const due = { card: dueCard, in: s.phase === 'crise' || s.era >= ERAS - 1 ? 0 : 2, pay: this.creditPrice(s, dueCard) };
+        // le crédit coûte toujours plus cher que le comptant : un quart de plus que le prix de l'option, au moins le tarif de la créance
+        const cash = Object.values(this.costOf(s, o.cost)).reduce((a, x) => a + (x ?? 0), 0);
+        const due = { card: dueCard, in: s.phase === 'crise' || s.era >= ERAS - 1 ? 0 : 2, pay: Math.max(this.creditPrice(s, dueCard), Math.ceil(cash * 1.25)) };
         const effect: Effect = lender
           ? { ...o.effect, loy: { ...(o.effect.loy ?? {}), troc: (o.effect.loy?.troc ?? 0) - 1 }, sched: [...(o.effect.sched ?? []), due] }
           : { ...o.effect, rival: (o.effect.rival ?? 0) - 1, sched: [...(o.effect.sched ?? []), due] };
@@ -579,7 +584,7 @@ export class Engine {
       const alt = this.jalonAltOf(s, e);
       const opts: Option[] = [{ label: `Bâtir ${j.name}, enfin`, cost: up(j.cost), req: j.req, effect: { jalon: true, jalonEra: e }, reply: `${j.built ?? `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}.`} ${j.gift}` }];
       if (alt) opts.push({ label: `Bâtir ${alt.name}, enfin`, cost: up(alt.cost), req: alt.req, effect: { jalon: 'alt', jalonEra: e }, reply: `${alt.built ?? `Le chantier est achevé : ${alt.name.charAt(0).toLowerCase()}${alt.name.slice(1)}.`} ${alt.gift}` });
-      opts.push({ label: 'Laisser les plans au coffre', effect: {}, reply: 'Les plans retournent au coffre. Quelqu’un écrit dessus « un jour », puis « peut-être ».' });
+      opts.push({ label: 'Laisser les plans au coffre', effect: {}, reply: ['', 'Les plans redescendent dans la cave du temple. Un scribe écrit dessus : « un jour ».', 'Les plans regagnent la bibliothèque du monastère, entre deux grimoires. On les recopie, par habitude.', 'Les plans repartent aux archives, tamponnés « ajourné ». Le tampon est neuf ; le projet, non.', 'Les plans retournent dans un serveur, dossier « plus tard », sous-dossier « vraiment plus tard ».'][s.era] || 'Les plans retournent au coffre.' });
       return opts;
     }
     if (card.kind === 'jalon') {
@@ -599,6 +604,11 @@ export class Engine {
         'Le projet est mis en veille. Il clignote doucement dans un coin du serveur.',
       ][s.era] });
       return opts;
+    }
+    if (card.kind === 'hommage') {
+      // une famille reconnaissante peut aussi rebâtir : une occasion de regagner un quartier
+      const base = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
+      return [...base, { label: 'Qu’ils bâtissent un quartier', effect: { quartiers: 1 }, reply: `{H:${card.family}} bâtissent un quartier à leurs frais. Ils y mettent leur nom partout, même sur les pavés.` }];
     }
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
     const opts = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
@@ -739,13 +749,13 @@ export class Engine {
     const dir: Partial<Record<FamilyId, number>> = {};
     for (const f of FAMILIES) if (loyNow[f] !== s.fam[f].loy) dir[f] = loyNow[f]! - s.fam[f].loy;
     if (Object.keys(dir).length) v.famDir = dir;
-    // le genre et l'ampleur de ce qui rentre (à l'échelle de l'ère), pas le montant
+    // ce qui rentre, en fourchette chiffrée et fixe (la même à toutes les ères), pas le montant exact
     const gl: Partial<Record<Res, number>> = {};
     for (const r of RES) {
       const g = o.effect.gain?.[r] ?? 0;
       if (g > 0) {
-        const a = g / ERA_SCALE[s.era];
-        gl[r] = a <= 2 ? 1 : a <= 5 ? 2 : 3;
+        const a = Math.max(1, Math.round(g * TUNING.gain));
+        gl[r] = a <= 2 ? 1 : a <= 5 ? 2 : a <= 9 ? 3 : a <= 15 ? 4 : 5;
       }
     }
     if (Object.keys(gl).length) v.gains = gl;
@@ -849,7 +859,7 @@ export class Engine {
     const k = this.crisisK(s) / (TUNING.crisisK * (s.iron ? TUNING.iron : 1));
     const rv = this.rival(s);
     const r0 = s.ruins[0];
-    const jv = (x: Jalon) => ({ name: fill(x.name, s, this.c), text: fill(x.text, s, this.c), gift: fill(x.gift, s, this.c), cost: x.cost, req: this.condLabel(s, x.req), shape: x.shape });
+    const jv = (x: Jalon) => ({ name: fill(x.name, s, this.c), text: fill(x.text, s, this.c), gift: fill(x.gift, s, this.c), cost: this.costOf(s, x.cost), req: this.condLabel(s, x.req), shape: x.shape });
     return {
       era: s.era,
       name: ERA_NAMES[s.era],
@@ -1022,7 +1032,7 @@ export class Engine {
       s.res[r] = Math.max(0, s.res[r] + (e.gain[r]! > 0 ? Math.max(1, Math.round(e.gain[r]! * TUNING.gain)) : e.gain[r]!));
     }
     if (e.loy) for (const f of Object.keys(e.loy) as FamilyId[]) this.changeLoy(s, f, e.loy[f]!, ev);
-    if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev, nested || !!e.forced);
+    if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev, nested || !!e.forced || !['famille', 'rencontre', 'evenement', 'decouverte', 'rivale'].includes(card.kind));
     for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
     for (const m of e.unmem ?? []) s.mem = s.mem.filter((x) => x !== m);
     for (const sc of e.sched ?? []) {
@@ -1141,6 +1151,8 @@ export class Engine {
     // mélangé, mais les échos d'abord : ils seront joués cette ère, quoi qu'il arrive
     const mixed = rng.shuffle(pool);
     s.pool = [...mixed.filter((id) => this.c.cards[id]?.echo), ...mixed.filter((id) => !this.c.cards[id]?.echo)];
+    // une rivale qui a triomphé réclame son tribut dès le début de l'ère, la dernière comprise
+    if (s.rivalJalons >= 5 && s.spent.includes('triomphe')) s.pool.unshift('tribut');
   }
 
   familyCard(s: GameState, f: FamilyId): string | undefined {
@@ -1336,7 +1348,8 @@ export class Engine {
     if (id === 'rattrapage') p.missed = this.missedJalon(s);
     if (from) p.from = from;
     if (c.qui) {
-      const fams = this.present(s).filter((f) => !c.qui!.exclude?.includes(f));
+      // une famille déjà au plus bas ne peut pas servir de bouc émissaire : la blâmer ne coûterait rien
+      const fams = this.present(s).filter((f) => !c.qui!.exclude?.includes(f) && !(s.fam[f].loy <= -3 && (c.qui!.option(f).effect.loy?.[f] ?? 0) < 0));
       p.qui = rng.sample(fams, Math.min(c.qui.count, fams.length));
     }
     return p;
@@ -1428,7 +1441,8 @@ export class Engine {
     }
     // la rivale triomphe dès qu'elle a ses cinq merveilles, qu'elle les ait bâties ou qu'on les lui ait payées
     if (s.rivalJalons >= 5 && !s.spent.includes('triomphe')) rivalTriumph = true;
-    const steps = [...(rivalTriumph ? ['triomphe'] : tribute ? ['tribut'] : []), 'croissance', 'proces', 'decouverte'];
+    void tribute;
+    const steps = [...(rivalTriumph ? ['triomphe'] : []), 'croissance', 'proces', 'decouverte'];
     // après la dernière crise, plus rien à fonder ni à juger : l'histoire s'arrête là
     s.steps = s.era < ERAS - 1 ? steps : [];
   }

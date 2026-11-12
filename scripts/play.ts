@@ -12,7 +12,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { content } from '../src/data';
-import { Engine, type Ev } from '../src/core/engine';
+import { Engine, GAIN_RANGES, type Ev } from '../src/core/engine';
 import { epitaph, newMeta, nextSetup, recordRun, testaments, loadMeta } from '../src/core/meta';
 import { FAMILIES, RES, RES_LABEL, type Bag, type FamilyId, type GameState, type MetaState } from '../src/core/types';
 import { capitalize, civName, ERA_NAMES } from '../src/core/text';
@@ -40,19 +40,19 @@ function hud(s: GameState): void {
     return `${fi.house} : ${fi.mood}${fi.loy ? ` (${fi.loy > 0 ? '+' : ''}${fi.loy})` : ''}${fi.neglected ? ' [délaissés]' : ''}`;
   }).join(' · ');
   const upkeep = e.presageInfo(s).upkeep;
-  P(`[${ERA_NAMES[s.era]} · ${s.quartiers} quartiers · ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')} (la cité mangera ${upkeep} Vivres en fin d’ère) · merveilles ${s.jalons.filter(Boolean).length}/5, rivale ${s.rivalJalons}/5]`);
+  P(`[${ERA_NAMES[s.era]} · ${s.quartiers} ${s.quartiers > 1 ? 'quartiers' : 'quartier'} · ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')} (la cité mangera ${upkeep} Vivres en fin d’ère) · merveilles ${s.jalons.filter(Boolean).length}/5, rivale ${s.rivalJalons}/5]`);
   P(`[${fams}]`);
 }
 
 function presage(s: GameState): void {
   const p = e.presageInfo(s);
   P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date}) — ${p.subtitle}`);
-  P(`Vous avez : ${s.quartiers} quartiers, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
+  P(`Vous avez : ${s.quartiers} ${s.quartiers > 1 ? 'quartiers' : 'quartier'}, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
   if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}. ${p.legacy.memory ?? ''}`);
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
   const missed = e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
-  if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. Au bilan de l’ère, vous pourrez en rattraper une, plus cher.`);
+  if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. À la seconde saison, vous pourrez en rattraper une, plus cher.`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
@@ -78,8 +78,8 @@ function card(s: GameState): void {
       o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
       o.spend ? `dépense ${bag(o.spend)} si la réserve suffit` : '',
-      o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${'+'.repeat(o.gains![r]!)} ${RES_LABEL[r]}`).join(', ')} (ampleur : + un peu, ++ bien, +++ beaucoup)` : '',
-      o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])}${d ? ` ${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}` : ''}`; }).join(', ')}` : '',
+      o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${GAIN_RANGES[o.gains![r]!]} ${RES_LABEL[r]}`).join(', ')}` : '',
+      o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])} ${d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}` : '? (selon l’issue)'}`; }).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
       o.warn ? `attention : ${o.warn}` : '',
       o.risk ? `risque : ${o.risk}` : '',
@@ -135,7 +135,7 @@ function end(s: GameState): void {
   const r = s.result!;
   P(`=== FIN : ${r.rank === 'triomphe' ? 'TRIOMPHE, dessein accompli' : r.rank === 'victoire' ? 'VICTOIRE' : r.type === 'defaite' ? `CHUTE : ${s.name} est tombée (${ERA_NAMES[s.era]})` : s.rivalJalons >= 5 ? `SURVIE, dans l’ombre de ${e.rival(s).name}` : 'SURVIE, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
   P(`Épitaphe : ${epitaph(e, s)}`);
-  for (const l of s.losses) P(`  perte : -${l.amount} quartier, ${l.cause}`);
+  for (const l of s.losses) P(`  perte : -${l.amount} ${l.amount > 1 ? 'quartiers' : 'quartier'}, ${l.cause}`);
   P('Derniers mots (choisir avec « testament N ») :');
   testaments(e, s).forEach((t, i) => P(`  ${i + 1}. « ${t.text} » — héritage : ${t.legacy.label}`));
 }

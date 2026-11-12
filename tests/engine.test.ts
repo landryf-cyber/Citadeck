@@ -161,7 +161,7 @@ describe('pas de redite', () => {
     expect(s.jalons[2]).toBe(false);
   });
 
-  it('après son triomphe, la rivale réclame un tribut à chaque fin d’ère', () => {
+  it('après son triomphe, la rivale réclame un tribut dès le début de chaque ère', () => {
     const s = e.newGame(12, { dessein: 'etoiles' });
     s.era = 2;
     s.rivalJalons = 5;
@@ -169,11 +169,10 @@ describe('pas de redite', () => {
     s.phase = 'crise';
     s.pile = [];
     s.prompt = { card: 'croissance' };
-    s.res = { vivres: 99, armee: 0, savoir: 0, tresor: 0 };
-    e.act(s, 1);
+    s.res = { vivres: 99, armee: 9, savoir: 9, tresor: 9 };
     const seen: string[] = [];
-    for (let g = 0; g < 6 && (s.phase as string) === 'finere'; g++) {
-      seen.push(s.prompt!.card);
+    for (let g = 0; g < 30 && s.era < 4 && (s.phase as string) !== 'fin'; g++) {
+      if (s.era === 3 && (s.phase as string) === 'saison') seen.push(s.prompt!.card);
       e.act(s, e.view(s)!.options.findIndex((o) => o.enabled));
     }
     expect(seen).toContain('tribut');
@@ -194,7 +193,7 @@ describe('pas de redite', () => {
     s.jalons = [true, false, false, false, false];
     const q = s.quartiers;
     const ev: never[] = [];
-    const card = content.cards.creance;
+    const card = content.cards.ourk_1;
     e.applyEffect(s, card, { quartiers: -1, cause: 'test' }, new Rng(1), ev);
     expect(s.quartiers).toBe(q - 1);
     e.applyEffect(s, card, { if: { quartiers: { min: 99 } }, else: { quartiers: -1, cause: 'test' } }, new Rng(1), ev);

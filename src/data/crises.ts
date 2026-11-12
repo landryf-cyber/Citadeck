@@ -71,7 +71,7 @@ export const crisisCards = [
     options: [
       { label: 'Les médecins', warn: 'Sans {k:9} Savoir, un quartier se vide{?mem:port_ouvert| (deux : le port était ouvert)|}',
         effect: { loy: { brume: 1, sel: -1 }, if: { res: $('S9') }, then: { gain: $('S-3'), reply: 'Les médecins trouvent : ce sont les rats. Les rats nient.' },
-          else: { quartiers: -1, cause: 'la Peste', if: { mem: 'port_ouvert' }, then: { quartiers: -1, cause: 'la Peste, entrée par le port' }, reply: 'Les médecins cherchent, ils sont trop peu. Un quartier se tait.' } } },
+          else: { quartiers: -1, cause: 'la Peste', if: { mem: 'port_ouvert' }, then: { quartiers: -1, cause: 'la Peste, entrée par le port' }, reply: 'Les médecins cherchent ; ils sont trop peu. Un quartier se tait. On ferme les volets, et on ne les rouvre plus.' } } },
       { label: 'Les processions', cost: $('V6'), warn: 'Il faut que les Sel vous aiment',
         effect: { if: { fam: { id: 'sel', min: 1 } }, then: { loy: { sel: 1 }, reply: 'Les processions ont rassemblé tout le monde. Par chance, la fièvre aussi est partie se promener.' },
           else: { quartiers: -1, cause: 'la Peste, et des processions sans ferveur', reply: 'Les processions ont rassemblé tout le monde, et la fièvre en a profité.' } } },
