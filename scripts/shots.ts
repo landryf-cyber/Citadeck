@@ -137,6 +137,11 @@ async function main(): Promise<void> {
     await jump(page, "s.era === 1 && s.prompt && s.prompt.card === 'ruines'", { seed: 44, meta: true, prefer: 'inconnu' });
     await page.waitForTimeout(1500);
     await shot(page, vp.name, '25-ruines');
+    await page.click('.icon-btn[data-act=deck]').catch(() => undefined);
+    await page.waitForTimeout(700);
+    await shot(page, vp.name, '26-civilisation');
+    await page.click('text=Fermer').catch(() => undefined);
+    await page.waitForTimeout(500);
     await page.click('.icon-btn[data-act=settings]').catch(() => undefined);
     await page.waitForTimeout(700);
     await shot(page, vp.name, '30-reglages');

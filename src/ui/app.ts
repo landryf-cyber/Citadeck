@@ -307,6 +307,7 @@ export class App {
       <div class="era-pill" title="${esc(ERA_NAMES[s.era])} : deux saisons, le chantier, la crise, le bilan"><div class="era-name"><b>${ROMAN[s.era]}</b><span>${esc(ERA_NAMES[s.era].replace(/^L’|^L'|^Le |^La /, ''))}</span></div>
         <div class="phase">${PHASES.map((_, i) => `<i class="${i === 3 ? 'cr ' : ''}${i < phaseIdx ? 'done' : i === phaseIdx ? 'now' : ''}"></i>`).join('')}</div></div>
       RACE
+      <button class="icon-btn deck-btn" data-act="deck" aria-label="Votre civilisation">${ICON.book}<span class="count">${s.deck.length + s.jalons.filter(Boolean).length}</span></button>
       <button class="icon-btn" data-act="settings" aria-label="Réglages">${ICON.gear}</button>
     </div>`;
     const fams = FAMILIES.map((f) => this.famHtml(this.e.familyInfo(s, f))).join('');
@@ -315,6 +316,7 @@ export class App {
       <div class="rr them">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < s.rivalJalons ? 'on' : ''}"></i>`).join('')}</div></div>`;
     hud.innerHTML = `${top.replace('RACE', race)}<div class="hud-row2"><div class="fams">${fams}</div></div>`;
     hud.querySelector('[data-act=settings]')!.addEventListener('click', () => this.settingsScreen(() => this.closeScreen()));
+    hud.querySelector('[data-act=deck]')!.addEventListener('click', () => this.deckScreen());
     hud.querySelectorAll<HTMLElement>('.fam').forEach((b) => b.addEventListener('click', () => this.famPopover(b.dataset.f as FamilyId, b)));
     // deltas animés
     for (const r of RES) {
@@ -783,6 +785,39 @@ export class App {
       (inner.lastChild as HTMLElement).style.cssText = 'color:var(--faint);font-size:13px;margin:0';
     }, (k) => {
       if (k === 'Enter') this.setup();
+    });
+  }
+
+  /** Votre civilisation : les merveilles, les découvertes, et ce que comptent vos mots-clés. */
+  private deckScreen(): void {
+    const s = this.s!;
+    const prevKeys = this.keyHandler;
+    const close = () => {
+      this.closeScreen();
+      this.keyHandler = prevKeys;
+    };
+    this.openScreen('veil deck', (inner) => {
+      inner.innerHTML = `<div class="over">Votre civilisation</div><h2 class="big" style="font-size:clamp(26px,8vw,40px)">${esc(s.name)}</h2>
+        <p class="sub">${esc(this.e.dessein(s).name)} · ${s.jalons.filter(Boolean).length} merveille${s.jalons.filter(Boolean).length > 1 ? 's' : ''} sur 5</p>`;
+      const tags = el('div', 'panel');
+      tags.innerHTML = '<h3>Mots-clés</h3>' + (['Science', 'Guerre', 'Foi', 'Commerce', 'Culture'] as const).map((t) => {
+        const src = this.e.tagSources(s, t);
+        return `<p><b>${esc(t)} : ${src.total}</b>${src.parts.length ? ` <span class="note">— ${esc(src.parts.join(', '))}</span>` : ''}</p>`;
+      }).join('') + '<p class="note">Les mots-clés ouvrent les merveilles du dessein et améliorent les chances des paris qui les citent.</p>';
+      inner.appendChild(tags);
+      const built = s.jalons.map((b, i) => (b ? this.e.jalonOf(s, i) : null)).filter(Boolean);
+      const w = el('div', 'panel');
+      w.innerHTML = '<h3>Merveilles</h3>' + (built.length ? built.map((j) => `<p><b>${esc(j!.name)}</b> <span class="note">— ${esc(j!.gift)}</span></p>`).join('') : '<p class="note">Aucune pour l’instant.</p>');
+      inner.appendChild(w);
+      const d = el('div', 'panel');
+      const disc = s.deck.map((id) => this.e.card(id)).filter((c) => c.kind === 'decouverte');
+      d.innerHTML = '<h3>Découvertes</h3>' + (disc.length ? disc.map((c) => `<p><b>${esc(c.title)}</b> <span class="note">— ${esc(c.gift ?? '')}</span></p>`).join('') : '<p class="note">Aucune. On en choisit une à la fin de chaque ère, avec du Savoir.</p>');
+      inner.appendChild(d);
+      const b = el('div', 'btns');
+      b.appendChild(this.button('Fermer', close));
+      inner.appendChild(b);
+    }, (k) => {
+      if (k === 'Escape' || k === 'Enter') close();
     });
   }
 
