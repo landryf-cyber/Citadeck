@@ -409,7 +409,7 @@ export class App {
     const card = el('article', `card enter${v.kind === 'crise' || v.kind === 'trahison' ? ' alarm' : ''}`);
     const art = v.kind === 'jalon' ? this.wonderArt(s) : cardArt(this.artFor(v));
     card.innerHTML = `<div class="card-art">${art}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
-      <div class="card-body"><h2 class="card-title">${esc(v.title)}</h2>${v.speaker && v.kind !== 'carrefour' ? `<p class="card-speaker">${esc(v.speaker)}</p>` : ''}<div class="card-rule"></div><p class="card-text">${rich(v.text)}</p></div>`;
+      <div class="card-body"><h2 class="card-title">${esc(v.title)}</h2>${v.speaker && v.kind !== 'carrefour' ? `<p class="card-speaker">${esc(capitalize(v.speaker))}</p>` : ''}<div class="card-rule"></div><p class="card-text">${rich(v.text)}</p></div>`;
     const opts = el('div', 'opts');
     v.options.forEach((o, i) => opts.appendChild(this.optButton(o, i, v)));
     card.appendChild(opts);
