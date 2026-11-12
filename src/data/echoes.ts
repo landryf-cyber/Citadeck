@@ -158,7 +158,7 @@ export const echoRecalls = [
   { family: 'sel' as const, mem: 'prophetie_moquee', line: 'Elle garde un os gravé dans un coffret. Elle ne dit pas ce qui est écrit dessus. Elle sourit en le regardant.', tone: 'neg' as const },
   { family: 'brume' as const, mem: 'feu_brume', line: 'Une petite flamme brûle dans une lanterne à sa ceinture. Elle vient du premier feu de Brume. {Il:brume} ne la prête pas.', tone: 'pos' as const },
   { family: 'ourk' as const, mem: 'heritage', line: 'Ses ancêtres gardaient déjà les murs de {ancienne}. Il compare. {ancienne} avait de plus beaux murs, et de meilleurs chefs, dit-il.' },
-  { family: 'sel' as const, mem: 'heritage', line: 'Elle prie aussi pour les morts de {ancienne}. Elle dit qu’ils vous regardent. Elle dit qu’ils prennent des notes.' },
+  { family: 'sel' as const, mem: 'heritage', line: 'Elle prie aussi pour les morts de {ancienne}. Elle dit qu’ils vous regardent. Elle dit qu’ils comptent les points.' },
   { family: 'brume' as const, mem: 'heritage', line: '{Il:brume} a retrouvé les calculs de {ancienne}. Ils étaient faux à la troisième décimale. {Il:brume} vous le montre, pour que vous ne recommenciez pas.' },
   { family: 'troc' as const, mem: 'heritage', line: 'Il possède encore des créances sur {ancienne}. Il espère que vous les honorerez, par solidarité entre civilisations.' },
   { family: 'troc' as const, mem: 'dette_ancestrale', line: 'Il a un caillou gravé dans sa poche. Il le sort parfois, le regarde, fait un calcul, et sourit.' },

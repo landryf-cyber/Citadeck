@@ -173,6 +173,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 
 /* réponse et retours */
 .after { width: var(--card-w); margin-top: 8px; min-height: 30px; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 3; text-align: center; }
+.reply-of { display: block; font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 2px; }
 .reply { font-style: italic; font-size: 15px; line-height: 1.32; color: #fff7e8; text-shadow: 0 1px 3px #000, 0 0 14px #000, 0 0 30px rgba(0, 0, 0, 0.95); opacity: 0; transform: translateY(6px); transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out); text-wrap: balance; padding: 0 6px; }
 .reply.show { opacity: 1; transform: none; }
 .reply.old { opacity: 0.55; }
@@ -333,6 +334,17 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   .opt-label { font-size: 16px; }
   .opt { padding: 11px 12px; }
 }
+/* tablette en portrait : une carte plus grande, pour ne pas laisser un ciel vide sous elle */
+@media (min-width: 700px) and (max-width: 899px) and (min-height: 1000px) {
+  :root { --card-w: 620px; }
+  #stage { margin-top: 3vh; }
+  .card-art { height: 180px; }
+  .card-title { font-size: 30px; }
+  .card-text { font-size: 19px; }
+  .opt-label { font-size: 17.5px; }
+  .opt { padding: 13px 14px; }
+  .after { font-size: 15px; }
+}
 @media (max-width: 520px) {
   .stat.q small, .era-name span { display: none; }
   .fam .fh .long { display: none; }
@@ -351,7 +363,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   .icon-btn { width: 32px; height: 32px; }
 }
 @media (max-height: 700px) {
-  .card-art { height: 64px; }
+  .card-art { height: 72px; }
   .card-text { font-size: 14.5px; }
   .opt { padding: 7px 9px; }
   .fam svg.med { width: 30px; height: 30px; }

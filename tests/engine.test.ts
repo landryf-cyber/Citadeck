@@ -142,4 +142,65 @@ describe('pas de redite', () => {
       expect(ids.length, `graine ${seed}`).toBe(new Set(ids).size);
     }
   });
+
+  it('une merveille manquée se rattrape au bilan suivant, plus cher, et compte pour le dessein', () => {
+    const s = e.newGame(11, { dessein: 'empire' });
+    s.era = 2;
+    s.jalons = [false, true, false, false, false];
+    s.res = { vivres: 99, armee: 99, savoir: 99, tresor: 99 };
+    s.phase = 'finere';
+    s.steps = ['rattrapage'];
+    s.prompt = { card: 'croissance' };
+    e.act(s, 1);
+    expect(s.prompt?.card).toBe('jalon');
+    expect(s.prompt?.missed).toBe(0);
+    const v = e.view(s)!;
+    expect(v.title).toBe('Le Chantier oublié');
+    const base = content.desseins.find((d) => d.id === 'empire')!.jalons[0].cost;
+    const k = Object.keys(base)[0] as keyof typeof base;
+    expect(v.options[0].cost[k]!).toBeGreaterThan(base[k]!);
+    e.act(s, 0);
+    expect(s.jalons[0]).toBe(true);
+    expect(s.jalons[2]).toBe(false);
+  });
+
+  it('après son triomphe, la rivale réclame un tribut à chaque fin d’ère', () => {
+    const s = e.newGame(12, { dessein: 'etoiles' });
+    s.era = 2;
+    s.rivalJalons = 5;
+    s.spent.push('triomphe');
+    s.phase = 'crise';
+    s.pile = [];
+    s.prompt = { card: 'croissance' };
+    s.res = { vivres: 99, armee: 0, savoir: 0, tresor: 0 };
+    e.act(s, 1);
+    const seen: string[] = [];
+    for (let g = 0; g < 6 && (s.phase as string) === 'finere'; g++) {
+      seen.push(s.prompt!.card);
+      e.act(s, e.view(s)!.options.findIndex((o) => o.enabled));
+    }
+    expect(seen).toContain('tribut');
+  });
+
+  it('une famille qui trahit encore ne refait pas le même coup', () => {
+    const s = e.newGame(13, { dessein: 'posterite' });
+    s.fam.troc.loy = -3;
+    s.history.push({ turn: 1, era: 0, date: '', card: 'trahison_troc', choice: 0, label: 'x', title: 'x' } as never);
+    s.phase = 'chantier';
+    s.prompt = { card: 'jalon' };
+    e.act(s, e.view(s)!.options.length - 1);
+    expect(s.pile).toContain('trahison_troc_2');
+  });
+
+  it('la palissade pare une perte subie, pas un sacrifice choisi', () => {
+    const s = e.newGame(14, { dessein: 'empire' });
+    s.jalons = [true, false, false, false, false];
+    const q = s.quartiers;
+    const ev: never[] = [];
+    const card = content.cards.creance;
+    e.applyEffect(s, card, { quartiers: -1, cause: 'test' }, new Rng(1), ev);
+    expect(s.quartiers).toBe(q - 1);
+    e.applyEffect(s, card, { if: { quartiers: { min: 99 } }, else: { quartiers: -1, cause: 'test' } }, new Rng(1), ev);
+    expect(s.quartiers).toBe(q - 1);
+  });
 });

@@ -96,7 +96,7 @@ export const brumeCards = [
     options: [
       { label: 'Payer son silence', cost: $('S4'), effect: { loy: { brume: 1 } }, reply: '{F:brume} range l’invention. Il garde le plan. Il garde toujours le plan.' },
       { label: 'Laisser faire', effect: { quartiers: -1, cause: 'l’expérience des Brume', loy: { brume: 1 } },
-        reply: 'L’expérience a réussi. Le quartier, moins. « Techniquement, je vous avais prévenus. »' },
+        reply: 'L’expérience a réussi. Le quartier, moins. « Je vous avais prévenus. Dans une note de bas de page. »' },
     ],
   }),
   card({

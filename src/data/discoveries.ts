@@ -210,7 +210,7 @@ export const discoveryCards = [
     title: 'Le Droit',
     text: 'Des juges, des codes, des robes noires. Vous avez eu tant de procès que la justice s’est organisée autour de vous. Reste à savoir pour qui elle travaille.',
     options: [
-      { label: 'Juger les puissants', effect: { gain: $('V3'), loy: { sel: 1, ourk: -1, troc: -1 } }, reply: 'Un amiral et un banquier en prison le même jour. La foule applaudit. Les puissants prennent des notes.' },
+      { label: 'Juger les puissants', effect: { gain: $('V3'), loy: { sel: 1, ourk: -1, troc: -1 } }, reply: 'Un amiral et un banquier en prison le même jour. La foule applaudit. Les puissants se font tout petits, pour la première fois.' },
       { label: 'Juger les pauvres', effect: { gain: $('T5'), loy: { troc: 1, sel: -1 } }, reply: 'Les prisons se remplissent de voleurs de pain. Les voleurs de banques vous remercient.' },
     ],
   }),

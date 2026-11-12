@@ -171,7 +171,7 @@ export const moreEvents = [
     title: 'Les Robots syndiqués',
     text: 'Les robots de {H:brume} ont créé un syndicat. Ils demandent des congés, une retraite et une prise électrique chacun. {F:ourk} propose de les armer. {F:troc} propose de les vendre à {rival}.',
     options: [
-      { label: 'Accorder les congés', cost: $('T4'), effect: { gain: $('S3'), loy: { brume: 1, troc: -1 } }, reply: 'Les robots partent en vacances. Ils reviennent bronzés, ce qui est techniquement impossible.' },
+      { label: 'Accorder les congés', cost: $('T4'), effect: { gain: $('S3'), loy: { brume: 1, troc: -1 } }, reply: 'Les robots partent en vacances. Ils reviennent bronzés, ce qui n’est pas prévu par le manuel.' },
       { label: 'Les armer', effect: { gain: $('A6'), loy: { ourk: 2, brume: -1 }, mem: ['robots_armes'] }, reply: 'Une armée de robots syndiqués. Ils refusent de combattre après 18 heures.' },
       { label: 'Les vendre à {rival}', effect: { gain: $('T6'), rival: -1, loy: { troc: 1, brume: -2 } }, reply: '{Reine} reçoit vos robots. Ils font grève le jour même. {Elle} soupçonne un sabotage. {Elle} a raison.' },
     ],

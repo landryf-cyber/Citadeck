@@ -805,7 +805,7 @@ export class Engine {
     const st = s.fam[f];
     const def = this.c.families[f];
     const loy = st.loy;
-    const mood = st.state === 'eteinte' ? 'partis' : loy <= -3 ? 'révoltés' : loy <= -2 ? 'hostiles' : loy === -1 ? 'froissés' : loy === 0 ? 'neutres' : loy === 1 ? 'amicaux' : loy === 2 ? 'dévoués' : 'fanatiques';
+    const mood = st.state === 'eteinte' ? 'partis' : loy <= -3 ? 'révoltés' : loy <= -2 ? 'hostiles' : loy === -1 ? 'froissés' : loy === 0 ? 'neutres' : loy === 1 ? 'amicaux' : loy === 2 ? 'dévoués' : 'fervents';
     void 0;
     let scars = 0;
     for (const h of s.history) if ((h.loy?.[f] ?? 0) < 0) scars++;
@@ -1396,29 +1396,47 @@ export class Engine {
     // un acquittement clôt l'affaire, pas la rancune : seule la réparation l'efface
     const WIN: Record<FamilyId, string[]> = {
       ourk: [`{F:ourk} plaide. {F:ourk} tape sur la table. Le juge est convaincu ; la table, moins. ${P} sont déboutés, et le prennent mal.`,
-        `{F:ourk} plaide en montrant ses muscles. Le tribunal acquitte, par prudence. ${P} gardent leur rancune, et un œil sur {F:ourk}.`],
+        `{F:ourk} plaide en montrant ses muscles. Le tribunal acquitte, par prudence. ${P} gardent leur rancune, et un œil sur {F:ourk}.`,
+        `{F:ourk} cite ses batailles, toutes. À la troisième heure, le tribunal acquitte pour pouvoir dîner. ${P} repartent affamés et rancuniers.`,
+        `{F:ourk} entre au tribunal à cheval, dans la salle. Le cheval est acquitté le premier, vous ensuite. ${P} protestent, pas trop fort.`],
       sel: [`{F:sel} plaide en prenant le ciel à témoin. Le ciel ne dit rien, ce qui vaut acquittement. ${P} repartent en grommelant.`,
-        `{F:sel} plaide en larmes. Le juge pleure aussi. ${P} perdent, et notent que le juge était un cousin des Sel.`],
+        `{F:sel} plaide en larmes. Le juge pleure aussi. ${P} perdent, et notent que le juge était un cousin des Sel.`,
+        `{F:sel} lit un passage des Écritures qui vous innocente. Personne ne l’avait jamais lu ; personne ne le retrouvera. ${P} sont déboutés.`,
+        `{F:sel} annonce que le ciel a déjà jugé, en votre faveur, et qu’il n’aime pas les appels. ${P} renoncent en regardant les nuages.`],
       brume: [`{F:brume} plaide avec des schémas. Personne ne comprend, tout le monde est convaincu. ${P} perdent, et réclament une copie des schémas.`,
-        `{F:brume} démontre que l’affaire est prescrite, à trois décimales près. ${P} perdent. Ils n’oublient pas pour autant.`],
+        `{F:brume} démontre que l’affaire est prescrite, à trois décimales près. ${P} perdent. Ils n’oublient pas pour autant.`,
+        `{F:brume} produit une expertise de quarante pages : personne n’existe vraiment. Le tribunal acquitte, troublé. ${P} demandent un second avis.`,
+        `{F:brume} rejoue la scène en maquette. Dans la maquette, vous êtes innocent, et très petit. ${P} perdent, et gardent la maquette.`],
       troc: [`{F:troc} plaide, puis achète le greffier. ${P} perdent le procès et gardent leur rancune, intacte, encadrée.`,
-        `{F:troc} trouve un vice de forme, puis un deuxième, qu’il facture. ${P} sont déboutés et jurent de revenir.`],
+        `{F:troc} trouve un vice de forme, puis un deuxième, qu’il facture. ${P} sont déboutés et jurent de revenir.`,
+        `{F:troc} propose au tribunal une offre groupée : votre acquittement, et une remise sur le prochain. ${P} sont déboutés au prix de gros.`,
+        `{F:troc} fait valoir que la plainte a été déposée hors des heures d’ouverture. ${P} perdent, et se promettent d’arriver plus tôt.`],
     };
+    // les plaidoiries changent d'un procès à l'autre
+    const nth = s.era + s.history.filter((h) => h.card === 'proces').length;
+    const MEH = [`{F:ADV} plaide sans conviction. Un arrangement est trouvé, à vos frais.`,
+      `{F:ADV} bâille pendant sa propre plaidoirie. On transige ; c’est vous qui payez.`,
+      `{F:ADV} plaide mollement, puis négocie avec entrain. L’arrangement vous coûte, et lui rapporte.`];
+    const AGAINST = [`{F:ADV} plaide… contre vous. Personne n’avait pensé à vérifier ce que {H:ADV} vous reprochaient.`,
+      `{F:ADV} se lève, vous regarde, et témoigne pour l’accusation. Le tribunal note que même votre avocat est contre vous.`,
+      `{F:ADV} plaide votre cause avec un tel ennui que le juge vous condamne, pour lui faire plaisir.`];
     const opts: Option[] = (p.qui ?? []).map((adv) => {
       const loy = s.fam[adv].loy;
       const plead: Effect =
         loy >= 1
-          ? { loy: { [adv]: -1 }, mem: judged, reply: WIN[adv][(s.era + s.turn) % 2] }
+          ? { loy: { [adv]: -1 }, mem: judged, reply: WIN[adv][nth % WIN[adv].length] }
           : loy === 0
-            ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: `{F:${adv}} plaide sans conviction. Un arrangement est trouvé, à vos frais.` }
-            : { loy: { [pl]: -1, [adv]: -1 }, reply: `{F:${adv}} plaide… contre vous. Personne n’avait pensé à vérifier ce que {H:${adv}} vous reprochaient.` };
+            ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: MEH[nth % 3].replace(/ADV/g, adv) }
+            : { loy: { [pl]: -1, [adv]: -1 }, reply: AGAINST[nth % 3].replace(/ADV/g, adv) };
       return { label: `Défendu par {F:${adv}}`, effect: plead };
     });
     const r = this.c.families[pl].res;
     opts.push({
       label: 'Plaider coupable',
       cost: { [r]: 3 + s.era },
-      effect: { loy: { [pl]: 2 }, mem: judged, reply: `Vous payez réparation. ${P} encadrent le reçu. Ils l’accrochent à côté des autres.` },
+      effect: { loy: { [pl]: 2 }, mem: judged, reply: [`Vous payez réparation. ${P} encadrent le reçu. Ils l’accrochent à côté des autres.`,
+        `Vous plaidez coupable et payez. ${P} sont si surpris qu’ils en oublient d’être fâchés. Presque.`,
+        `Vous payez sans discuter. ${P} acceptent, et racontent partout que vous avez pleuré. Vous n’avez pas pleuré.`][nth % 3] },
     });
     return opts;
   }

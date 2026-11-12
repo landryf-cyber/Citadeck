@@ -51,12 +51,14 @@ function presage(s: GameState): void {
   if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}. ${p.legacy.memory ?? ''}`);
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
+  const missed = e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
+  if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. Au bilan de l’ère, vous pourrez en rattraper une, plus cher.`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
   P(`En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}.`);
   if (p.nextJalon) P(`À l’ère suivante : ${p.nextJalon.name}${p.nextJalon.req ? `, qui exigera ${p.nextJalon.req}` : ''}.`);
-  P(p.rival.count >= 5 ? `Rivale : ${p.rival.name} ont achevé leur grand dessein. Relations : ${p.rival.rel}.` : `Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
+  P(p.rival.count >= 5 ? `Rivale : ${p.rival.name} ont achevé leur grand dessein ; à chaque fin d’ère, ils réclament un tribut. Relations : ${p.rival.rel}.` : `Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
   P('Options : 1. En route');
 }
 

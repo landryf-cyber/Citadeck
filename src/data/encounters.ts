@@ -189,7 +189,7 @@ export const encounterCards = [
         win: { gain: $('S8'), reply: 'La pierre contenait un métal inconnu. {F:brume} lui donne son nom. Le métal n’a rien demandé.' },
         lose: { gain: $('S-2'), reply: 'La pierre a explosé. {F:brume} a gardé un morceau. Le morceau bourdonne toujours.' } } } },
       { label: 'L’adorer', effect: { gain: $('V3'), loy: { sel: 1 } }, reply: 'La pierre a son temple. Elle bourdonne pendant les prières. C’est bon signe, dit {F:sel}.' },
-      { label: 'La vendre', effect: { gain: $('T5'), loy: { troc: 1 } }, reply: 'Vendue à {rival}. Elle a explosé chez eux. Prix d’ami.' },
+      { label: 'La vendre', effect: { gain: $('T5'), loy: { troc: 1 } }, reply: 'Vendue à {rival}. Elle a explosé chez eux. Ils n’ont pas demandé de remboursement. Pas encore.' },
     ],
   }),
 ];

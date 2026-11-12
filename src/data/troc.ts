@@ -63,7 +63,7 @@ export const trocCards = [
       { label: 'Vendre le nom', effect: { gain: $('T12'), loy: { troc: 2 }, mem: ['troc_nom'] },
         reply: 'Vous gouvernez désormais {cite}™. Chaque discours est suivi d’une publicité.' },
       { label: 'Exproprier TrocCorp', cost: $('A5'), effect: { gain: $('T6'), loy: { troc: -3 } },
-        reply: 'TrocCorp est à vous. Elle était endettée jusqu’à l’orbite. Prix d’ami.' },
+        reply: 'TrocCorp est à vous. Elle était endettée jusqu’à l’orbite. Les dettes étaient comprises dans le prix.' },
     ],
   }),
   card({
@@ -79,7 +79,7 @@ export const trocCards = [
   card({
     id: 'trahison_troc', kind: 'trahison', scale: true, family: 'troc', art: { motif: 'coin', hue: 0 },
     title: 'La Caisse',
-    text: 'En pleine crise, {H:troc} sont partis avec la caisse. {F:troc} a laissé un mot : « Prix d’ami. »',
+    text: 'En pleine crise, {H:troc} sont partis avec la caisse. {F:troc} a laissé un mot : « Nous reviendrons. Avec une facture. »',
     options: [
       { label: 'Les rattraper', cost: $('A4'), effect: { gain: $('T3'), loy: { troc: 1 } }, reply: 'Rattrapés à la frontière. Ils prétendent qu’ils allaient investir.' },
       { label: 'Laisser filer', effect: { gain: $('T-6'), quartiers: -1, cause: 'la fuite des Troc avec la caisse', loy: { troc: 1 } },

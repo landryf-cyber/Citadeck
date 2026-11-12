@@ -484,12 +484,12 @@ export class App {
     store.saveGame(s.phase === 'fin' ? null : s);
     card?.classList.add('leave');
     await wait(240);
-    await this.feedback(ev, v);
+    await this.feedback(ev, v, v.options[i].label);
     this.lock = false;
   }
 
   /** Montre ce que le choix a fait : réserves, familles, quartiers, réponse, et les grands moments. */
-  private async feedback(ev: Ev[], v: View): Promise<void> {
+  private async feedback(ev: Ev[], v: View, picked?: string): Promise<void> {
     const s = this.s!;
     const after = this.root.querySelector('.after') as HTMLElement;
     after.innerHTML = '';
@@ -521,7 +521,8 @@ export class App {
       if (x.type === 'rival') chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'}</span>`);
       if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
     }
-    if (reply) after.appendChild(el('p', 'reply', esc(reply)));
+    // la réponse s'affiche sous la carte suivante : on rappelle à quoi elle répond
+    if (reply) after.appendChild(el('p', 'reply', `${picked ? `<span class="reply-of">${esc(v.title)} · ${esc(picked)}</span>` : ''}${esc(reply)}`));
     if (chips.length) after.appendChild(el('div', 'fx', chips.join('')));
     requestAnimationFrame(() => after.querySelector('.reply')?.classList.add('show'));
     // familles : éclat sur l'emblème
@@ -613,7 +614,11 @@ export class App {
           ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}${p.alt.req ? `<span class="note">· exige ${esc(p.alt.req)}</span>` : ''}</div><p class="note">${esc(p.alt.gift)}</p>` : ''}`
         : '<p class="note">Le jalon de cette ère est déjà debout.</p>';
       const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
-      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>${nxt}`));
+      // une merveille manquée n'est pas perdue : elle se rattrape au bilan, plus cher
+      const missed = this.e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
+      const miss = missed.length ? `<p class="warnline">Manquée${missed.length > 1 ? 's' : ''} : ${esc(missed.join(', '))}. Au bilan de l’ère, vous pourrez ${missed.length > 1 ? 'en rattraper une' : 'la rattraper'}, plus cher.</p>` : '';
+      const rule = s.era === 0 ? '<p class="note">Le chantier ouvre après les deux saisons, juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>' : '';
+      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${miss}${rule}${nxt}`));
       const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
       const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
       const fams = p.needs.families.length ? `<p class="note">Ce qui aide aussi : ${esc(p.needs.families.join(', '))}.</p>` : '';
@@ -621,8 +626,8 @@ export class App {
         ${p.envy ? `<p class="warnline">Vos ${p.built} merveille${p.built > 1 ? 's' : ''} attire${p.built > 1 ? 'nt' : ''} les regards : la crise sera ${p.envy} % plus dure.</p>` : ''}`));
       const rv = this.e.rival(s);
       inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
-        <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur grand dessein. Ils vous regardent de haut.` : `${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. S’ils achèvent leurs cinq merveilles, toute la vallée les regardera triompher.`} Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
-      inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}${s.res.vivres < p.upkeep ? ` (vous en avez ${s.res.vivres})` : ''}. Sans assez de Vivres : la famine, et un quartier perdu. L’Armée et le Trésor s’érodent un peu.`));
+        <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur grand dessein : à chaque fin d’ère, ils réclament un tribut.` : `${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. À cinq, ils triomphent, et la vallée leur paie tribut.`} Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
+      inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''}${s.res.vivres < p.upkeep ? ` ; vous en avez ${s.res.vivres}` : ''}. Sinon : famine, et un quartier perdu.`));
       (inner.lastChild as HTMLElement).style.cssText = 'color:var(--dim);font-size:13px;text-align:center;margin:0';
       const btns = el('div', 'btns');
       btns.appendChild(this.button('En route', go));
@@ -951,7 +956,7 @@ export class App {
 
   private cardHints(v: View): void {
     if (v.kind === 'carrefour') this.hint('carrefour', 'Deux <b>saisons</b> par ère. Choisissez où les passer : chaque route mène à une famille, ou vers l’inconnu. Les familles qu’on ne visite pas se vexent.');
-    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché. Les gains et les rancunes, non : ils sont dans le texte. Les pastilles disent seulement qui sera concerné.');
+    else if (v.options.some((o) => Object.keys(o.cost).length)) this.hint('cout', 'Le <b>coût</b> est affiché, et le genre de gain (+). Les montants, non : ils sont dans le texte. Les flèches des pastilles disent quelle famille y gagne ou y perd.');
     if (v.kind === 'famille') this.hint('famille', 'Les familles <b>se souviennent</b>. Ce que vous décidez ici, leurs descendants vous le reprocheront ou vous en remercieront, citation à l’appui.');
     if (v.kind === 'proces') this.hint('proces', 'Le <b>procès</b> : la famille la plus lésée cite votre pire décision contre elle. Choisissez bien votre avocat.');
     if (v.kind === 'jalon') this.hint('jalon', 'Le <b>chantier</b> : bâtir rapproche du dessein, mais chaque merveille attire la convoitise. La crise suivante sera plus dure.');
