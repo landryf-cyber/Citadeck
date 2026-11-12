@@ -228,7 +228,7 @@ describe('pas de redite', () => {
           const price = Number(/la note : (\d+) Trésor/.exec(v.options[k].detail ?? '')?.[1]);
           expect(price).toBeGreaterThan(0);
           e.act(s, k);
-          for (let h = 0; h < 6 && s.phase !== 'fin'; h++) {
+          for (let h = 0; h < 6 && (s.phase as string) !== 'fin'; h++) {
             const w = e.view(s)!;
             if (/^creance/.test(w.card.id)) {
               expect(w.options[0].cost.tresor).toBe(price);
