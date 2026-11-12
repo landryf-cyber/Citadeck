@@ -550,7 +550,7 @@ export class Engine {
         const d = this.card(id);
         return { label: d.title, cost: { savoir: d.price ?? 0 }, effect: { addCard: [id] } };
       });
-      opts.push({ label: 'Rien de nouveau', effect: {}, reply: 'Les savants rangent leurs croquis. Ils boudent.' });
+      opts.push({ label: 'Rien de nouveau', effect: {}, reply: ['Les savants rangent leurs croquis. Ils boudent.', 'Les savants rangent leurs tablettes et vont se plaindre aux bains.', 'Les savants rangent leurs parchemins. L’un d’eux part chez {rival}, avec les siens.', 'Les savants rangent leurs brevets dans un tiroir, qu’ils ferment à clé, ostensiblement.', 'Les savants archivent le projet. Il sera redécouvert dans mille ans, par quelqu’un d’autre.'][s.era] });
       return opts;
     }
     if (card.kind === 'proces') return this.trialOptions(s, p);
