@@ -2,7 +2,7 @@
  * L'interface V2 : un écran titre, la fondation, puis la partie (HUD, carte, retours),
  * les présages, les bilans d'ère, la chute ou la victoire, le testament et la chronique.
  */
-import { ERA_SCALE, GAIN_RANGES, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
+import { ERA_SCALE, GAIN_RANGES, TUNING, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
 import { chronicleLines, epitaph, nextSetup, recordRun, testaments, UNLOCKS, type Testament, type Unlock } from '../core/meta';
 import { FAMILIES, RES, RES_LABEL, type ChronicleEntry, type FamilyId, type GameState, type MetaState, type Res } from '../core/types';
 import { civName, ERA_NAMES, ERA_SUBTITLES, capitalize, fill } from '../core/text';
@@ -635,7 +635,7 @@ export class App {
       // prévenir avant de punir : une famille qu'on ne visitera pas cette ère se sentira délaissée au bilan
       const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
       if (lonely.length) inner.appendChild(el('p', 'warnline', `${esc(capitalize(lonely.join(' et ')))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`));
-      inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''}${s.res.vivres < p.upkeep ? ` ; vous en avez ${s.res.vivres}` : ''}. Sinon : famine, et un quartier perdu.`));
+      inner.appendChild(el('p', 'note', `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''}${s.res.vivres < p.upkeep ? ` ; vous en avez ${s.res.vivres}` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
       (inner.lastChild as HTMLElement).style.cssText = 'color:var(--dim);font-size:13px;text-align:center;margin:0';
       const btns = el('div', 'btns');
       btns.appendChild(this.button('En route', go));

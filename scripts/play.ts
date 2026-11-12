@@ -56,7 +56,7 @@ function presage(s: GameState): void {
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
-  P(`En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}.`);
+  P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
   const lonely = e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => e.c.families[f].house[s.era]);
   if (lonely.length) P(`${capitalize(lonely.join(' et '))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`);
   if (p.nextJalon) P(`À l’ère suivante : ${p.nextJalon.name}${p.nextJalon.req ? `, qui exigera ${p.nextJalon.req}` : ''}.`);

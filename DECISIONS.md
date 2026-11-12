@@ -141,3 +141,10 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     de saboter une merveille rivale pour l'arrêter ; l'épreuve finale est proportionnelle (un quartier à trois
     merveilles, deux en dessous) ; un hommage peut rebâtir un quartier quand la cité n'en a plus que deux.
 46. **Quelques cartes graves sans chute** (le travail des enfants, la peste) : l'humour ne doit pas tout recouvrir.
+47. **Après le dernier tour de juges** (corrections sans nouveau jugement) : la palissade ne rachète jamais un
+    quartier qu'on cède soi-même (elle prélevait d'office l'Armée d'un joueur qui avait choisi de céder) ; une
+    option qui ferait passer une famille à −3 l'annonce, et la dernière carte avant le bilan dit ce que coûteront
+    les révoltes ; le bilan s'affiche aussi après une disette ; une perte impayable coûte un cran de loyauté même
+    dans une branche, et la dette rivale ignorée à sec ou à la dernière ère coûte un quartier ; le chantier annonce
+    l'entretien de la merveille, le présage l'usure du bilan et la découverte ; la nouvelle cité ne reprend pas le
+    nom de ses ruines.

@@ -829,7 +829,7 @@ export class Engine {
       const je = o.effect.jalonEra ?? s.era;
       const j = o.effect.jalon === 'alt' ? this.jalonAltOf(s, je) : this.dessein(s).jalons[je];
       if (j) {
-        v.detail = fill(j.gift, s, this.c);
+        v.detail = `${fill(j.gift, s, this.c)} Entretien : +${TUNING.wonderUpkeep} Vivre par ère.`;
         v.ref = j.shape;
       }
     }
@@ -1049,7 +1049,8 @@ export class Engine {
       s.res[r] = Math.max(0, s.res[r] + (e.gain[r]! > 0 ? Math.max(1, Math.round(e.gain[r]! * TUNING.gain)) : e.gain[r]!));
     }
     if (e.loy) for (const f of Object.keys(e.loy) as FamilyId[]) this.changeLoy(s, f, e.loy[f]!, ev);
-    if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev, nested || !!e.forced || !['famille', 'rencontre', 'evenement', 'decouverte', 'rivale'].includes(card.kind));
+    // la palissade rachète une perte subie (seuil raté, pari perdu, trahison, bilan), jamais un quartier qu'on cède soi-même
+    if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev, nested || !!e.forced || card.kind === 'trahison');
     for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
     for (const m of e.unmem ?? []) s.mem = s.mem.filter((x) => x !== m);
     for (const sc of e.sched ?? []) {
