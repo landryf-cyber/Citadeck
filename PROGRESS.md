@@ -30,9 +30,9 @@ P2 clarté
 - [x] présage : réserves actuelles, seuils chiffrés de la crise à venir, d'où vient la Science/Guerre/Culture et combien on en a
 - [x] merveille bâtie : une phrase (réplique), pas seulement ★
 P3 textes
-- [ ] grammaire : « des les », rivales au pluriel (Ligue d'Ombre), genres (amirale Ourk-7, Monseigneur Salin, BRUME), {RIVAL}, « Un vieux légionnaires », « On lui a pris », dates « en l'an »
-- [ ] une seule accroche par carte de famille (souvenir OU humeur, en alternance, souvenirs filtrés par le ton) ; tics (« techniquement », « prix d'ami », « le ciel est formel », « coffre plein de plans »)
-- [ ] cartes : Comète (Mère Sel/Sélènè, éclipse), Canons (fondre les cloches), titre « Troc et Fils », Loterie et Suffrage (options dominantes), gains d'Armée injustifiés (espion, ambassadeur), Carrefour (promesses)
+- [x] grammaire : « des les », rivales au pluriel (Ligue d'Ombre), genres (amirale Ourk-7, Monseigneur Salin, BRUME), {RIVAL}, « Un vieux légionnaires », « On lui a pris », dates « en l'an »
+- [x] une seule accroche par carte de famille (souvenir OU humeur, en alternance, souvenirs filtrés par le ton) ; tics (« techniquement », « prix d'ami », « le ciel est formel », « coffre plein de plans »)
+- [x] cartes : Comète (Mère Sel/Sélènè, éclipse), Canons (fondre les cloches), titre « Troc et Fils », Loterie et Suffrage (options dominantes), gains d'Armée injustifiés (espion, ambassadeur), Carrefour (promesses)
 P4 variété
 - [ ] suites liées aux souvenirs toujours tirées (priorité) ; variantes d'âge de pierre par famille ; voix propres à chaque rivale ; deux cartes de l'éditeur (Quarantième Génération, Brevet de la roue)
 Ensuite : relancer les joueurs A et B (limite d'usage levée vers 2 h 10 UTC) via SendMessage, mesures, captures.

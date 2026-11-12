@@ -23,7 +23,7 @@ export const selCards = [
   card({
     id: 'sel_2', kind: 'famille', family: 'sel', eras: [1], tags: ['Foi'], art: { motif: 'eye' },
     title: 'L’Oracle',
-    text: 'Sélènè la Pythie a vu une comète dans ses fumées. « Elle reviendra. Le ciel est formel. Le ciel accepte aussi les dons, pour la précision. »',
+    text: 'Sélènè la Pythie a vu une comète dans ses fumées. « Elle reviendra. Le ciel accepte les dons, pour la précision. »',
     options: [
       { label: 'Payer la prophétie', cost: $('T3'), effect: { loy: { sel: 2 }, mem: ['sel_comete'], sched: [{ card: 'sel_comete_2', in: 9 }] },
         reply: '« La comète reviendra après les grandes moissons. Préparez des greniers. Et un temple. Surtout le temple. »' },
@@ -47,18 +47,18 @@ export const selCards = [
   card({
     id: 'sel_4', kind: 'famille', family: 'sel', eras: [3], tags: ['Foi'], art: { motif: 'bell' },
     title: 'L’École du dimanche',
-    text: 'Monseigneur Salin veut garder les écoles. {F:brume} veut les lui prendre. Les enfants veulent qu’on les laisse tranquilles. Personne n’écoute les enfants.',
+    text: '{F:sel} veut garder les écoles. {F:brume} veut les lui prendre. Les enfants veulent qu’on les laisse tranquilles. Personne n’écoute les enfants.',
     options: [
       { label: 'Les écoles à l’Église', effect: { loy: { sel: 2, brume: -2 }, gain: $('V4'), mem: ['sel_ecole'] },
         reply: 'Les enfants apprennent le catéchisme. Ils le récitent bien. Ils ne savent pas compter les quêtes.' },
       { label: 'L’école laïque', cost: $('T3'), effect: { loy: { sel: -2, brume: 2 }, gain: $('S5') },
-        reply: 'Les enfants savent lire. Ils lisent les journaux. Monseigneur Salin lit vos comptes.' },
+        reply: 'Les enfants savent lire. Ils lisent les journaux. {F:sel} lit vos comptes.' },
     ],
   }),
   card({
     id: 'sel_5', kind: 'famille', family: 'sel', eras: [4], tags: ['Foi'], art: { motif: 'star' },
     title: 'Le Paradis, quatrième étage',
-    text: 'La révérende Sel vend des places au paradis. Le paradis existe : c’est une station orbitale. Il reste des places avec vue. « Le ciel est formel. Le ciel a un ascenseur. »',
+    text: 'La révérende Sel vend des places au paradis. Le paradis existe : c’est une station orbitale. Il reste des places avec vue. « Le ciel a enfin un ascenseur. Les escaliers restent gratuits. »',
     options: [
       { label: 'Bénir la station', cost: $('V4'), effect: { loy: { sel: 2 }, gain: $('T5'), if: { dessein: 'posterite' }, then: { gain: $('T3') } },
         reply: 'Les fidèles montent au ciel. Ils redescendent le dimanche, pour la messe et les courses.' },
@@ -69,11 +69,11 @@ export const selCards = [
   card({
     id: 'sel_comete_2', kind: 'intrigue', family: 'sel', arc: 'comete', finale: true, art: { motif: 'comet' },
     title: 'La Comète',
-    text: 'La comète est revenue, exactement comme {A:sel} l’avait prédit {D:sel_comete}. Tout le monde regarde le ciel. {F:sel} regarde la quête.',
+    text: 'La comète est revenue, exactement comme Sélènè la Pythie l’avait prédit en {D:sel_comete}. Tout le monde regarde le ciel. {F:sel} regarde la quête.',
     options: [
       { label: 'Un grand pèlerinage', cost: $('V3'), effect: { gain: $('T6'), loy: { sel: 2 }, quartiers: 1 },
         reply: 'Des pèlerins de partout. Certains restent. On leur construit un quartier, avec vue sur le ciel.' },
-      { label: 'Une simple éclipse', effect: { gain: $('S4'), loy: { sel: -2, brume: 1 } },
+      { label: 'Une pierre qui passe, voilà tout', effect: { gain: $('S4'), loy: { sel: -2, brume: 1 } },
         reply: '{F:brume} explique la comète avec un tableau noir. {F:sel} explique {F:brume} avec une malédiction.' },
     ],
   }),

@@ -46,7 +46,7 @@ export const trocCards = [
   }),
   card({
     id: 'troc_4', kind: 'famille', family: 'troc', eras: [3], tags: ['Commerce'], art: { motif: 'gear' },
-    title: 'Troc et Fils',
+    title: 'Les Petits Doigts',
     text: 'Troc et Fils emploie des enfants dans ses filatures. « Ils sont très bien payés, en bonbons. Et ils ont de petits doigts, c’est un avantage concurrentiel. »',
     options: [
       { label: 'Laisser faire', effect: { gain: $('T8'), loy: { troc: 2, sel: -2 }, mem: ['troc_enfants'] },
@@ -73,7 +73,7 @@ export const trocCards = [
     options: [
       { label: 'Rembourser', cost: $('T8'), effect: { loy: { troc: 2 } }, reply: 'Remboursé. {F:troc} vous propose aussitôt un nouveau prêt. Plus amical.' },
       { label: 'Faire défaut', effect: { loy: { troc: -3 }, rival: -1, if: { fam: { id: 'troc', max: -1 } }, then: { quartiers: -1, cause: 'la dette envers les Troc' } },
-        reply: 'Vous ne payez pas. {F:troc} vend votre dette à {rival}. {Rival} adore les dettes.' },
+        reply: 'Vous ne payez pas. {F:troc} vend votre dette à {rival}. {Rival} adorent les dettes.' },
     ],
   }),
   card({

@@ -48,7 +48,7 @@ export const crisisCards = [
     text: 'La horde est passée. Il reste des cendres, des blessés, et quatre familles qui vous regardent pour savoir à qui la faute.',
     form: 'qui',
     qui: { count: 3, option: (f) => ({ label: `Blâmer {H:${f}}`, effect: { loy: { [f]: -2, ...Object.fromEntries((['ourk', 'sel', 'brume', 'troc'] as const).filter((x) => x !== f).map((x) => [x, 1])) }, gain: $('V2') },
-      reply: `{H:${f}} sont coupables, c’est décidé. Les autres familles se sentent mieux. {H:${f}} se sentent notés.` }) },
+      reply: `{H:${f}} sont coupables, c’est décidé. Les autres familles se sentent mieux. {H:${f}} prennent des notes. Elles seront citées.` }) },
     options: [],
   }),
 

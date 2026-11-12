@@ -5,14 +5,15 @@ import { $, card } from './dsl';
 export const families: Record<FamilyId, FamilyDef> = {
   ourk: {
     id: 'ourk', tag: 'Guerre', res: 'armee', hue: 8, motif: 'fang',
-    head: ['Ourk', 'Ourkos', 'Sire Ourquin', 'le colonel Ourkov', 'l’amirale Ourk-7'],
+    head: ['Ourk', 'Ourkos', 'Sire Ourquin', 'le colonel Ourkov', 'l’amiral Ourk-7'],
     house: ['les Ourk', 'les Ourkides', 'les Ourquin', 'les Ourkov', 'les Ourkonautes'],
     trade: ['chasseurs', 'légionnaires', 'chevaliers', 'officiers', 'amiraux'],
     voice: 'Parle de lui à la troisième personne. Depuis dix mille ans.',
   },
   sel: {
     id: 'sel', tag: 'Foi', res: 'vivres', hue: 44, motif: 'eye',
-    head: ['Mère Sel', 'Sélènè la Pythie', 'l’abbesse Salière', 'Monseigneur Salin', 'la révérende Sel'],
+    head: ['Mère Sel', 'Sélènè la Pythie', 'l’abbesse Salière', 'la prieure Salin', 'la révérende Sel'],
+    she: [true, true, true, true, true],
     house: ['les Sel', 'les Sélénides', 'les Salière', 'les Salin', 'les Sélestes'],
     trade: ['chamanes', 'oracles', 'moniales', 'prélats', 'télévangélistes'],
     voice: 'Prédit le malheur et tend la main.',
@@ -20,6 +21,7 @@ export const families: Record<FamilyId, FamilyDef> = {
   brume: {
     id: 'brume', tag: 'Science', res: 'savoir', hue: 205, motif: 'spiral',
     head: ['le vieux Brume', 'Brumos le Mesureur', 'frère Brumaire', 'le docteur Brumel', 'BRUME'],
+    she: [false, false, false, false, true],
     house: ['les Brume', 'les Brumides', 'les Brumaire', 'les Brumel', 'les BRUME'],
     trade: ['sages', 'géomètres', 'copistes', 'ingénieurs', 'intelligences'],
     voice: 'Corrige tout le monde. Fait exploser des choses.',
@@ -87,7 +89,7 @@ export const rivals: RivalDef[] = [
   { id: 'harsk', name: 'les Harsk', hue: 0, she: false, voice: 'Hurle ses lettres. Les signe avec une hache.',
     leader: ['le grand Harsk', 'Harsk le Conquérant', 'le roi Harsk XIV', 'le maréchal Harsk', 'HARSK PRIME'],
     jalons: ['le Tumulus des Harsk', 'l’Arène de Harsk', 'la Forteresse noire', 'l’Usine à canons', 'la Lune de guerre'] },
-  { id: 'ombre', name: 'la Ligue d’Ombre', hue: 230, she: true, voice: 'Ne signe jamais. Sait déjà ce que vous allez répondre.',
+  { id: 'ombre', name: 'les Ombres', hue: 230, she: true, voice: 'Ne signe jamais. Sait déjà ce que vous allez répondre.',
     leader: ['l’Ombre', 'l’Ombre pourpre', 'le Conseil d’Ombre', 'la Directrice', 'OMBRE'],
     jalons: ['la Pierre qui écoute', 'la Bibliothèque fermée', 'le Labyrinthe', 'le Bureau des fiches', 'le Grand Miroir'] },
 ];
@@ -106,7 +108,7 @@ export const routes: RouteDef[] = [
     promise: 'Les affaires de {H:brume}. Du Savoir, et des choses qui explosent.', encounters: ['r_brume_eleve', 'r_brume_erreur', 'r_brume_machine'] },
   { id: 'comptoir_troc', family: 'troc', art: { motif: 'coin', hue: 150 },
     name: N('Le Comptoir de Troc', 'Le Port des Trokides', 'La Banque Troquet', 'Les Usines Troc et Fils', 'La Tour TrocCorp'),
-    promise: 'Les affaires de {H:troc}. Du Trésor, à prix d’ami.', encounters: ['r_troc_marche', 'r_troc_contrat', 'r_troc_faillite'] },
+    promise: 'Les affaires de {H:troc}. Du Trésor, et des contrats à relire deux fois.', encounters: ['r_troc_marche', 'r_troc_contrat', 'r_troc_faillite'] },
   { id: 'frontiere', art: { motif: 'road', hue: 0 },
     name: 'La Frontière', promise: 'Du butin, et des nouvelles de {rival}.', risk: 'Sans Armée, la frontière se défend mal.',
     encounters: ['r_front_raid', 'r_front_marchands', 'r_front_deserteur'] },

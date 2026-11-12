@@ -246,6 +246,20 @@ export class Engine {
     if (lg) s.mem.push('heritage');
   }
 
+  /** Ce que les textes peuvent dire de la civilisation précédente. */
+  private ruinExtras(s: GameState): Record<string, string> {
+    const r = s.ruins[0];
+    if (!r) return {};
+    return {
+      ancienne: r.name,
+      testament: r.testament ?? 'rien, ils n’ont pas eu le temps',
+      cause: r.cause,
+      grief: r.grudge?.quote ?? '',
+      griefdate: r.grudge?.date ?? '',
+      griefmaison: r.grudge ? capitalize(r.grudge.house) : '',
+    };
+  }
+
   /** Contenu verrouillé par la méta-progression. */
   available(s: GameState, c: CardDef | undefined): boolean {
     return !!c && (!c.lock || s.unlocked.includes(c.lock));
@@ -471,7 +485,13 @@ export class Engine {
       const alt = this.jalonAltOf(s, s.era);
       const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.name} est debout. On vient de loin pour la voir ; {rival} viennent surtout pour la mesurer. ${j.gift}` }];
       if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `${alt.name} est debout. Personne n’avait jamais vu ça, et {rival} non plus. ${alt.gift}` });
-      opts.push({ label: 'Pas cette fois', effect: {}, reply: 'Les plans retournent dans un coffre. Le coffre est plein de plans.' });
+      opts.push({ label: 'Pas cette fois', effect: {}, reply: [
+        'Les plans retournent dans un coffre. Le coffre est plein de plans.',
+        'Les architectes rangent leurs maquettes. Ils les dépoussièrent chaque matin, en soupirant.',
+        'Le chantier attendra. Les tailleurs de pierre jouent aux dés sur les fondations.',
+        'On remet à plus tard. Les ingénieurs en profitent pour améliorer les plans. Ils coûtent déjà plus cher.',
+        'Le projet est mis en veille. Il clignote doucement dans un coin du serveur.',
+      ][s.era] });
       return opts;
     }
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
@@ -512,17 +532,7 @@ export class Engine {
       extra.quand = h ? h.date : 'depuis toujours';
       header = 'L’Hommage';
     }
-    if (s.ruins[0]) {
-      const r = s.ruins[0];
-      if (r) {
-        extra.ancienne = r.name;
-        extra.testament = r.testament ?? 'rien, ils n’ont pas eu le temps';
-        extra.cause = r.cause;
-        extra.grief = r.grudge?.quote ?? '';
-        extra.griefdate = r.grudge?.date ?? '';
-        extra.griefmaison = r.grudge ? capitalize(r.grudge.house) : '';
-      }
-    }
+    Object.assign(extra, this.ruinExtras(s));
     if (card.kind === 'famille' && card.family) {
       const lead = this.familyLead(s, card.family);
       if (lead) text = `${lead} ${text}`;
@@ -628,9 +638,14 @@ export class Engine {
     const m = this.c.moods[f];
     const pickM = (a: string[]) => a[(s.era + s.seed) % a.length];
     const mood = loy <= -2 ? pickM(m.hostile) : loy === -1 ? pickM(m.cold) : loy === 1 ? pickM(m.warm) : loy >= 2 ? pickM(m.devoted) : '';
-    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era);
-    const recall = rec.length ? rec[(s.era + rec.length) % rec.length].line : '';
-    return [mood, recall].filter(Boolean).join(' ');
+    // un souvenir d'une ère passée, accordé à l'humeur (une rancune ne se montre pas chez qui vous adore)
+    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && (s.memo[r.mem]?.era ?? s.era) < s.era
+      && (r.tone !== 'neg' || loy <= 0) && (r.tone !== 'pos' || loy >= 0));
+    const recall = rec.length ? rec[(s.era + s.seed) % rec.length].line : '';
+    // une seule accroche : le souvenir une ère sur deux, l'humeur sinon (ou ce qui existe)
+    const fi = FAMILIES.indexOf(f);
+    if (recall && (!mood || (s.era + fi) % 2 === 0)) return recall;
+    return mood || recall;
   }
 
   rival(s: GameState) {
@@ -760,13 +775,13 @@ export class Engine {
       title: v?.title ?? card.title,
       choice: index,
       label: view.label,
-      reply: reply ? fill(reply, s, this.c) : undefined,
+      reply: reply ? fill(reply, s, this.c, this.ruinExtras(s)) : undefined,
       loy,
       from: p.from,
       res: { ...s.res },
       quartiers: s.quartiers,
     });
-    if (reply) ev.unshift({ type: 'reply', text: fill(reply, s, this.c) });
+    if (reply) ev.unshift({ type: 'reply', text: fill(reply, s, this.c, this.ruinExtras(s)) });
     if (RES.some((r) => s.res[r] !== before[r])) ev.push({ type: 'res', before, after: { ...s.res } });
     s.turn++;
     s.growth++;

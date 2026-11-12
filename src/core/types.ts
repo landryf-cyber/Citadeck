@@ -146,6 +146,8 @@ export interface CardDef {
 }
 
 export interface FamilyDef {
+  /** le chef de famille est une femme, par ère (pronoms {il:x}) */
+  she?: boolean[];
   id: FamilyId;
   tag: Tag;
   res: Res;

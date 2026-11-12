@@ -27,7 +27,7 @@ export interface Content {
   /** humeur affichée en tête des cartes de famille */
   moods: Record<FamilyId, Moods>;
   /** souvenirs rappelés par les familles */
-  recalls: { family: FamilyId; mem: string; line: string }[];
+  recalls: { family: FamilyId; mem: string; line: string; tone?: 'neg' | 'pos' }[];
 }
 
 export function validateContent(c: Content): string[] {

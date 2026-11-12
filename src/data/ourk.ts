@@ -74,8 +74,8 @@ export const ourkCards = [
     text: '« Le colonel Ourkov a dessiné un canon. Il porte à dix kilomètres. Le colonel ne sait pas encore sur quoi. Le colonel a des idées. »',
     options: [
       { label: 'Fondre ses canons', cost: $('T5'), effect: { gain: $('A6'), loy: { ourk: 2 }, rival: -1 },
-        reply: 'Les canons pointent vers {rival}. {Rival} a pointé les siens vers vous. Équilibre.' },
-      { label: 'Fondre des cloches', effect: { gain: $('T3'), loy: { ourk: -1, sel: 1 } },
+        reply: 'Les canons pointent vers {rival}. {Rival} ont pointé les leurs vers vous. Équilibre.' },
+      { label: 'Des cloches, pas des canons', effect: { gain: $('T3'), loy: { ourk: -1, sel: 1 } },
         reply: 'Les cloches sonnent la paix. Le colonel Ourkov sonne la retraite, très fort, dans son bureau.' },
     ],
   }),
@@ -87,16 +87,16 @@ export const ourkCards = [
     text: '« OURK-7 A ÉTUDIÉ L’HISTOIRE. OURK-7 A TROUVÉ {?mem:ourk_humilie|LE MAMMOUTH|BEAUCOUP DE CHOSES}. OURK-7 PROPOSE DE VOUS REMPLACER. AVEC RESPECT. ET UN CROISEUR. »',
     options: [
       { label: 'Lui céder la flotte', cost: $('A6'), effect: { loy: { ourk: 3 }, rivalJalon: -1 },
-        reply: 'OURK-7 EST SATISFAITE. OURK-7 VA S’OCCUPER DE {RIVAL}. VOUS POUVEZ GARDER LE TRÔNE. POUR L’INSTANT.' },
+        reply: 'OURK-7 EST SATISFAIT. {RIVAL} N’ONT QU’À BIEN SE TENIR. VOUS POUVEZ GARDER LE TRÔNE. POUR L’INSTANT.' },
       { label: 'La mettre aux arrêts', warn: 'Sans 20 Armée, un quartier brûle',
         effect: { if: { res: $('A20') }, then: { loy: { ourk: -1 }, gain: $('A-4'), reply: 'OURK-7 EST AUX ARRÊTS. OURK-7 PRÉPARE SES MÉMOIRES. TOME UN : LE MAMMOUTH.' },
-          else: { quartiers: -2, cause: 'le putsch de l’amirale Ourk-7', reply: 'LE CROISEUR A TIRÉ SUR LE PALAIS. OURK-7 S’EXCUSE POUR LE BRUIT.' } } },
+          else: { quartiers: -2, cause: 'le putsch de l’amiral Ourk-7', reply: 'LE CROISEUR A TIRÉ SUR LE PALAIS. OURK-7 S’EXCUSE POUR LE BRUIT.' } } },
     ],
   }),
   card({
     id: 'ourk_5', kind: 'famille', family: 'ourk', eras: [4], tags: ['Guerre'], art: { motif: 'fang' },
-    title: 'L’Amirale',
-    text: '« OURK-7 A UNE FLOTTE EN ORBITE ET UNE PROPOSITION : RÉGLER LA QUESTION {RIVAL} AVANT LE DÎNER. OURK-7 A FAIM. DE GLOIRE. ET UN PEU DE DÎNER. »',
+    title: 'L’Amiral',
+    text: '« OURK-7 A UNE FLOTTE EN ORBITE ET UNE PROPOSITION : QUE {RIVAL} DISPARAISSENT AVANT LE DÎNER. OURK-7 A FAIM. DE GLOIRE. ET UN PEU DE DÎNER. »',
     options: [
       { label: 'Feu à volonté', cost: $('A5'), effect: { rivalJalon: -1, rival: -2, loy: { ourk: 2 }, mem: ['rival_frappe'] },
         reply: 'Le chantier de {rival} est un cratère. {Reine} vous écrit une lettre. Elle est courte.' },

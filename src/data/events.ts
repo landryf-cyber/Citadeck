@@ -219,7 +219,7 @@ export const rivalCards = [
     text: '« Ma chère voisine, j’ai appris vos difficultés. Je prie pour vous. J’envoie aussi un ambassadeur, pour prier de plus près. Affectueusement. »',
     options: [
       { label: 'Recevoir l’ambassadeur', cost: $('V2'), effect: { rival: 1, gain: $('S2') }, reply: 'L’ambassadeur prie beaucoup, surtout près des archives.' },
-      { label: 'Répondre poliment non', effect: { rival: -1, gain: $('A1') }, reply: '{Reine} vous répond qu’{elle} comprend. {Elle} ne comprend pas.' },
+      { label: 'Répondre poliment non', effect: { rival: -1, gain: $('A1') }, reply: '{Reine} vous répond qu’{elle} comprend. {Elle} ne comprend pas. Vos gardes restent à la frontière, au cas où {elle} comprendrait.' },
     ],
   }),
   card({
@@ -266,7 +266,7 @@ export const rivalCards = [
     text: 'Un espion de {rival} a été pris dans vos archives. Il dit qu’il visitait. Il visitait avec un plan, une lanterne et un faux nez.',
     options: [
       { label: 'Le retourner', cost: $('T2'), effect: { gain: $('S3'), rivalJalon: -1, rival: -1 }, reply: 'Il espionne pour vous désormais. Ou pour eux. Il ne sait plus lui-même, mais le chantier de {rival} a pris du retard.' },
-      { label: 'Le pendre', effect: { gain: $('A2'), rival: -2 }, reply: 'Pendu. {Rival} pendent le vôtre. Vous ne saviez pas que vous en aviez un.' },
+      { label: 'Le pendre', effect: { gain: $('A2'), rival: -2 }, reply: 'Pendu. La garde, galvanisée, double les rondes. {Rival} pendent le vôtre. Vous ne saviez pas que vous en aviez un.' },
     ],
   }),
   card({

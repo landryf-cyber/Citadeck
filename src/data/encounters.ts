@@ -17,7 +17,7 @@ export const encounterCards = [
     title: 'Le Défilé',
     text: '{F:ourk} veut un défilé. « Le peuple doit voir sa force. » Le peuple a vu. Le peuple voudrait surtout voir le dîner.',
     options: [
-      { label: 'Un défilé', cost: $('T3'), effect: { gain: $('A3'), loy: { ourk: 2 }, rival: -1 }, reply: '{Rival} a envoyé des observateurs. Ils ont pris beaucoup de notes, et un peu peur.' },
+      { label: 'Un défilé', cost: $('T3'), effect: { gain: $('A3'), loy: { ourk: 2 }, rival: -1 }, reply: '{Rival} ont envoyé des observateurs. Ils ont pris beaucoup de notes, et un peu peur.' },
       { label: 'Un banquet', cost: $('V3'), effect: { loy: { ourk: 1, sel: 1 } }, reply: 'Le banquet a dégénéré en défilé. Ourk a défilé sur la table.' },
       { label: 'Ni l’un ni l’autre', effect: { gain: $('T2'), loy: { ourk: -1 } }, reply: '{F:ourk} défile tout seul, dans sa cour. Les voisins applaudissent par prudence.' },
     ],
@@ -36,7 +36,7 @@ export const encounterCards = [
   card({
     id: 'r_sel_miracle', kind: 'rencontre', scale: true, family: 'sel', art: { motif: 'sun', hue: 44 },
     title: 'Le Miracle',
-    text: '{F:sel} annonce un miracle pour demain : les greniers vont se remplir. « Le ciel est formel. Il faudrait juste avancer un peu de grain. »',
+    text: '{F:sel} annonce un miracle pour demain : les greniers vont se remplir. « Le ciel me l’a dit. Il faudrait juste avancer un peu de grain. Le ciel ne fait pas crédit. »',
     options: [
       { label: 'Avancer le grain', cost: $('V3'),
         effect: { bet: { chance: 0.55, per: { tag: 'Foi', bonus: 0.15 },
@@ -80,7 +80,7 @@ export const encounterCards = [
     text: '{F:brume} a trouvé une erreur dans les calculs de l’ancêtre. La Terre ne tourne pas dans le bon sens. « Il faudrait tout recalculer. Ça coûte. »',
     options: [
       { label: 'Tout recalculer', cost: $('T3'), effect: { gain: $('S6'), loy: { brume: 2 } }, reply: 'Tout est recalculé. La Terre tourne dans le bon sens. Elle ne s’est aperçue de rien.' },
-      { label: 'Elle tourne, c’est bien', effect: { gain: $('V2'), loy: { brume: -1 } }, reply: '{F:brume} soupire si fort que la Terre ralentit. Techniquement.' },
+      { label: 'Elle tourne, c’est bien', effect: { gain: $('V2'), loy: { brume: -1 } }, reply: '{F:brume} soupire si fort que la Terre ralentit. Un peu. Il a mesuré.' },
     ],
   }),
   card({
@@ -97,7 +97,7 @@ export const encounterCards = [
   card({
     id: 'r_troc_marche', kind: 'rencontre', scale: true, family: 'troc', art: { motif: 'coin', hue: 150 },
     title: 'Le Marché',
-    text: '{F:troc} vous fait visiter le marché. Tout est à vendre. « Même ça. Surtout ça. Pour vous, prix d’ami. »',
+    text: '{F:troc} vous fait visiter le marché. Tout est à vendre. « Même ça. Surtout ça. Et ça aussi, mais c’est plus cher. »',
     options: [
       { label: 'Acheter des vivres', cost: $('T3'), effect: { gain: $('V5') }, reply: 'Des vivres de première qualité. Les étiquettes disent « première qualité ». C’est déjà ça.' },
       { label: 'Acheter des armes', cost: $('T3'), effect: { gain: $('A4') }, reply: 'Des armes neuves. {F:troc} a vendu les mêmes à {rival}, pour être juste.' },

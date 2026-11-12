@@ -99,8 +99,9 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
     .replace(/\{k:(\d+)\}/g, (_m, n: string) => String(Math.max(1, Math.round(Number(n) * crisisK()))))
     .replace(/\{date\}/g, eraDate(s.era, s.turn - (s.eraStart ?? 0)))
     .replace(/\{Q:(\w+)\}/g, (_m, k: string) => (s.memo[k] ? `« ${s.memo[k].label} »` : '« … »'))
-    .replace(/\{D:(\w+)\}/g, (_m, k: string) => s.memo[k]?.date ?? 'un jour')
+    .replace(/\{D:(\w+)\}/g, (_m, k: string) => (s.memo[k]?.date ? `l’${s.memo[k].date}` : 'l’an je-ne-sais-plus'))
     .replace(/\{ruine:(\d)\}/g, (_m, i: string) => s.ruins[Number(i)]?.name ?? 'une cité sans nom')
+    .replace(/\{(il|Il):(\w+)\}/g, (_m, w: string, id: FamilyId) => { const she = c.families[id]?.she?.[s.era]; return w === 'Il' ? (she ? 'Elle' : 'Il') : she ? 'elle' : 'il'; })
     .replace(/\{elle\}/g, rival.she ? 'elle' : 'il')
     .replace(/\{Elle\}/g, rival.she ? 'Elle' : 'Il')
     .replace(/\{(\w+)\}/g, (m, k: string) => extra[k] ?? m);
@@ -111,6 +112,7 @@ export function fill(text: string, s: GameState, c: Content, extra: Record<strin
 export function polish(text: string): string {
   let out = text.replace(/\s{2,}/g, ' ').trim();
   out = out
+    .replace(/\b([dD])es les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
     .replace(/\b([dD])e les (?=[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'des ' : 'Des '))
     .replace(/(^|[\s'’(«])([àÀ]) les (?=[A-ZÉÈ])/g, (_m, p: string, a: string) => p + (a === 'à' ? 'aux ' : 'Aux '))
     .replace(/\b([dD])e le (?=(grand|roi|maréchal|colonel|docteur|vieux|Conseil)\b|[A-ZÉÈ])/g, (_m, d: string) => (d === 'd' ? 'du ' : 'Du '))

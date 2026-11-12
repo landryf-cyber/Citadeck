@@ -81,7 +81,7 @@ export const moreEvents = [
   card({
     id: 'ev_amants', kind: 'evenement', eras: [2], cond: { mem: 'noces_refusees' }, art: { motif: 'ring', hue: 330 },
     title: 'Les Amants',
-    text: 'Un jeune Ourquin et une novice Salière se sont enfuis ensemble. Les deux familles vous accusent : {D:noces_refusees}, vous aviez interdit une union pareille. Elles se sont mises d’accord pour vous en vouloir.',
+    text: 'Un jeune Ourquin et une novice Salière se sont enfuis ensemble. Les deux familles vous accusent : en {D:noces_refusees}, vous aviez interdit une union pareille. Elles se sont mises d’accord pour vous en vouloir.',
     options: [
       { label: 'Les marier, enfin', cost: $('T3'), effect: { loy: { ourk: 1, sel: 1, troc: -1 }, mem: ['noces'] }, reply: 'Mariés en grande pompe, huit siècles en retard. Les deux familles pleurent, ensemble cette fois.' },
       { label: 'Les faire rattraper', cost: $('A2'), effect: { loy: { ourk: -1, sel: -1 } }, reply: 'Rattrapés, séparés. On écrit des chansons sur eux. Vous y jouez le méchant.' },
@@ -90,7 +90,7 @@ export const moreEvents = [
   card({
     id: 'ev_heritier', kind: 'evenement', scale: true, eras: [2], cond: { mem: 'philosophe_precepteur' }, art: { motif: 'crown', hue: 210 },
     title: 'L’Héritier qui pense',
-    text: 'Depuis le précepteur engagé {D:philosophe_precepteur}, chaque héritier de la cité a reçu l’éducation du philosophe. Le dernier en date refuse le trône. « Je doute, donc je ne règne pas. »',
+    text: 'Depuis le précepteur engagé en {D:philosophe_precepteur}, chaque héritier de la cité a reçu l’éducation du philosophe. Le dernier en date refuse le trône. « Je doute, donc je ne règne pas. »',
     options: [
       { label: 'Le laisser douter', effect: { gain: $('S5'), loy: { brume: 1, ourk: -1 } }, reply: 'Il ouvre une école. Ses élèves doutent de tout, sauf de leur talent.' },
       { label: 'Le couronner de force', cost: $('A2'), effect: { loy: { ourk: 1, brume: -1 } }, reply: 'Il règne en soupirant. Ses décrets commencent tous par « Admettons que ».' },
@@ -132,7 +132,7 @@ export const moreEvents = [
     text: 'Le peuple veut voter. {?mem:recense|Grâce au vieux recensement, on sait même combien ils sont.|Personne ne sait combien ils sont, mais ils sont nombreux.} Chaque famille veut voter un peu plus que les autres.',
     options: [
       { label: 'Une voix par personne', effect: { gain: $('S3'), loy: { brume: 1, troc: -1, ourk: -1 }, mem: ['suffrage'] }, reply: 'Les premières élections. Vous êtes réélu avec 52 %. Vous auriez préféré 51 : ça fait plus vrai.' },
-      { label: 'Une voix par famille', effect: { loy: { ourk: 1, sel: 1, troc: 1, brume: 1 } }, reply: 'Quatre familles, quatre voix, quatre avis. Les élections durent six mois et finissent en banquet.' },
+      { label: 'Une voix par famille', cost: $('T3'), effect: { loy: { ourk: 1, sel: 1, troc: 1, brume: -1 } }, reply: 'Quatre familles, quatre voix, quatre avis. Les élections durent six mois, coûtent une fortune et finissent en banquet. {F:brume} a voté contre le banquet.' },
       { label: 'Une voix par pièce d’or', effect: { gain: $('T4'), loy: { troc: 2, sel: -1, brume: -1 } }, reply: '{F:troc} est élu par lui-même, à l’unanimité.' },
     ],
   }),
@@ -149,7 +149,7 @@ export const moreEvents = [
   card({
     id: 'ev_martyr', kind: 'evenement', scale: true, eras: [3], cond: { mem: 'cigue' }, art: { motif: 'scroll', hue: 0 },
     title: 'Le Martyr',
-    text: 'Les étudiants ont retrouvé l’histoire du philosophe empoisonné {D:cigue}. Ils veulent une statue, une journée de deuil et des excuses officielles. Ils sont nombreux et ils ont du temps.',
+    text: 'Les étudiants ont retrouvé l’histoire du philosophe empoisonné en {D:cigue}. Ils veulent une statue, une journée de deuil et des excuses officielles. Ils sont nombreux et ils ont du temps.',
     options: [
       { label: 'Présenter des excuses', cost: $('T2'), effect: { gain: $('S4'), loy: { brume: 2, sel: -1 } }, reply: 'Vous vous excusez pour un crime vieux de deux mille ans. Les étudiants applaudissent, puis demandent autre chose.' },
       { label: 'Il l’avait cherché', effect: { gain: $('A2'), loy: { brume: -2, ourk: 1 } }, reply: 'Les étudiants occupent l’université. Ils y étaient déjà, mais maintenant ils dorment dedans.' },
@@ -200,7 +200,7 @@ export const moreEncounters = [
   card({
     id: 'r_ourk_veteran', kind: 'rencontre', scale: true, family: 'ourk', art: { motif: 'shield', hue: 8 },
     title: 'Le Vétéran',
-    text: 'Un vieux {T:ourk} a fait toutes les guerres, y compris celles qu’on a perdues. Il demande une pension. « Ou une dernière guerre. Ça m’est égal, mais il me faut une des deux. »',
+    text: 'Un vétéran de {H:ourk} a fait toutes les guerres, y compris celles qu’on a perdues. Il demande une pension. « Ou une dernière guerre. Ça m’est égal, mais il me faut une des deux. »',
     options: [
       { label: 'Une pension', cost: $('T3'), effect: { loy: { ourk: 2 } }, reply: 'Il touche sa pension et raconte ses guerres au café. Elles deviennent plus glorieuses à chaque tournée.' },
       { label: 'Instructeur des recrues', effect: { gain: $('A3'), loy: { ourk: 1, brume: -1 } }, reply: 'Les recrues apprennent à marcher, à crier et à détester {H:brume}. Le programme est complet.' },
@@ -267,7 +267,7 @@ export const moreEncounters = [
     text: '{F:troc} propose une loterie d’État. « Les pauvres paient l’impôt en souriant. C’est l’impôt le plus aimé de l’histoire. » {F:sel} trouve que c’est un péché. Elle a déjà acheté dix billets.',
     options: [
       { label: 'Lancer la loterie', effect: { gain: $('T5'), loy: { troc: 1, sel: -1 } }, reply: 'Le gros lot est gagné par {F:troc}. Une coïncidence, selon {F:troc}.' },
-      { label: 'Loterie pour les temples', effect: { gain: $('T2 V2'), loy: { sel: 1, troc: 1 } }, reply: 'On joue pour le ciel. Le ciel ne gagne jamais, mais il ne se plaint pas.' },
+      { label: 'Loterie pour les temples', effect: { gain: $('V3'), loy: { sel: 1, troc: -1 } }, reply: 'On joue pour le ciel. Le ciel ne gagne jamais. {F:troc} non plus, et ça, ça le fâche.' },
       { label: 'Interdire le jeu', effect: { loy: { troc: -1, sel: -1 } }, reply: 'Le jeu continue en cachette. Les cachettes sont tenues par {H:troc}.' },
     ],
   }),

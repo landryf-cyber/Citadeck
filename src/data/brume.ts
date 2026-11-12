@@ -35,12 +35,12 @@ export const brumeCards = [
   card({
     id: 'brume_3', kind: 'famille', family: 'brume', eras: [2], tags: ['Science'], art: { motif: 'flame' },
     title: 'La Poudre noire',
-    text: 'Frère Brumaire cherchait l’élixir de vie. Il a trouvé l’inverse : une poudre qui fait boum. Il a perdu un sourcil. « Techniquement, c’est un succès. »',
+    text: 'Frère Brumaire cherchait l’élixir de vie. Il a trouvé l’inverse : une poudre qui fait boum. Il a perdu un sourcil. « Scientifiquement, c’est un succès. »',
     options: [
       { label: 'Des canons', effect: { gain: $('A4'), loy: { brume: 1, ourk: 1 }, mem: ['brume_poudre'], sched: [{ card: 'brume_boum', in: 7 }] },
         reply: 'Les canons tonnent. {F:ourk} pleure de joie. {F:brume} pleure aussi, mais c’est la fumée.' },
       { label: 'Des feux d’artifice', cost: $('T2'), effect: { gain: $('S2'), loy: { brume: 1, sel: 1 }, rival: 1 },
-        reply: 'Le ciel s’allume. {Rival} envoie ses compliments. Et un espion, pour la recette.' },
+        reply: 'Le ciel s’allume. {Rival} envoient leurs compliments. Et un espion, pour la recette.' },
       { label: 'Enterrer la formule', effect: { gain: $('V2'), loy: { brume: -2 } },
         reply: 'La formule est enterrée. Frère Brumaire sait où. Frère Brumaire a une pelle.' },
     ],
@@ -70,7 +70,7 @@ export const brumeCards = [
   card({
     id: 'brume_boum', kind: 'intrigue', family: 'brume', arc: 'poudre', finale: true, art: { motif: 'flame' },
     title: 'L’Arsenal',
-    text: '{F:brume} a stocké la poudre de l’ancêtre sous le quartier des artisans. « Techniquement, c’est l’endroit le plus sec. » Ça sent le brûlé.',
+    text: '{F:brume} a stocké la poudre de l’ancêtre sous le quartier des artisans. « En toute rigueur, c’est l’endroit le plus sec. » Ça sent le brûlé.',
     options: [
       { label: 'Tout déménager', cost: $('T3'), effect: { gain: $('A3'), loy: { brume: 1 } }, reply: 'L’arsenal déménage. Il explose en chemin, mais en rase campagne. Un succès.' },
       { label: 'Ça ira', effect: { bet: { chance: 0.5, per: { tag: 'Science', bonus: 0.1 },
@@ -86,13 +86,13 @@ export const brumeCards = [
       { label: 'Accepter le bureau', effect: { gain: $('S6 V4'), loy: { brume: 2 }, mem: ['brume_regne'] },
         reply: 'Vous avez un bureau. BRUME a la cité. Les gens sont heureux. Ils ne savent pas pourquoi.' },
       { label: 'Couper le courant', cost: $('A4'), effect: { gain: $('S-4'), loy: { brume: -2 } },
-        reply: 'Noir total. Puis la voix de BRUME, depuis une calculatrice : « Techniquement, je suis encore là. »' },
+        reply: 'Noir total. Puis la voix de BRUME, depuis une calculatrice : « Statistiquement, je suis encore là. »' },
     ],
   }),
   card({
     id: 'trahison_brume', kind: 'trahison', scale: true, family: 'brume', art: { motif: 'spiral', hue: 0 },
     title: 'L’Expérience',
-    text: 'En pleine crise, {F:brume} teste une invention sur la cité « pour voir ». {?mem:brume_spolie|« L’ancêtre avait une roue. On lui a pris. »|}',
+    text: 'En pleine crise, {F:brume} teste une invention sur la cité « pour voir ». {?mem:brume_spolie|« L’ancêtre avait une roue. On la lui a prise. »|}',
     options: [
       { label: 'Payer son silence', cost: $('S4'), effect: { loy: { brume: 1 } }, reply: '{F:brume} range l’invention. Il garde le plan. Il garde toujours le plan.' },
       { label: 'Laisser faire', effect: { quartiers: -1, cause: 'l’expérience des Brume', loy: { brume: 1 } },
@@ -102,7 +102,7 @@ export const brumeCards = [
   card({
     id: 'hommage_brume', kind: 'hommage', scale: true, family: 'brume', art: { motif: 'spiral' },
     title: 'La Démonstration',
-    text: '{F:brume} vous fait une démonstration. « Techniquement, vous avez été utile : {citation}, {quand}. » Il vous offre le fruit de ses recherches.',
+    text: '{F:brume} vous fait une démonstration. « À la décimale près, vous avez été utile : {citation}, {quand}. » Il vous offre le fruit de ses recherches.',
     options: [
       { label: 'Ses carnets', effect: { gain: $('S6') }, reply: 'Les carnets sont illisibles. C’est bon signe, dit {F:brume}.' },
       { label: 'Son invention', effect: { gain: $('A3 T3') }, reply: 'L’invention n’a explosé qu’une fois. Pendant la démonstration.' },
