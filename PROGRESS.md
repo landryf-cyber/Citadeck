@@ -73,12 +73,13 @@ P4 variété
 ## Juges — tour 3 (fait, version 8)
 - Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : journaliste mobile 6·6·7·7·7·6·6 ; autrice de jeux de société 6,5·6·7,5·7,5·5,5·6,5·7 ; joueuse occasionnelle 7·6·8·7·6·6·6. Verdicts dans `scratchpad/juges/juge-7..9.md`.
 - Trois faiblesses : (1) l'affichage ment (« gratuit » qui consomme, flèches sous-estimées, crédit au montant et à l'échéance faux, perte gratuite à stock vide, options dominées) ; (2) filets qui dissolvent les dilemmes et fin sans adversaire (palissade à 0 Armée, plancher des Peintures, Culture jamais bloquante, Trésor sans usage, famine forfaitaire, tribut absent, Verdict gratuit) ; (3) ères coulées dans le même moule, anachronismes, trahisons revues, illustrations génériques.
-## Tour 4 de corrections (en cours, copie `../citadeck-dev`)
-- [x] (préparé pendant le tour 3) vingt nouveaux événements, variantes réécrites
-- [ ] affichage honnête : dépense des options à seuil, flèches exactes (mépris compris), ampleur des gains (+, ++, +++), crédit à montant fixe et compte à rebours, perte = coût, vocabulaire, coquilles, options dominées
-- [ ] filets et fin : palissade payante, Peintures qui réconcilient au lieu d'un plancher, merveilles hors du compte des mots-clés, famine proportionnelle et disette (acheter des Vivres), tribut dès cinq merveilles rivales, Verdict qui coûte
-- [ ] moule : chantier ouvert dès la fin de la première saison, trahisons et cartes vues écartées, anachronismes, réponse lisible, flèches plus grandes, silhouette d'ère dans les illustrations
-- [ ] mesures, tests, fusion, republication, trois nouveaux juges (tour 4)
+## Tour 4 de corrections (fait, fusionné dans la branche de travail)
+- [x] vingt nouveaux événements, variantes réécrites
+- [x] affichage honnête : dépense des options à seuil, flèches exactes (mépris compris), ampleur des gains (+, ++, +++), crédit à prix fixe et compte à rebours, perte à sec payée en loyauté, vocabulaire, coquilles, options payantes jamais dominées
+- [x] filets et fin : rachat payant (palissade, observatoire, vaccin), Peintures qui réconcilient, merveilles hors du compte des mots-clés, famine proportionnelle et disette (acheter du grain), tribut dès cinq merveilles rivales, réponse finale payante
+- [x] moule : chantier ouvert dès la fin de la première saison, trahisons et cartes des deux dernières parties écartées, découvertes de la bonne ère, anachronismes, réponse lisible, flèches plus grandes, silhouette d'ère, portraits modelés
+- [x] mesures (E13), tests (27), README, DECISIONS 33-40
+- [ ] republication (version 9), captures, trois nouveaux juges (tour 4)
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
