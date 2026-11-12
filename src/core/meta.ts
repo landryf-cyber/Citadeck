@@ -304,7 +304,7 @@ export function recordRun(meta: MetaState, e: Engine, s: GameState, testament?: 
     chronicle: [entry, ...meta.chronicle].slice(0, CHRONICLE_MAX),
     unlocked: [...meta.unlocked],
     feats: [...meta.feats, ...fresh],
-    lastSeen: s.history.map((h) => h.card).filter((id) => ['evenement', 'rencontre', 'rivale'].includes(e.c.cards[id]?.kind ?? '')),
+    lastSeen: [...new Set(s.history.map((h) => h.card).filter((id) => ['evenement', 'rencontre', 'rivale', 'famille', 'crise'].includes(e.c.cards[id]?.kind ?? '')))],
   };
   const unlocked = UNLOCKS.filter((u) => !next.unlocked.includes(u.id) && u.test(next));
   next.unlocked.push(...unlocked.map((u) => u.id));

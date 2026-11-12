@@ -162,6 +162,10 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .chip.free { color: var(--faint); font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; background: none; box-shadow: none; }
 .fdot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px hsl(var(--h) 70% 65%); background: hsla(var(--h), 60%, 30%, 0.6); }
 .fdot svg { width: 18px; height: 18px; overflow: visible; }
+.fdot { position: relative; }
+.fdot .dir { position: absolute; right: -6px; bottom: -5px; font-style: normal; font-size: 8px; line-height: 1; letter-spacing: -2px; padding: 1px 2px 1px 1px; border-radius: 5px; background: rgba(10, 8, 14, 0.85); }
+.fdot .dir.up { color: #b9e6a8; } .fdot .dir.down { color: #ff8a6e; }
+.chip.gain { background: none; box-shadow: inset 0 0 0 1px rgba(170, 230, 150, 0.28); padding: 2px 5px 2px 4px; font-weight: 700; opacity: 0.92; }
 .meta-ico { width: 16px; height: 16px; color: #ffd59a; }
 .meta-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .odds { font-size: 12px; font-weight: 800; color: #ffd59a; display: inline-flex; align-items: center; gap: 2px; }

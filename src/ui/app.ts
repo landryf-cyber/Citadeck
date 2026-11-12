@@ -392,7 +392,7 @@ export class App {
     if (c.kind === 'jalon') hue = 42;
     const spec: ArtSpec = { key: c.id + s.era, motif: c.art?.motif ?? KIND_MOTIF[c.kind] ?? (fi?.motif ?? 'star'), hue, alarm: c.kind === 'crise' || c.kind === 'trahison' };
     if (fi) spec.speaker = { motif: fi.motif, hue: fi.hue, mood: fi.loy, era: s.era, scars: fi.scars, fam: fi.id };
-    else if (c.kind === 'rivale' || c.id === 'creance_rivale') spec.speaker = { motif: 'crown', hue: this.e.rival(s).hue, mood: s.rivalRel, era: s.era, scars: 0, fam: 'rival' };
+    else if (c.kind === 'rivale' || c.id === 'creance_rivale' || c.id === 'tribut') spec.speaker = { motif: 'crown', hue: this.e.rival(s).hue, mood: s.rivalRel, era: s.era, scars: 0, fam: 'rival' };
     if (spec.speaker && spec.motif === spec.speaker.motif) spec.motif = KIND_MOTIF[c.kind] ?? 'star';
     return spec;
   }
@@ -425,8 +425,9 @@ export class App {
 
   /** Le chantier montre la (ou les) silhouette(s) de la merveille, telle qu'elle se dressera dans la cité. */
   private wonderArt(s: GameState): string {
-    const j = this.e.dessein(s).jalons[s.era];
-    const alt = this.e.jalonAltOf(s, s.era);
+    const era = s.prompt?.missed ?? s.era;
+    const j = this.e.dessein(s).jalons[era];
+    const alt = this.e.jalonAltOf(s, era);
     const shapes = alt ? [j.shape, alt.shape] : [j.shape];
     const imgs = shapes.map((sh) => `<img src="${wonderIcon(sh, 38, 220).toDataURL()}" alt="">`).join('');
     return `<div class="wonder-art">${imgs}</div>`;
@@ -440,9 +441,14 @@ export class App {
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
+    // ce qui rentre : le genre de ressource, pas le montant (le texte le dit)
+    const gains = (o.gains ?? []).map((r) => `<span class="chip gain r-${r}" title="Rapporte : ${RES_LABEL[r]}">+${RES_ICON[r]}</span>`).join('');
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
-      return `<span class="fdot" style="--h:${d.hue}" title="${esc(capitalize(d.house[s.era]))} sont concernés">${this.miniMotif(d.motif, d.hue)}</span>`;
+      const dir = o.famDir?.[f] ?? 0;
+      const arrow = dir ? `<i class="dir ${dir > 0 ? 'up' : 'down'}">${(dir > 0 ? '▲' : '▼').repeat(Math.min(2, Math.abs(dir)))}</i>` : '';
+      const what = dir > 0 ? 'y gagnent' : dir < 0 ? 'y perdent' : 'sont concernés';
+      return `<span class="fdot" style="--h:${d.hue}" title="${esc(capitalize(d.house[s.era]))} ${what}">${this.miniMotif(d.motif, d.hue)}${arrow}</span>`;
     }).join('');
     const meta = `${fams}${o.later ? `<span class="meta-ico" title="Cela aura des suites">${ICON.hourglass}</span>` : ''}${o.odds !== undefined ? `<span class="odds" title="Chance de réussite">${ICON.dice}${Math.round(o.odds * 100)} %</span>` : ''}`;
     b.innerHTML = `<span class="opt-n">${i + 1}</span><span class="opt-main"><span class="opt-label">${esc(o.label)}</span>
@@ -450,7 +456,7 @@ export class App {
       ${o.risk ? `<span class="opt-warn">${ICON.warn}<span>${esc(o.risk)}</span></span>` : ''}
       ${o.warn ? `<span class="opt-warn">${ICON.warn}<span>${esc(o.warn)}</span></span>` : ''}
       ${o.req ? `<span class="opt-req${o.reqOk ? '' : ' ko'}">${o.reqOk ? '✓' : ICON.lock}<span>Exige ${esc(o.req)}</span></span>` : ''}
-      </span><span class="opt-side"><span class="opt-cost">${costs}</span><span class="opt-meta">${meta}</span></span>`;
+      </span><span class="opt-side"><span class="opt-cost">${costs}${gains}</span><span class="opt-meta">${meta}</span></span>`;
     if (!o.enabled) b.disabled = true;
     b.addEventListener('click', () => void this.choose(i));
     return b;

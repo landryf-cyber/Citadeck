@@ -66,7 +66,7 @@ export const discoveryCards = [
     text: 'L’eau arrive en ville. Les ingénieurs veulent un deuxième aqueduc, juste au cas où le premier aurait une idée.',
     options: [
       { label: 'Un deuxième', cost: $('T3'), effect: { gain: $('V4'), loy: { brume: 1 } }, reply: 'Deux aqueducs. La ville est si propre que {F:sel} parle d’orgueil.' },
-      { label: 'Des bains publics', cost: $('V2'), effect: { loy: { troc: 1, sel: -1 }, gain: $('T3') }, reply: 'Les bains sont pleins. Les affaires s’y traitent en toge, ce qui accélère les choses.' },
+      { label: 'Des bains publics', cost: $('V2'), effect: { loy: { troc: 1, sel: -1 }, gain: $('T3') }, reply: 'Les bains sont pleins. Les affaires s’y traitent en serviette, ce qui accélère les choses.' },
     ],
   }),
   card({

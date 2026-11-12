@@ -44,7 +44,7 @@ export const desseins: DesseinDef[] = [
     jalons: [
       { name: 'Le Cercle de pierres', text: 'Des pierres dressées qui annoncent les saisons.', cost: $('S5'), gift: 'Il rapporte 1 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 1 }, shape: 'cercle', built: 'Les pierres sont dressées. Au solstice, le soleil se lève pile entre les deux plus grosses. {F:brume} prétend l’avoir prévu ; {F:sel} prétend l’avoir demandé.' },
       { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S8 V3'), req: { tags: { Science: 2 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour', built: 'La tour dépasse enfin le temple. {F:sel} parle d’orgueil ; {F:brume} parle de vue. Ils montent quand même ensemble, pour voir qui a raison.' },
-      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S12 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'dome', built: 'La coupole s’ouvre pour la première fois. La lunette montre une étoile, puis {reine} en train de regarder la même étoile. On lui fait signe.',
+      { name: 'L’Observatoire', text: 'Une coupole et une lunette. On y voit venir les ennuis.', cost: $('S12 T5'), req: { tags: { Science: 3 } }, gift: 'Chaque ère, la première perte de quartier subie est évitée. Un sacrifice choisi reste un sacrifice.', passive: { type: 'shield', amount: 1 }, shape: 'dome', built: 'La coupole s’ouvre pour la première fois. La lunette montre une étoile, puis {reine} en train de regarder la même étoile. On lui fait signe.',
         alt: { lock: 'alt_etoiles', name: 'Le Grand Télescope', text: 'Un tube de cuivre long comme une rue. On y voit {reine} se gratter le nez, de l’autre côté de la vallée.', cost: $('S12 T7'), req: { tags: { Science: 3 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'telescope', built: 'Le grand télescope pivote, grince, et se fixe sur la cité de {rival}. {Reine} se gratte le nez. Toute la ville l’a vu.' } },
       { name: 'Le Pas de tir', text: 'Du béton, des tours de lancement, des ingénieurs nerveux.', cost: $('S17 T7'), req: { tags: { Science: 4 } }, gift: 'Il rapporte 2 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 2 }, shape: 'fusee', built: 'Le premier essai décolle, monte, hésite, et retombe dans la mer. Le deuxième ne retombe pas. Les ingénieurs pleurent, puis réclament une prime.' },
       { name: 'L’Arche', text: 'Un vaisseau assez grand pour emporter une civilisation. Et ses rancunes.', cost: $('S20 T8 V6'), req: { tags: { Science: 5 } }, gift: 'Le départ.', shape: 'arche', built: 'L’Arche est prête. Il y a une place pour chacun, et une cabine pour chaque rancune. Les familles comparent la taille de leurs cabines.' },
@@ -54,7 +54,7 @@ export const desseins: DesseinDef[] = [
     id: 'empire', name: 'Soumettre la vallée', tag: 'Guerre', ending: 'military',
     pitch: 'La vallée sera à vous, et {rival} avec. Il faudra de l’Armée, et des guerriers fidèles.',
     jalons: [
-      { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier est évitée.', passive: { type: 'shield', amount: 1 }, shape: 'palissade', built: 'La palissade fait le tour du camp. {F:ourk} la parcourt trois fois, en touchant chaque pieu. Il en manque un : il le plante lui-même, avec la tête.' },
+      { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier subie est évitée. Un sacrifice choisi reste un sacrifice.', passive: { type: 'shield', amount: 1 }, shape: 'palissade', built: 'La palissade fait le tour du camp. {F:ourk} la parcourt trois fois, en touchant chaque pieu. Il en manque un : il le plante lui-même, avec la tête.' },
       { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A7 T3'), req: { tags: { Guerre: 2 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle', built: 'Six mille hommes défilent au même pas. Le sol tremble. Au loin, {rival} décident que la marche à pied, c’est surfait.' },
       { name: 'La Forteresse', text: 'Des murs si épais qu’on y loge les ennemis, pour les impressionner.', cost: $('A10 V4'), req: { tags: { Guerre: 3 } }, gift: 'Elle compte pour deux cartes Guerre.', passive: { type: 'tagBonus', tag: 'Guerre', amount: 2 }, shape: 'forteresse', built: 'La forteresse est achevée. Elle est si épaisse qu’on a oublié de prévoir des fenêtres. {F:ourk} trouve ça parfait.',
         alt: { lock: 'alt_empire', name: 'La Voie impériale', text: 'Une route droite d’un bout à l’autre de la vallée. Les légions arrivent partout en trois jours. Les impôts, en deux.', cost: $('A9 T6'), req: { tags: { Guerre: 3 } }, gift: 'Elle rapporte 2 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 2 }, shape: 'voie', built: 'La voie est tracée, droite comme une flèche, d’un bout à l’autre de la vallée. Les légions la parcourent en trois jours. Les collecteurs d’impôts, en deux.' } },
@@ -136,12 +136,41 @@ export const engineCards = [
     ],
   }),
   card({
+    id: 'tribut', kind: 'intrigue', scale: true, title: 'Le Tribut de {rival}', speaker: '{Reine}', art: { motif: 'crown', hue: 268 },
+    text: '{Rival} ont achevé leur dessein, et la vallée leur appartient un peu, de l’avis de {reine}. « Un petit tribut, ma chère voisine. Pour l’entretien de la vallée. Et de mes merveilles, qui vous font de l’ombre. »',
+    options: [
+      { label: 'Payer le tribut', cost: $('T4'), effect: { rival: 1 }, reply: '{Reine} compte devant vous, puis vous rend une pièce : « Pour votre peine. » C’est la pièce la plus chère de votre vie.' },
+      { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'le tribut de {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. On y parle déjà comme chez {rival}, avec l’accent.' },
+      { label: 'Refuser, armes à la main', warn: 'Sans {s:6} Armée, ils prennent un quartier de force',
+        effect: { rival: -1, if: { res: $('A6') }, then: { gain: $('A-2'), mem: ['tribut_refuse'], reply: 'Vos soldats tiennent la frontière. {Reine} remballe sa liste. {elle} la gardera pour l’ère prochaine.' },
+          else: { quartiers: -1, cause: '{rival}, venus chercher leur tribut', reply: '{Rival} viennent se servir. Ils emportent un quartier, et laissent une facture pour le dérangement.' } } },
+    ],
+  }),
+  card({
     id: 'creance', kind: 'intrigue', scale: true, family: 'troc', title: 'La Créance', art: { motif: 'scales', hue: 150 },
     text: '{F:troc} présente la note du crédit. « Le principal, les intérêts, les intérêts des intérêts, et un petit quelque chose pour l’émotion. » Il a apporté un huissier. L’huissier a apporté un autre huissier.',
     options: [
       { label: 'Payer rubis sur l’ongle', cost: $('T6'), effect: { loy: { troc: 1 } }, reply: 'Vous payez. {F:troc} compte deux fois, puis vous serre la main. Il garde le reçu pour la prochaine fois.' },
       { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la créance des Troc', loy: { troc: 1 } }, reply: 'Un quartier passe aux mains de {H:troc}. Ils y installent des boutiques, et vous facturent le droit d’y passer.' },
-      { label: 'Refuser de payer', effect: { loy: { troc: -2 }, mem: ['dette_refusee'] }, reply: 'Vous refusez. {F:troc} sourit, range la note dans un tiroir, et ferme le tiroir à clé. Il a une très bonne mémoire.' },
+      { label: 'Refuser de payer', effect: { loy: { troc: -2 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 3 }] }, reply: 'Vous refusez. {F:troc} sourit, range la note dans sa sacoche, et prend la route de chez {rival}. Une dette, ça se revend.' },
+    ],
+  }),
+  card({
+    id: 'creance_2', kind: 'intrigue', scale: true, family: 'troc', title: 'La Seconde Créance', art: { motif: 'scales', hue: 150 },
+    text: '{F:troc} revient avec la note. Elle est plus épaisse. « Nous avons ajouté les frais de la première, et les frais de rédaction de la seconde. » L’huissier salue : il commence à se sentir chez lui.',
+    options: [
+      { label: 'Payer, en grinçant', cost: $('T7'), effect: { loy: { troc: 1 } }, reply: 'Vous payez. {F:troc} vous offre un calendrier, avec les échéances déjà entourées.' },
+      { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la seconde créance des Troc' }, reply: 'Un quartier de plus passe aux {H:troc}. Ils le rebaptisent « Quartier de la Confiance ». Il y a un péage.' },
+      { label: 'Refuser de payer', effect: { loy: { troc: -2 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 3 }] }, reply: 'Vous refusez encore. {F:troc} soupire comme on soupire sur un mauvais placement, et part vendre votre dette à {rival}, avec une remise.' },
+    ],
+  }),
+  card({
+    id: 'creance_3', kind: 'intrigue', scale: true, family: 'troc', title: 'La Saisie', art: { motif: 'scales', hue: 150 },
+    text: 'Cette fois, {F:troc} ne présente pas de note. Il présente des déménageurs. « Nous sommes des gens patients. Nous avons été patients trois fois. » Ils ont déjà mesuré vos fenêtres.',
+    options: [
+      { label: 'Tout rembourser', cost: $('T9'), effect: { loy: { troc: 2 } }, reply: 'Vous payez tout. {F:troc} est si ému qu’il vous propose aussitôt un nouveau crédit. Vous le raccompagnez.' },
+      { label: 'Laisser saisir un quartier', effect: { quartiers: -1, cause: 'la saisie des Troc', loy: { troc: -1 } }, reply: 'Les déménageurs emportent un quartier, maison par maison. Ils laissent les rues, qu’ils jugent invendables.' },
+      { label: 'Faire jeter les huissiers dehors', effect: { loy: { troc: -3 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 2 }] }, reply: 'Les huissiers volent par la fenêtre. Ils atterrissent chez {rival}, qui rachète votre dette en les relevant.' },
     ],
   }),
   card({
@@ -150,7 +179,7 @@ export const engineCards = [
     options: [
       { label: 'Payer', cost: $('T6'), effect: { rival: 1 }, reply: '{Reine} vous remercie de votre ponctualité, avec une surprise feinte.' },
       { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'la dette envers {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. {Reine} y fait planter des fleurs, pour que vous les voyiez.' },
-      { label: 'Ignorer la lettre', effect: { rival: -2, rivalJalon: 1 }, reply: '{Reine} se paie {elle}-même, en pierres de taille : une merveille de plus chez {rival}.' },
+      { label: 'Ignorer la lettre', warn: '{Rival} se paieront : une merveille de plus chez eux, ou un de vos quartiers s’ils les ont déjà toutes.', effect: { rival: -2, if: { rivalJalons: 5 }, then: { quartiers: -1, cause: '{rival}, qui se paient sur votre territoire', reply: '{Reine} n’a plus de merveille à bâtir : {elle} se paie en terrain. Un quartier change de drapeau, sans fleurs.' }, else: { rivalJalon: 1, reply: '{Reine} se paie {elle}-même, en pierres de taille : une merveille de plus chez {rival}.' } } },
     ],
   }),
   card({ id: 'proces', kind: 'proces', title: 'Le Procès', text: '{maison} vous traduisent en justice. {plaignant} lit l’acte d’accusation. {objet}, {quand} : vous avez dit {citation}. {depuis}« Nous n’avons pas oublié. » Qui plaidera pour vous ?', options: [], art: { motif: 'scales' } }),

@@ -13,7 +13,7 @@ if (args[0] === '--transcript') {
   mkdirSync('shots/transcripts', { recursive: true });
   const f = `shots/transcripts/${p.name.replace(/\s/g, '_')}-${args[2] ?? 1}.md`;
   writeFileSync(f, r.lines.join('\n'));
-  console.log(`${f} (${r.decisions} décisions, ${r.win ? 'victoire' : 'défaite ère ' + (r.era + 1)})`);
+  console.log(`${f} (${r.decisions} décisions, ${r.win ? r.rank + ', ' + r.jalons + ' merveilles' : 'chute à l’ère ' + (r.era + 1)})`);
   process.exit(0);
 }
 if (args[0] === '--campaign') {

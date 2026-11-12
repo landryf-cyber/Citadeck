@@ -14,11 +14,13 @@ import { moreEncounters, moreEvents, moreRival } from './more';
 import { echoEvents, echoFamilyCards, echoRecalls, memoryOptions } from './echoes';
 import { crisisAltCards, crisisAlts } from './crises2';
 import { familyAltCards, familyAltRecalls } from './familyAlts';
+import { variantCards, variantRecalls } from './variants';
+import { betrayalCards } from './betrayals';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards, ...variantCards, ...betrayalCards,
 ];
 
 // hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
@@ -41,12 +43,9 @@ for (const [id, opts] of Object.entries(memoryOptions)) {
   if (c) c.options = [...c.options, ...opts];
 }
 
-// une famille qui trahit deux fois le fait savoir
+// une famille qui a trahi s'en souvient (les trahisons suivantes ont leurs propres cartes, voir betrayals.ts)
 for (const f of ['ourk', 'sel', 'brume', 'troc'] as const) {
-  const c = all.find((x) => x.id === `trahison_${f}`);
-  if (!c) continue;
-  c.text = `{?mem:trahi_${f}|Encore. {H:${f}} ne prennent même plus la peine de se cacher. |}${c.text}`;
-  for (const o of c.options) o.effect = { ...o.effect, mem: [...(o.effect.mem ?? []), `trahi_${f}`] };
+  for (const c of all.filter((x) => x.kind === 'trahison' && x.family === f)) for (const o of c.options) o.effect = { ...o.effect, mem: [...(o.effect.mem ?? []), `trahi_${f}`] };
 }
 
 // les suites liées à un souvenir sont toujours tirées
@@ -91,7 +90,7 @@ export const content: Content = {
   ruinsCard: 'ruines',
   revenantCard: 'revenants',
   moods,
-  recalls: [...recalls, ...echoRecalls, ...familyAltRecalls],
+  recalls: [...recalls, ...echoRecalls, ...familyAltRecalls, ...variantRecalls],
 };
 
 export const CARD_COUNT = all.filter((c) => !['presage', 'carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(c.kind)).length;

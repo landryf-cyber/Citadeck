@@ -18,6 +18,7 @@
  *   {ruine:0}       nom d'une civilisation passée (0 = la plus récente)
  *   {?ruins>=2|oui|non}         selon le nombre de civilisations passées
  *   {?rv:harsk|oui|non}         selon la rivale (orvandes, harsk, ombre) : chacune sa voix
+ *   {k:7} / {s:7}   un seuil mis à l'échelle de la crise / de l'ère
  */
 import type { FamilyId, GameState } from './types';
 import type { Content } from './content';
@@ -28,6 +29,9 @@ export const crisisK = () => CRISIS_K;
 export function setCrisisK(k: number): void {
   CRISIS_K = k;
 }
+
+/** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
+export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 
 export const ERA_NAMES = ['L’Âge de pierre', 'L’Antiquité', 'Le Moyen Âge', 'L’Ère industrielle', 'L’Ère spatiale'];
 export const ERA_SUBTITLES = [

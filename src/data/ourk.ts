@@ -136,7 +136,7 @@ export const ourkCards = [
     title: 'Les Portes ouvertes',
     text: 'En pleine crise, {H:ourk} ont ouvert une porte de la cité. « Elle grinçait », explique {F:ourk}.{?mem:ourk_humilie| Il ajoute, sans raison apparente : « Mammouth. »|}',
     options: [
-      { label: 'Boucher la brèche', cost: $('A4'), warn: 'Sans {s:4} Armée, un quartier tombe',
+      { label: 'Boucher la brèche', cost: $('A4'),
         effect: { loy: { ourk: 1 } }, reply: 'La brèche est bouchée. {F:ourk} est déçu, mais il fait semblant d’aider.' },
       { label: 'Laisser brûler', effect: { quartiers: -1, cause: 'la trahison des Ourk', loy: { ourk: 1 } },
         reply: 'Le quartier brûle. {F:ourk} se dit vengé, pour cette fois. Pour cette fois.' },

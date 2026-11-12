@@ -63,6 +63,8 @@ export interface Effect {
   /** variation de ressources, non affichée avant le choix (c'est le texte qui la dit) */
   gain?: Bag;
   quartiers?: number;
+  /** perte imposée (aucune autre option) : la palissade peut la parer, contrairement à un sacrifice choisi */
+  forced?: boolean;
   loy?: Partial<Record<FamilyId, number>>;
   mem?: string[];
   unmem?: string[];
@@ -78,6 +80,8 @@ export interface Effect {
   /** fait avancer le jalon de l'ère (bâtit le jalon) */
   /** bâtir le jalon de l'ère (« alt » : la variante débloquée) */
   jalon?: boolean | 'alt';
+  /** ère du jalon bâti (rattrapage d'une merveille manquée) ; par défaut l'ère en cours */
+  jalonEra?: number;
   bet?: Bet;
   if?: Cond;
   then?: Effect;
@@ -303,6 +307,8 @@ export interface Prompt {
   quote?: number;
   /** pour les suites : la décision qui l'a provoquée */
   from?: string;
+  /** chantier de rattrapage : l'ère de la merveille manquée */
+  missed?: number;
 }
 
 export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fin';

@@ -60,6 +60,8 @@ export function stateValue(e: Engine, s: GameState, p: Profile): number {
     // un joueur gourmand regarde ses coffres plus que l'humeur de ses familles
     v += st.loy * 7 * (0.3 + 0.7 * Math.min(1, p.safety)) + (st.loy <= -2 ? -18 * p.safety : 0) + (st.loy >= 2 ? 6 : 0);
   }
+  // une créance annoncée (sablier, détail du crédit) se paiera : en Trésor ou en quartier
+  v -= s.sched.filter((x) => /^creance/.test(x.card)).length * 30 * Math.max(0.5, p.safety);
   // ce que rapportent les découvertes et merveilles pour le reste de la partie
   const left = Math.max(0, (4 - s.era) * 2 + (1 - s.saison));
   for (const ps of e.passives(s)) {
@@ -115,8 +117,12 @@ function indicatorChoice(all: OptionView[], enabled: { o: OptionView; i: number 
   let best = enabled[0].i;
   let bestV = -Infinity;
   for (const { o, i } of enabled) {
-    const cost = RES.reduce((a, r) => a + (o.cost[r] ?? 0), 0);
+    const cost = RES.reduce((a, r) => a + (o.cost[r] ?? 0), 0) + RES.reduce((a, r) => a + (o.loss?.[r] ?? 0), 0);
     let v = -cost * 2;
+    // ce que l'interface montre aussi : le genre de gain, le sens de l'effet sur les familles, les quartiers perdus
+    v += (o.gains?.length ?? 0) * 4;
+    for (const d of Object.values(o.famDir ?? {})) v += (d ?? 0) * 3;
+    v -= (o.lossQ ?? 0) * 25;
     if (o.warn) v -= 6;
     if (o.odds !== undefined) v += (o.odds - 0.5) * 10;
     if (o.req) v += 4; // une option réservée a l'air d'une bonne affaire
