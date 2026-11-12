@@ -120,7 +120,8 @@ function indicatorChoice(all: OptionView[], enabled: { o: OptionView; i: number 
     const cost = RES.reduce((a, r) => a + (o.cost[r] ?? 0), 0) + RES.reduce((a, r) => a + (o.loss?.[r] ?? 0), 0);
     let v = -cost * 2;
     // ce que l'interface montre aussi : le genre de gain, le sens de l'effet sur les familles, les quartiers perdus
-    v += (o.gains?.length ?? 0) * 4;
+    for (const r of RES) v += (o.gains?.[r] ?? 0) * 3;
+    for (const r of RES) v -= (o.spend?.[r] ?? 0) * 1.5;
     for (const d of Object.values(o.famDir ?? {})) v += (d ?? 0) * 3;
     v -= (o.lossQ ?? 0) * 25;
     if (o.warn) v -= 6;

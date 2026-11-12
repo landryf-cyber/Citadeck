@@ -46,7 +46,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_sel_relique', kind: 'rencontre', scale: true, family: 'sel', art: { motif: 'hand', hue: 44 },
+    id: 'r_sel_relique', kind: 'rencontre', eras: [1, 2, 3, 4], scale: true, family: 'sel', art: { motif: 'hand', hue: 44 },
     title: 'La Relique',
     text: '{H:sel} ont trouvé la relique d’un saint : un os. {F:troc} propose de l’acheter, de la découper et de vendre les morceaux.',
     options: [
@@ -75,7 +75,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_brume_erreur', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'spiral', hue: 205 },
+    id: 'r_brume_erreur', kind: 'rencontre', eras: [2, 3, 4], scale: true, family: 'brume', art: { motif: 'spiral', hue: 205 },
     title: 'L’Erreur de calcul',
     text: '{F:brume} a trouvé une erreur dans les calculs de l’ancêtre. La Terre ne tourne pas dans le bon sens. « Il faudrait tout recalculer. Ça coûte. »',
     options: [
@@ -84,7 +84,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_brume_machine', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'gear', hue: 205 },
+    id: 'r_brume_machine', kind: 'rencontre', eras: [1, 2, 3, 4], scale: true, family: 'brume', art: { motif: 'gear', hue: 205 },
     title: 'La Machine',
     text: '{F:brume} a construit une machine qui fait le travail de dix {T:ourk}. Elle fait aussi le bruit de dix {T:ourk}.',
     options: [
@@ -146,7 +146,7 @@ export const encounterCards = [
     ],
   }),
   card({
-    id: 'r_front_deserteur', kind: 'rencontre', scale: true, art: { motif: 'hand', hue: 0 },
+    id: 'r_front_deserteur', kind: 'rencontre', eras: [1, 2, 3, 4], scale: true, art: { motif: 'hand', hue: 0 },
     title: 'Le Déserteur',
     text: 'Un officier de {rival} déserte. Il connaît tous les secrets de {reine}. Il demande l’asile, un château, et qu’on l’appelle « Excellence ».',
     options: [

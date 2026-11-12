@@ -65,7 +65,7 @@ export function validateContent(c: Content): string[] {
     }
     const longest = longestVariant(card.text);
     if (longest.length > 260) errors.push(`${card.id} : texte trop long (${longest.length})`);
-    const dynamic = ['carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(card.kind);
+    const dynamic = ['carrefour', 'jalon', 'decouverte', 'croissance', 'proces'].includes(card.kind) || card.id === 'disette';
     if (!card.qui && !dynamic && card.options.length < 1) errors.push(`${card.id} : aucune option`);
   }
   return errors;

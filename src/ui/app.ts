@@ -300,9 +300,12 @@ export class App {
     const upkeep = this.e.presageInfo(s).upkeep;
     const rv = this.e.rival(s);
     const phaseIdx = s.phase === 'saison' ? s.saison : s.phase === 'chantier' ? 2 : s.phase === 'crise' ? 3 : s.phase === 'finere' ? 4 : -1;
+    // une créance en cours : son montant et le nombre de cartes avant l'huissier
+    const dues = s.sched.filter((x) => /^creance/.test(x.card));
+    const debt = dues.length ? `<span class="debt" title="Créance : ${dues.map((d) => `${d.pay ?? '?'} Trésor dans ${Math.max(1, d.at - s.turn + 1)} carte(s), ou un quartier`).join(' ; ')}">−${dues.reduce((a, d) => a + (d.pay ?? 0), 0)} ⌛${Math.max(1, Math.min(...dues.map((d) => d.at - s.turn + 1)))}</span>` : '';
     const top = `<div class="hud-top">
       <div class="stat q${s.quartiers <= 2 ? ' low' : ''}" data-k="q" title="Quartiers : votre cité. À zéro, elle tombe.">${ICON.house}<b>${s.quartiers}</b><small>quartiers</small><span class="delta"></span></div>
-      ${RES.map((r) => `<div class="stat r-${r}${r === 'vivres' && s.res.vivres < upkeep ? ' hunger' : ''}" data-k="${r}" title="${RES_LABEL[r]}${r === 'vivres' ? ` — la cité en mangera ${upkeep} en fin d’ère` : ''}">${RES_ICON[r]}<b>${s.res[r]}</b><span class="delta"></span></div>`).join('')}
+      ${RES.map((r) => `<div class="stat r-${r}${r === 'vivres' && s.res.vivres < upkeep ? ' hunger' : ''}" data-k="${r}" title="${RES_LABEL[r]}${r === 'vivres' ? ` — la cité en mangera ${upkeep} en fin d’ère` : ''}">${RES_ICON[r]}<b>${s.res[r]}</b><span class="delta"></span>${r === 'tresor' ? debt : ''}</div>`).join('')}
       <div class="hud-sp"></div>
       <div class="era-pill" title="${esc(ERA_NAMES[s.era])} : deux saisons, le chantier, la crise, le bilan"><div class="era-name"><b>${ROMAN[s.era]}</b><span>${esc(ERA_NAMES[s.era].replace(/^L’|^L'|^Le |^La /, ''))}</span></div>
         <div class="phase">${PHASES.map((_, i) => `<i class="${i === 3 ? 'cr ' : ''}${i < phaseIdx ? 'done' : i === phaseIdx ? 'now' : ''}"></i>`).join('')}</div></div>
@@ -436,18 +439,19 @@ export class App {
   private optButton(o: OptionView, i: number, v: View): HTMLButtonElement {
     const s = this.s!;
     const b = el('button', 'opt');
-    const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
-      + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '');
+    const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}${s.res[r] < (o.loss![r] ?? 0) ? ' short' : ''}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
+      + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '')
+      + (o.spend ? RES.filter((r) => o.spend![r]).map((r) => `<span class="chip spend r-${r}" title="Dépensé si la réserve suffit">${RES_ICON[r]}<b>−${o.spend![r]}</b></span>`).join('') : '');
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
-    // ce qui rentre : le genre de ressource, pas le montant (le texte le dit)
-    const gains = (o.gains ?? []).map((r) => `<span class="chip gain r-${r}" title="Rapporte : ${RES_LABEL[r]}">+${RES_ICON[r]}</span>`).join('');
+    // ce qui rentre : le genre et l'ampleur (+ un peu, ++ bien, +++ beaucoup), pas le montant (le texte le dit)
+    const gains = RES.filter((r) => o.gains?.[r]).map((r) => `<span class="chip gain r-${r}" title="Rapporte : ${RES_LABEL[r]} (${['', 'un peu', 'bien', 'beaucoup'][o.gains![r]!]})">${'+'.repeat(o.gains![r]!)}${RES_ICON[r]}</span>`).join('');
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
       const dir = o.famDir?.[f] ?? 0;
-      const arrow = dir ? `<i class="dir ${dir > 0 ? 'up' : 'down'}">${(dir > 0 ? '▲' : '▼').repeat(Math.min(2, Math.abs(dir)))}</i>` : '';
-      const what = dir > 0 ? 'y gagnent' : dir < 0 ? 'y perdent' : 'sont concernés';
+      const arrow = dir ? `<i class="dir ${dir > 0 ? 'up' : 'down'}">${dir > 0 ? '▲' : '▼'}${Math.abs(dir) > 1 ? Math.abs(dir) : ''}</i>` : '';
+      const what = dir > 0 ? `y gagnent (+${dir})` : dir < 0 ? `y perdent (${dir})` : 'sont concernés, selon l’issue';
       return `<span class="fdot" style="--h:${d.hue}" title="${esc(capitalize(d.house[s.era]))} ${what}">${this.miniMotif(d.motif, d.hue)}${arrow}</span>`;
     }).join('');
     const meta = `${fams}${o.later ? `<span class="meta-ico" title="Cela aura des suites">${ICON.hourglass}</span>` : ''}${o.odds !== undefined ? `<span class="odds" title="Chance de réussite">${ICON.dice}${Math.round(o.odds * 100)} %</span>` : ''}`;
@@ -514,7 +518,7 @@ export class App {
     }
     for (const x of ev) {
       if (x.type === 'quartiers' && x.delta) chips.push(`<span class="chip q${x.delta > 0 ? ' gain' : ''}">${ICON.house}<b>${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}</b>&nbsp;${Math.abs(x.delta) > 1 ? 'quartiers' : 'quartier'}${x.delta < 0 ? ` · ${esc(x.cause)}` : ''}</span>`);
-      if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">Une merveille vous protège : ${esc(x.cause)} évitée</span>`);
+      if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">Une merveille rachète le quartier${x.paid ? ` : ${bagChips(x.paid, '−')}` : ''}</span>`);
       if (x.type === 'sched') chips.push(`<span class="chip note">${ICON.hourglass}&nbsp;Cela aura des suites</span>`);
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
@@ -628,6 +632,9 @@ export class App {
       const rv = this.e.rival(s);
       inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
         <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur grand dessein : à chaque fin d’ère, ils réclament un tribut.` : `${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. À cinq, ils triomphent, et la vallée leur paie tribut.`} Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
+      // prévenir avant de punir : une famille qu'on ne visitera pas cette ère se sentira délaissée au bilan
+      const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
+      if (lonely.length) inner.appendChild(el('p', 'warnline', `${esc(capitalize(lonely.join(' et ')))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`));
       inner.appendChild(el('p', 'note', `En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''}${s.res.vivres < p.upkeep ? ` ; vous en avez ${s.res.vivres}` : ''}. Sinon : famine, et un quartier perdu.`));
       (inner.lastChild as HTMLElement).style.cssText = 'color:var(--dim);font-size:13px;text-align:center;margin:0';
       const btns = el('div', 'btns');
@@ -649,10 +656,12 @@ export class App {
       if (x.type === 'revolt') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(H(x.family))} se révoltent.</b> Un quartier brûle. Ils se calment, pour l’instant.` });
       if (x.type === 'defect') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(H(x.family))} passent chez ${esc(this.e.rival(s).name)}.</b> Avec un quartier entier.` });
       if (x.type === 'neglect') lines.push({ cls: 'bad', ico: ICON.warn, html: `${esc(H(x.family))} se sentent délaissés : vous n’êtes pas passé chez eux depuis deux ères.` });
-      if (x.type === 'income') lines.push({ cls: 'good', ico: ICON.star, html: `Une famille dévouée apporte sa part : ${bagChips(x.bag, '+')}` });
+      if (x.type === 'income') lines.push({ cls: 'good', ico: ICON.star, html: `Une famille fervente apporte sa part : ${bagChips(x.bag, '+')}` });
+      if (x.type === 'mend') lines.push({ cls: 'good', ico: ICON.star, html: `Les Peintures de la grotte apaisent ${esc(this.e.c.families[x.family].house[s.era])} : ils remontent d’un cran.` });
+      if (x.type === 'disette') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>Disette.</b> Il manquait ${x.missing} Vivres : pas de quartier perdu, mais toutes les familles grognent.` });
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
-      if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
+      if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? '<b>Famine.</b> Les greniers sont vides ; une merveille rachète le quartier.' : '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
       if (x.type === 'annex') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(capitalize(x.name))} annexent un quartier.</b> Leur dessein est achevé ; ils s’étendent, sauf chez leurs amis.` });
       if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
     }

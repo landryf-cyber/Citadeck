@@ -105,7 +105,7 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
   st.mem = s.mem.slice();
   st.rivalJalons = s.rivalJalons;
   st.quartiers = s.quartiers;
-  L(`\n## FIN : ${s.result?.type} — ère ${s.era + 1} — ${st.jalons} jalons — ${s.result?.cause ?? s.result?.ending ?? ''} — rivale ${s.rivalJalons}/5`);
+  L(`\n## FIN : ${({ triomphe: 'triomphe, dessein accompli', victoire: 'victoire (quatre merveilles)', survie: 'survie, dessein inachevé', chute: 'chute' } as Record<string, string>)[s.result?.rank ?? 'chute']} — ère ${s.era + 1} — ${st.jalons} merveilles — ${s.result?.cause ?? s.result?.ending ?? ''} — rivale ${s.rivalJalons}/5`);
   return st;
 }
 

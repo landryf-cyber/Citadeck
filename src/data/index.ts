@@ -38,6 +38,42 @@ const damp = (e: import('../core/types').Effect | undefined): void => {
 };
 for (const c of all) if (['rencontre', 'evenement', 'rivale'].includes(c.kind) && !c.echo) for (const o of c.options) damp(o.effect);
 
+// une option payante (sans suite cachée) ne rapporte jamais moins que la meilleure option gratuite de la carte :
+// payer doit être un investissement, pas un piège (tour 3 des juges)
+{
+  const total = (b?: Partial<Record<string, number>>) => Object.values(b ?? {}).reduce((a: number, x) => a + Math.max(0, x ?? 0), 0);
+  const loss = (b?: Partial<Record<string, number>>) => Object.values(b ?? {}).reduce((a: number, x) => a + Math.max(0, -(x ?? 0)), 0);
+  for (const c of all) {
+    if (!['famille', 'rencontre', 'evenement', 'rivale', 'intrigue', 'decouverte'].includes(c.kind)) continue;
+    const plain = (o: (typeof c.options)[number]) => !(o.effect.mem?.length || o.effect.sched?.length || o.effect.if || o.effect.bet || o.effect.jalon || o.effect.rivalJalon || o.effect.famState || o.req);
+    const free = c.options.filter((o) => !o.cost && (o.effect.quartiers ?? 0) >= 0);
+    if (!free.length) continue;
+    const value = (o: (typeof c.options)[number]) => total(o.effect.gain) - loss(o.effect.gain) - total(o.cost);
+    const bigger = (b: Partial<Record<string, number>>, d: number) => {
+      const g = { ...b };
+      const key = (Object.keys(g) as (keyof typeof g)[]).filter((k) => (g[k] ?? 0) > 0).sort((x, y) => (g[y] ?? 0) - (g[x] ?? 0))[0];
+      if (!key) return g;
+      g[key] = Math.max(1, (g[key] ?? 0) + d);
+      return g;
+    };
+    for (const o of c.options) {
+      if (!o.cost || !plain(o)) continue;
+      const best = Math.max(...free.map(value));
+      const gap = best + 1 - value(o);
+      if (gap <= 0) continue;
+      // l'écart se partage : l'option payante rapporte un peu plus, la gratuite un peu moins
+      const up = Math.ceil(gap / 2);
+      const g = { ...(o.effect.gain ?? {}) };
+      if (!Object.values(g).some((x) => (x ?? 0) > 0)) g[Object.keys(o.cost)[0] === 'tresor' ? 'savoir' : 'tresor'] = 0;
+      o.effect = { ...o.effect, gain: bigger(Object.keys(g).length ? g : { tresor: 0 }, up) };
+      for (const f of free) if (value(f) >= value(o)) f.effect = { ...f.effect, gain: bigger(f.effect.gain ?? {}, -(value(f) - value(o) + 1)) };
+      // une option gratuite qui n'a rien à rendre : c'est la payante qui monte
+      const rest = Math.max(...free.map(value)) + 1 - value(o);
+      if (rest > 0) o.effect = { ...o.effect, gain: bigger(o.effect.gain ?? {}, rest) };
+    }
+  }
+}
+
 // des options qui n'existent que par un souvenir
 for (const [id, opts] of Object.entries(memoryOptions)) {
   const c = all.find((x) => x.id === id);

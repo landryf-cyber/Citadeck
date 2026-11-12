@@ -57,6 +57,8 @@ function presage(s: GameState): void {
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
   P(`En fin d’ère, la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''}.`);
+  const lonely = e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => e.c.families[f].house[s.era]);
+  if (lonely.length) P(`${capitalize(lonely.join(' et '))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`);
   if (p.nextJalon) P(`À l’ère suivante : ${p.nextJalon.name}${p.nextJalon.req ? `, qui exigera ${p.nextJalon.req}` : ''}.`);
   P(p.rival.count >= 5 ? `Rivale : ${p.rival.name} ont achevé leur grand dessein ; à chaque fin d’ère, ils réclament un tribut. Relations : ${p.rival.rel}.` : `Rivale : ${p.rival.name} (${p.rival.leader}), ${p.rival.count}/5 merveilles ; prochaine : ${p.rival.next}. Relations : ${p.rival.rel}.`);
   P('Options : 1. En route');
@@ -71,12 +73,13 @@ function card(s: GameState): void {
   P(v.text);
   v.options.forEach((o, i) => {
     const bits = [
-      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss || o.lossQ ? '' : 'gratuit',
+      Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss || o.lossQ || o.spend ? '' : 'gratuit',
       o.loss ? `perte ${bag(o.loss)}` : '',
       o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
-      o.gains?.length ? `rapporte ${o.gains.map((r) => RES_LABEL[r]).join(', ')} (montant non affiché)` : '',
-      o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])}${d ? ' ' + (d > 0 ? '▲' : '▼').repeat(Math.min(2, Math.abs(d))) : ''}`; }).join(', ')}` : '',
+      o.spend ? `dépense ${bag(o.spend)} si la réserve suffit` : '',
+      o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${'+'.repeat(o.gains![r]!)} ${RES_LABEL[r]}`).join(', ')} (ampleur : + un peu, ++ bien, +++ beaucoup)` : '',
+      o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])}${d ? ` ${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}` : ''}`; }).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
       o.warn ? `attention : ${o.warn}` : '',
       o.risk ? `risque : ${o.risk}` : '',
@@ -98,7 +101,7 @@ function feedback(s: GameState, ev: Ev[]): void {
   for (const [f, d] of loy) if (d) parts.push(`${capitalize(e.c.families[f].house[s.era])} ${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}`);
   for (const x of ev) {
     if (x.type === 'quartiers' && x.delta) parts.push(`${x.delta > 0 ? '+' : ''}${x.delta} quartier${Math.abs(x.delta) > 1 ? 's' : ''}${x.delta < 0 ? ` (${x.cause})` : ''}`);
-    if (x.type === 'quartiers' && x.shielded) parts.push(`perte évitée par une merveille (${x.cause})`);
+    if (x.type === 'quartiers' && x.shielded) parts.push(`une merveille rachète le quartier (${x.cause})${x.paid ? ` contre ${bag(x.paid, '-')}` : ''}`);
     if (x.type === 'sched') parts.push('cela aura des suites');
     if (x.type === 'bet') parts.push(`pari ${x.win ? 'réussi' : 'raté'} (${Math.round(x.chance * 100)} %)`);
     if (x.type === 'jalon') parts.push(`★ MERVEILLE BÂTIE : ${x.name}`);
@@ -112,10 +115,12 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'revolt') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se révoltent : un quartier brûle.`);
     if (x.type === 'defect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} passent chez la rivale, avec un quartier.`);
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
-    if (x.type === 'income') bil.push(`Une famille dévouée apporte ${bag(x.bag, '+')}.`);
+    if (x.type === 'income') bil.push(`Une famille fervente apporte ${bag(x.bag, '+')}.`);
+    if (x.type === 'mend') bil.push(`Les Peintures apaisent ${e.c.families[x.family].house[s.era]} : ils remontent d’un cran.`);
+    if (x.type === 'disette') bil.push(`DISETTE : il manquait ${x.missing} Vivres ; pas de quartier perdu, mais toutes les familles grognent (−1).`);
     if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);
-    if (x.type === 'famine') bil.push('FAMINE : un quartier se vide.');
+    if (x.type === 'famine') bil.push(ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? 'FAMINE : une merveille rachète le quartier.' : 'FAMINE : un quartier se vide.');
     if (x.type === 'annex') bil.push(`${capitalize(x.name)} annexent un quartier (leur dessein est achevé ; ils épargnent leurs amis).`);
     if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
   }

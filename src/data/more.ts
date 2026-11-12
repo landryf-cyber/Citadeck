@@ -241,7 +241,7 @@ export const moreEncounters = [
   }),
   // chez les Brume
   card({
-    id: 'r_brume_automate', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'gear', hue: 205 },
+    id: 'r_brume_automate', kind: 'rencontre', eras: [2, 3, 4], scale: true, family: 'brume', art: { motif: 'gear', hue: 205 },
     title: 'L’Automate',
     text: '{F:brume} a fabriqué un automate qui joue aux échecs. Il bat tout le monde. {F:ourk} a perdu trois fois, puis l’a frappé. L’automate a gagné aussi ce combat-là.',
     options: [
@@ -262,13 +262,13 @@ export const moreEncounters = [
   }),
   // chez les Troc
   card({
-    id: 'r_troc_loterie', kind: 'rencontre', scale: true, family: 'troc', art: { motif: 'coin', hue: 150 },
+    id: 'r_troc_loterie', kind: 'rencontre', eras: [1, 2, 3, 4], scale: true, family: 'troc', art: { motif: 'coin', hue: 150 },
     title: 'La Loterie',
     text: '{F:troc} propose une loterie d’État. « Les pauvres paient l’impôt en souriant. C’est l’impôt le plus aimé de l’histoire. » {F:sel} trouve que c’est un péché. Elle a déjà acheté dix billets.',
     options: [
       { label: 'Lancer la loterie', effect: { gain: $('T5'), loy: { troc: 1, sel: -1 } }, reply: 'Le gros lot est gagné par {F:troc}. Une coïncidence, selon {F:troc}.' },
       { label: 'Loterie pour les temples', effect: { gain: $('V3'), loy: { sel: 1, troc: -1 } }, reply: 'On joue pour le ciel. Le ciel ne gagne jamais. {F:troc} non plus, et ça, ça le fâche.' },
-      { label: 'Interdire le jeu', effect: { loy: { troc: -1, sel: -1 } }, reply: 'Le jeu continue en cachette. Les cachettes sont tenues par {H:troc}.' },
+      { label: 'Interdire le jeu', effect: { gain: $('S2'), loy: { troc: -1, sel: -1, brume: 1 } }, reply: 'Le jeu continue en cachette, tenu par {H:troc}. {F:brume} en profite pour calculer les chances, et en tire un traité.' },
     ],
   }),
   card({

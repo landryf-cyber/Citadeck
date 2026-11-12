@@ -163,8 +163,9 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .fdot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px hsl(var(--h) 70% 65%); background: hsla(var(--h), 60%, 30%, 0.6); }
 .fdot svg { width: 18px; height: 18px; overflow: visible; }
 .fdot { position: relative; }
-.fdot .dir { position: absolute; right: -6px; bottom: -5px; font-style: normal; font-size: 8px; line-height: 1; letter-spacing: -2px; padding: 1px 2px 1px 1px; border-radius: 5px; background: rgba(10, 8, 14, 0.85); }
+.fdot .dir { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 10px; font-weight: 800; line-height: 1; padding: 1px 2px; border-radius: 5px; background: rgba(10, 8, 14, 0.9); }
 .fdot .dir.up { color: #b9e6a8; } .fdot .dir.down { color: #ff8a6e; }
+.chip.spend { background: none; box-shadow: inset 0 0 0 1px rgba(255, 190, 120, 0.4); border-radius: 8px; opacity: 0.95; }
 .chip.gain { background: none; box-shadow: inset 0 0 0 1px rgba(170, 230, 150, 0.28); padding: 2px 5px 2px 4px; font-weight: 700; opacity: 0.92; }
 .meta-ico { width: 16px; height: 16px; color: #ffd59a; }
 .meta-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -369,3 +370,9 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   .fam svg.med { width: 30px; height: 30px; }
 }
 .reduced *, .reduced *::before, .reduced *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.12s !important; }
+
+/* créance en cours, sous le Trésor */
+.stat { position: relative; }
+.stat .debt { position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #ff9a84; white-space: nowrap; background: rgba(12, 8, 12, 0.92); border-radius: 5px; padding: 0 4px; box-shadow: inset 0 0 0 1px rgba(255, 120, 90, 0.4); z-index: 6; }
+/* la réponse au choix précédent : lisible sur n'importe quel ciel */
+.after .reply { background: rgba(10, 8, 14, 0.62); border-radius: 12px; padding: 7px 12px; backdrop-filter: blur(3px); }

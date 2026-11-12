@@ -179,7 +179,8 @@ export function testaments(e: Engine, s: GameState): Testament[] {
   else if (nextJ >= 0 && nextJ < 5) lines.push(`Finissez ${e.jalonOf(s, nextJ).name.replace(/^L[ae’] ?/, (m) => m.toLowerCase())}. Nous avions les plans.`);
   if (s.mem.includes('brume_ia') || s.deck.includes('d_ia')) lines.push('Ne touchez pas au bouton rouge. Quel que soit le bouton.');
   lines.push('Nous étions trop beaux pour durer.', `C’était la faute de {F:troc}. Vérifiez.`, 'Rien. Absolument rien. Bonne chance.');
-  const gain: Bag = { [res]: 4 };
+  // une seule ressource, mais plus : jamais moins bien que la leçon (4 + 2)
+  const gain: Bag = { [res]: 7 };
   out.push({ text: t(pick(s, 3, lines)), legacy: { label: `${bagLabel(gain)} au départ`, gain } });
   return out;
 }
@@ -304,7 +305,8 @@ export function recordRun(meta: MetaState, e: Engine, s: GameState, testament?: 
     chronicle: [entry, ...meta.chronicle].slice(0, CHRONICLE_MAX),
     unlocked: [...meta.unlocked],
     feats: [...meta.feats, ...fresh],
-    lastSeen: [...new Set(s.history.map((h) => h.card).filter((id) => ['evenement', 'rencontre', 'rivale', 'famille', 'crise'].includes(e.c.cards[id]?.kind ?? '')))],
+    // ce que les deux dernières parties ont montré : la suivante l'écarte autant que possible
+    lastSeen: [...new Set([...s.history.map((h) => h.card).filter((id) => ['evenement', 'rencontre', 'rivale', 'famille', 'crise', 'trahison'].includes(e.c.cards[id]?.kind ?? '')), ...(meta.lastSeen ?? [])])].slice(0, 90),
   };
   const unlocked = UNLOCKS.filter((u) => !next.unlocked.includes(u.id) && u.test(next));
   next.unlocked.push(...unlocked.map((u) => u.id));

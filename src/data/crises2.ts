@@ -204,7 +204,7 @@ export const crisisAltCards = [
     title: 'Le Verdict',
     text: 'Les machines ont délibéré. Elles vont décider si la cité mérite d’être gardée, ou optimisée. Ce que vous avez bâti pèsera. Ce que vous n’avez pas bâti aussi.',
     options: [
-      { label: 'Montrer notre dessein', warn: 'Sans la quatrième merveille, deux quartiers sont « optimisés »',
+      { label: 'Montrer notre dessein', cost: $('T3'), warn: 'Sans la quatrième merveille, deux quartiers sont « optimisés »',
         effect: { if: { jalons: 4 }, then: { mem: ['filtre_passe'], reply: 'Verdict : « À garder. Inefficace, mais à garder. » Les machines demandent si elles peuvent rester. Elles restent.' },
           else: { quartiers: -2, cause: 'le Verdict des machines, devant un dessein inachevé', reply: 'Les machines optimisent deux quartiers. Ils sont parfaitement propres, et parfaitement vides.' } } },
       { label: 'Tout donner', cost: $('V7 A7 S7 T7'), effect: { mem: ['filtre_passe'] }, reply: 'Vous leur donnez tout. Les machines comptent, recomptent, et vous rendent la monnaie, exacte. C’est une première.' },

@@ -135,7 +135,7 @@ export const discoveryCards = [
   // ------------------------------------------------------------------ fin de l'ère industrielle
   card({
     id: 'd_vaccin', kind: 'decouverte', scale: true, eras: [4], tags: ['Science'], art: { motif: 'spiral', hue: 160 }, price: 7,
-    passive: [{ type: 'shield', amount: 1 }], gift: 'Chaque ère, la première perte de quartier est évitée. Compte pour la Science.',
+    passive: [{ type: 'shield', amount: 4, res: 'vivres' }], gift: 'Chaque ère, la première perte de quartier subie se rachète 4 Vivres (à l’échelle de l’ère), si vous les avez. Compte pour la Science.',
     title: 'Le Vaccin',
     text: 'Le docteur Brumel veut injecter du pus de vache à tout le monde. Il jure que ça marche. La vache n’a pas été consultée.',
     options: [

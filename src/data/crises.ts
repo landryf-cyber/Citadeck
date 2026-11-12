@@ -145,8 +145,9 @@ export const crisisCards = [
     title: 'Le Front',
     text: 'Le front ne bouge plus. Chaque mètre coûte mille hommes. {F:ourk} veut un mètre.{?mem:guerre_negociee| Les avocats négocient encore. Ça aide un peu.|}',
     options: [
-      { label: 'Tenir le front', warn: 'Sans {k:14} Armée, deux quartiers tombent{?mem:guerre_negociee| (un : la négociation aide)|}',
-        effect: { if: { res: $('A14') }, then: { gain: $('A-5'), reply: 'Le front tient. Personne ne sait plus très bien pourquoi, mais il tient.' },
+      { label: 'Tenir le front', warn: 'Sans {k:14} Armée, deux quartiers tombent{?mem:guerre_negociee| (un : la négociation aide)|}{?mem:rouge_garde| ; en pantalon rouge, le front coûte bien plus d’hommes|}',
+        effect: { if: { res: $('A14') }, then: { gain: $('A-5'), reply: 'Le front tient. Personne ne sait plus très bien pourquoi, mais il tient.',
+          if: { mem: 'rouge_garde' }, then: { gain: $('A-4'), reply: 'Le front tient. Les pantalons rouges se voient de très loin : il a fallu deux fois plus d’hommes. {F:ourk} trouve que ça valait le coup.' } },
           else: { quartiers: -2, cause: 'la Grande Guerre', if: { mem: 'guerre_negociee' }, then: { quartiers: 1 }, reply: 'Le front a craqué. Deux quartiers de la frontière sont désormais chez {rival}.' } } },
       { label: 'Acheter des alliés', cost: $('T11'), effect: { rival: -1 }, reply: 'Des alliés arrivent, chers et vexés d’arriver si tard. Le front tient, grâce à eux et malgré eux.' },
       { label: '{H:ourk} en première ligne', req: { fam: { id: 'ourk', min: -1 } }, reqLabel: '{H:ourk} pas encore hostiles', effect: { loy: { ourk: -3 } },
@@ -200,7 +201,7 @@ export const crisisCards = [
     title: 'La Réponse',
     text: 'Le signal attend votre réponse définitive. Ce que vous avez bâti parlera. Ce que vous n’avez pas bâti aussi, mais moins bien.',
     options: [
-      { label: 'Montrer notre dessein', warn: 'Sans la quatrième merveille, deux quartiers tombent',
+      { label: 'Montrer notre dessein', cost: $('T3'), warn: 'Sans la quatrième merveille, deux quartiers tombent',
         effect: { if: { jalons: 4 }, then: { mem: ['filtre_passe'], reply: 'Le signal se tait longuement. Puis : « D’accord. » Personne ne sait à quoi on a dit oui.' },
           else: { quartiers: -2, cause: 'le Grand Filtre, devant un dessein inachevé', reply: 'Le signal n’est pas impressionné. Il éteint deux quartiers, pour voir.' } } },
       { label: 'Tout donner', cost: $('V7 A7 S7 T7'), effect: { mem: ['filtre_passe'] }, reply: 'Vous envoyez tout ce que vous avez. Le signal accepte. Il ne rend pas la monnaie.' },

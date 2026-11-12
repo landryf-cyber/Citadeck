@@ -69,7 +69,7 @@ export interface Effect {
   mem?: string[];
   unmem?: string[];
   /** cartes programmées : jouées dans `in` cartes (0 = tout de suite après) */
-  sched?: { card: string; in: number }[];
+  sched?: { card: string; in: number; pay?: number }[];
   /** carte ajoutée au deck permanent */
   addCard?: string[];
   removeCard?: string[];
@@ -224,7 +224,8 @@ export type Passive =
   | { type: 'crisisShield'; amount: number } // ignore N quartiers perdus pendant les crises (par crise)
   | { type: 'income'; res: Res; amount: number } // à chaque saison
   | { type: 'loyalty'; family: FamilyId | 'all'; floor: number } // loyauté jamais sous ce plancher
-  | { type: 'shield'; amount: number } // la première perte de quartier de chaque ère est évitée
+  | { type: 'mend' } // à chaque fin d'ère, les familles hostiles remontent d'un cran
+  | { type: 'shield'; amount: number; res: Res } // la première perte de quartier subie de chaque ère se rachète en réserves
   | { type: 'growth'; amount: number } // quartiers bonus à la croissance
   | { type: 'tagBonus'; tag: Tag; amount: number } // compte pour N cartes du mot-clé
   | { type: 'discount'; res: Res; amount: number }; // coûts réduits
@@ -309,6 +310,10 @@ export interface Prompt {
   from?: string;
   /** chantier de rattrapage : l'ère de la merveille manquée */
   missed?: number;
+  /** chantier ouvert dès la fin de la première saison */
+  early?: boolean;
+  /** créance : montant fixé au moment du crédit */
+  pay?: number;
 }
 
 export type Phase = 'presage' | 'saison' | 'chantier' | 'crise' | 'finere' | 'fin';
@@ -356,7 +361,7 @@ export interface GameState {
   visits: Record<FamilyId, number>;
   /** cartes à usage unique déjà jouées */
   spent: string[];
-  sched: { card: string; at: number; from?: string }[];
+  sched: { card: string; at: number; from?: string; pay?: number }[];
   turn: number;
   /** tour où l'ère en cours a commencé (dates) */
   eraStart: number;
