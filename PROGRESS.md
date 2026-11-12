@@ -56,5 +56,5 @@ P4 variété
 5. Trois juges indépendants (notes ≥ 8 sur 7 critères, 5 tours max)
 6. Déploiement : `npm run single` → page hébergée https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (V2 publiée en version 5 le 12/11 ; republier après chaque tour de corrections) ; message final
 
-## Bloqué
-- `git push` refusé (403). Publication par page hébergée.
+## Dépôt
+- Branche `claude/inspiring-cerf-jcrkjo` poussée sur GitHub le 12/11 (l'accès a été rétabli). Le déploiement GitHub Pages ne se déclenche que sur `main` ; publication courante : page hébergée.
