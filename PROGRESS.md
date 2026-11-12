@@ -48,7 +48,7 @@ P4 variété
 ## Juges — tour 1 (fait, version 6)
 - Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : critique 6·5·7·7·7·6·7 ; designer 6·6·7·8·6·6·7 ; scénariste 7·6·6·8·6·6·7. Verdicts dans `scratchpad/juges/juge-1..3.md`.
 - Trois faiblesses : (1) impasses et enjeux sans dents ; (2) squelette répétitif ; (3) cohérence, héritage mince, illustrations génériques.
-## Tour 2 de corrections (en cours, dans la copie de travail `../citadeck-dev`, branche `tour-juges-2`, à fusionner dans la branche de travail)
+## Tour 2 de corrections (fait, fusionné dans la branche de travail, publié en version 7)
 - [x] paliers de fin (triomphe, victoire, survie, chute), rivale qui annexe un quartier par ère après son triomphe, crédit quand une seule option est jouable, une perte de quartier au plus par famille et par ère
 - [x] procès seulement pour les rancunes graves (−2), hommage une fois par famille, griefs pondérés par la gravité
 - [x] Grand Filtre : le dessein répond dès le premier acte
@@ -57,7 +57,10 @@ P4 variété
 - [x] cohérence : dette de mammouth, élisions (« d'Ourk »), « À », libellés
 - [x] interface : paliers de fin, annexion au bilan, noms courts sur mobile, carte plus grande sur bureau, silhouettes des merveilles en illustration
 - [x] variantes de cartes de famille pour les ères IV et V
-- [ ] mesures, tests, fusion, republication, puis trois nouveaux juges
+- [x] mesures, tests, fusion, republication (version 7)
+## Juges — tour 2 (en cours, version 7)
+- Trois nouveaux juges : rédacteur de magazine indé (graine 5150), joueuse de roguelites (graine 7777), auteur de fiction interactive (graine 1313, postérité puis héritiers). Verdicts attendus dans `scratchpad/juges/juge-4..6.md`.
+- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
