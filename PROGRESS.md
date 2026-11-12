@@ -61,14 +61,15 @@ P4 variété
 ## Juges — tour 2 (fait, version 7)
 - Notes (originalité · tension · fil rouge · humour · impact · rejouer · beauté) : rédacteur 7·8·7·8·8·6·7 ; joueuse de roguelites 6·5·8·7·5·6·7 ; auteur de fiction interactive 6·6·7,5·7·6·6·7. Verdicts dans `scratchpad/juges/juge-4..6.md`.
 - Trois faiblesses : (1) répétitions (mêmes cartes d'une partie à l'autre, mêmes crises aux ères I et V, cartes de système identiques, tics d'écriture) ; (2) choix illisibles ou inéquitables (gains cachés trop amples, sens des loyautés caché, options payantes moins bonnes que les gratuites, loyautés volatiles, procès sur le dernier grief) ; (3) menaces sans dents (sorties de crise gratuites, palissade détournable, dettes d'ère V jamais réclamées, triomphe et sabotage de la rivale sans effet, parties mortes après deux merveilles manquées, fin incohérente).
-## Tour 3 de corrections (en cours, copie `../citadeck-dev`, branche `tour-juges-2`)
+## Tour 3 de corrections (fait, fusionné dans la branche de travail)
 - [x] portraits des chefs de famille (un buste par maison et par ère, expression selon l'humeur)
-- [ ] bugs : texte de la Horde, « en toge » en 2150, plancher des Peintures, sabotage rebâti au même bilan, étiquette des transcriptions
-- [ ] menaces : sorties de crise par une famille payantes, palissade limitée aux crises, dettes soldées (saisie, échéance avant la fin), triomphe rival qui pèse, sabotage qui retarde d'une ère, merveilles qui allègent le Grand Filtre sans l'annuler, rattrapage d'une merveille manquée, dessein perdu annoncé, pas de « Greniers » après la dernière crise, stèle fidèle à la fin
-- [ ] lisibilité : type de gain affiché sans chiffre, sens de l'effet sur chaque famille, gains resserrés, payant ≥ gratuit, loyautés ±1/±2, procès sur le grief le plus grave ; mesurer « texte nécessaire »
-- [ ] répétitions : crises alternatives ères I et V, variantes des cartes de système (Créance, Caisse, plaidoiries), nouvelles cartes par ère, anti-redite renforcé, tics d'écriture
-- [ ] interface : titres sur petit écran, résultat sous la carte suivante, vide sur tablette, humeur « fanatiques » tronquée
-- [ ] mesures, tests, fusion, republication, trois nouveaux juges
+- [x] bugs : texte de la Horde, « en toge » en 2150, plancher des Peintures, sabotage rebâti au même bilan, étiquette des transcriptions, stèle d'empire
+- [x] menaces : aide des dévoués payante et une fois par partie, palissade limitée aux pertes subies, créances qui montent (Créance, Seconde Créance, Saisie) et se revendent à la rivale, échéance immédiate à la dernière ère, tribut après le triomphe rival, sabotage qui retarde d'une ère, merveilles qui allègent le Grand Filtre sans l'annuler, rattrapage d'une merveille manquée (seconde saison), plus rien après la dernière crise
+- [x] lisibilité : genre de gain affiché sans chiffre, sens de l'effet sur chaque famille (▲ ▼), prix du crédit écrit, procès sur le grief le plus grave ; « texte nécessaire » mesuré (indicateurs seuls 2 % contre lecteur 81 %)
+- [x] répétitions : crises alternatives aux ères I et V, trois cartes de créance, trahisons qui s'aggravent (8 cartes), plaidoiries variées, 8 variantes de familles (Antiquité, Moyen Âge), anti-redite élargi aux crises et variantes, tics allégés
+- [x] interface : présage allégé (merveilles manquées, tribut), humeur « fervents », réponse rattachée à son choix, carte agrandie sur tablette
+- [x] mesures (E12), tests (24), README, DECISIONS 25-32
+- [ ] republication (version 8), captures, trois nouveaux juges (tour 3)
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
