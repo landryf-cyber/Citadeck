@@ -11,12 +11,13 @@ import { eventCards, rivalCards } from './events';
 import { desseins, engineCards, families, origins, rivalries, rivals, routes } from './world';
 import { moods, recalls } from './moods';
 import { moreEncounters, moreEvents, moreRival } from './more';
-import { echoEvents, echoFamilyCards, echoRecalls } from './echoes';
+import { echoEvents, echoFamilyCards, echoRecalls, memoryOptions } from './echoes';
+import { crisisAltCards, crisisAlts } from './crises2';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards,
 ];
 
 // hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
@@ -32,6 +33,12 @@ const damp = (e: import('../core/types').Effect | undefined): void => {
   }
 };
 for (const c of all) if (['rencontre', 'evenement', 'rivale'].includes(c.kind) && !c.echo) for (const o of c.options) damp(o.effect);
+
+// des options qui n'existent que par un souvenir
+for (const [id, opts] of Object.entries(memoryOptions)) {
+  const c = all.find((x) => x.id === id);
+  if (c) c.options = [...c.options, ...opts];
+}
 
 // une famille qui trahit deux fois le fait savoir
 for (const f of ['ourk', 'sel', 'brume', 'troc'] as const) {
@@ -70,6 +77,7 @@ export const content: Content = {
   origins,
   routes: routes.map((r) => ({ ...r, encounters: [...r.encounters, ...(extraEnc[r.id] ?? [])] })),
   crises,
+  crisisAlts,
   events: [0, 1, 2, 3, 4].map((e) => events.filter((c) => c.kind === 'evenement' && c.eras?.includes(e)).map((c) => c.id)),
   rivalCards: {
     hostile: ['v_raid', 'v_ultimatum', 'v_espion', 'v_lettre', 'v_portrait'],

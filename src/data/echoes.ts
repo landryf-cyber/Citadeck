@@ -159,3 +159,26 @@ export const echoRecalls = [
   { family: 'brume' as const, mem: 'feu_brume', line: 'Une petite flamme brûle dans une lanterne à sa ceinture. Elle vient du premier feu de Brume. {Il:brume} ne la prête pas.', tone: 'pos' as const },
   { family: 'troc' as const, mem: 'dette_ancestrale', line: 'Il a un caillou gravé dans sa poche. Il le sort parfois, le regarde, fait un calcul, et sourit.' },
 ];
+
+/**
+ * Options qui n'existent que si un souvenir existe : la mémoire change ce que l'on peut faire.
+ * Ajoutées aux cartes désignées (souvent des crises) ; invisibles sans le souvenir.
+ */
+export const memoryOptions: Record<string, import('../core/types').Option[]> = {
+  x0_horde: [{ label: 'Le clan peint en rouge', req: { mem: 'ourk_rouge' }, effect: { loy: { ourk: 1 } },
+    reply: 'La horde voit surgir un mur rouge qui hurle. Elle découvre la peur, fait demi-tour, et raconte partout que vous êtes des démons.' }],
+  x1_port: [{ label: 'Quarantaine sur les navires', req: { mem: 'troc_navires' }, effect: { loy: { sel: 1 }, mem: ['port_ferme'] },
+    reply: 'Les navires de la flotte de Trokos mouillent au large, pavillon jaune. Le port vit, la fièvre attend dehors.' }],
+  x1_fievre: [{ label: 'L’ours sacré bénit les malades', req: { mem: 'ours_sacre' }, effect: { loy: { sel: 1 } },
+    reply: 'L’ours lèche les fiévreux. Certains guérissent. Les autres sont léchés quand même, et se sentent mieux.' }],
+  x2_barricades: [{ label: 'Les descendants des noces', req: { mem: 'noces' }, effect: { loy: { ourk: 1, sel: 1 } },
+    reply: 'Les enfants des vieilles noces Ourk-Sel, prêtres et soldats à la fois, montent sur les barricades et les bénissent. La foule rentre dîner.' }],
+  x2_charte: [{ label: 'L’héritier philosophe la rédige', req: { mem: 'philosophe_precepteur' }, effect: { loy: { brume: 1 }, mem: ['charte'] },
+    reply: 'La charte commence par « Admettons que ». Tout le monde signe, par fatigue, et personne n’y perd rien.' }],
+  x4_panique: [{ label: 'Montrer le rocher : c’était écrit', req: { mem: 'prophetie_gravee' }, effect: { loy: { sel: 1 } },
+    reply: 'La foule lit la prophétie de Mère Sel. Tout était prévu, même la panique. On se calme, rassurés d’avoir été prévus.' }],
+  x4_reponse: [{ label: 'Les dernières paroles du sage', req: { mem: 'cigue' }, effect: { loy: { brume: 1 }, mem: ['filtre_passe'] },
+    reply: 'Vous envoyez les dernières paroles du philosophe empoisonné. Elles sont longues. Le signal répond : « Enfin quelqu’un qui doute. » Il s’en va.' }],
+  troc_3: [{ label: 'Rappeler la défense de mammouth', req: { mem: 'dette_ancestrale' }, effect: { gain: $('T4'), loy: { troc: -1 } },
+    reply: 'Vous rappelez à {F:troc} la défense de mammouth jamais rendue. Il pâlit, puis vous accorde des conditions d’ancêtre.' }],
+};

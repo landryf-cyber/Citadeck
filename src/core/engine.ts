@@ -15,7 +15,7 @@ export const SAVE_VERSION = 21;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.7, gain: 0.95, cards: 3, wonderUpkeep: 1.5 };
+export const TUNING = { crisisK: 1.3, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.5, gain: 0.95, cards: 3, wonderUpkeep: 1.25 };
 /** croissance de l'économie d'une ère à l'autre (cartes « à l'échelle ») */
 export const ERA_SCALE = [1, 1.35, 1.75, 2.2, 2.7];
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
@@ -267,6 +267,14 @@ export class Engine {
     };
   }
 
+  /** La crise de l'ère : celle d'origine, ou l'alternative si la graine la désigne. */
+  crisisOf(s: GameState) {
+    const alt = this.c.crisisAlts?.[s.era];
+    if (!alt) return this.c.crises[s.era];
+    const h = Math.abs(Math.imul(s.seed ^ (s.era * 40503), 2246822519)) >>> 0;
+    return h % 2 ? alt : this.c.crises[s.era];
+  }
+
   /** Contenu verrouillé par la méta-progression. */
   available(s: GameState, c: CardDef | undefined): boolean {
     return !!c && (!c.lock || s.unlocked.includes(c.lock));
@@ -360,7 +368,7 @@ export class Engine {
       walk(e.then);
       walk(e.else);
     };
-    for (const id of this.c.crises[s.era].cards) {
+    for (const id of this.crisisOf(s).cards) {
       for (const o of this.card(id).options.map((x) => scaleOption(x, 0, k))) {
         take(o.cost);
         take(o.req?.res);
@@ -455,7 +463,7 @@ export class Engine {
     if (opts.some((o) => this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req))) return opts;
     const card = this.card(p.card);
     if (card.kind === 'crise') {
-      const name = this.c.crises[s.era].name;
+      const name = this.crisisOf(s).name;
       return [...opts, { label: 'Encaisser', effect: { quartiers: -1, cause: `${name.charAt(0).toLowerCase()}${name.slice(1)}, sans rien à lui opposer` }, reply: 'Rien à opposer. On serre les dents, on compte les ruines.' }];
     }
     return [...opts, { label: 'Ne rien faire', effect: {}, reply: 'Faute de moyens, on attend. Pour une fois, ça ne coûte rien.' }];
@@ -547,7 +555,7 @@ export class Engine {
     }
     if (p.from) header = `Suite de · ${p.from}`;
     if (card.kind === 'crise') {
-      const cr = this.c.crises[s.era];
+      const cr = this.crisisOf(s);
       header = `Crise · ${cr.name} · ${cr.cards.indexOf(card.id) + 1}/${cr.cards.length}`;
     }
     if (card.kind === 'trahison') header = 'Trahison';
@@ -680,7 +688,7 @@ export class Engine {
     const d = this.dessein(s);
     const j = d.jalons[s.era];
     const alt = this.jalonAltOf(s, s.era);
-    const cr = this.c.crises[s.era];
+    const cr = this.crisisOf(s);
     const built = s.jalons.filter(Boolean).length;
     const k = this.crisisK(s) / (TUNING.crisisK * (s.iron ? TUNING.iron : 1));
     const rv = this.rival(s);
@@ -1050,7 +1058,7 @@ export class Engine {
       if (s.phase === 'chantier') {
         // la crise
         s.phase = 'crise';
-        const cr = this.c.crises[s.era];
+        const cr = this.crisisOf(s);
         const pile = cr.cards.slice();
         // une famille qui vous hait choisit ce moment pour trahir
         const traitor = this.present(s).filter((f) => s.fam[f].loy <= -2).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];

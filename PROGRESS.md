@@ -13,7 +13,7 @@ Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md`
 - V1 retirée (historique git), arborescence aplatie, README et DECISIONS à jour
 - Tests : contenu, moteur (pas de blocage, déterminisme, gabarits résolus), méta, rejeu — `npm test`
 - Captures : `npm run shots` (mobile + bureau, ~19 écrans) ; perf : `npm run perf -- 2` ; scène seule : `npx tsx scripts/scene.ts` ; planches d'animation : `npx tsx scripts/film.ts` (à réparer : le saut vers le chantier)
-- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E10 (`TUNING crisisK 1.3, envie 0.15, entretien 1.7 + 1.5 par merveille, gains ×0.95, 3 cartes par saison`)
+- Contenu sans redites (usage unique), 3 humeurs par famille, 31 cartes nouvelles dont 9 suites ; rééquilibrage E10 (`TUNING crisisK 1.3, envie 0.15, entretien 1.5 + 1.25 par merveille, gains ×0.95, 3 cartes par saison`)
 - Joueur en mode texte pour testeurs : `npx tsx scripts/play.ts new <dossier> [dessein] [origine] [graine]`
 - Introduction des quatre familles au premier lancement ; ruines et rivale lisibles sur la crête ; sons du procès et des ruines
 - Rapport de l'éditeur (agent) : `scratchpad/rapport-editeur.md` ; notes du joueur A (arrêté par la limite d'usage) : `scratchpad/notesA.txt`
@@ -42,8 +42,8 @@ P4 variété
 - [x] B. rancune : l'acquittement n'efface pas la rancune (seule la réparation payante), excuses de la grève payantes, verdicts et trahisons variés, loyautés ±1 hors cartes de famille et de crise
 - [x] C. dessein : pas de sacrifice au Grand Filtre, « Survie » nommée comme fin médiocre (et « dans l'ombre de la rivale »), une découverte du mot-clé du dessein proposée à chaque ère
 - [x] D. fin de partie : mesurer les choix imposés par ère ; seuils de crise des ères III-V abaissés ; entretien allégé
-- [ ] E. une crise alternative par ère (II à IV), tirée par la graine
-- [ ] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
+- [x] E. une crise alternative par ère (II à IV), tirée par la graine
+- [x] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
 Ensuite : republier, puis trois juges.
 
 ## Reste à faire (dans l'ordre)

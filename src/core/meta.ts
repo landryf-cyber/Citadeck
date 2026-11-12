@@ -158,7 +158,7 @@ export function testaments(e: Engine, s: GameState): Testament[] {
     lesson = { text: t(pick(s, 2, ['Mangez d’abord. Bâtissez ensuite.', 'Les greniers. Toujours les greniers.'])), legacy: { label: '', gain: { vivres: 6 } } };
   } else {
     const f = familyInCause(e, cause);
-    const cr = e.c.crises.find((c) => cause.toLowerCase().includes(c.name.toLowerCase().replace(/^(la|le|l’) ?/, '')));
+    const cr = [...e.c.crises, ...((e.c.crisisAlts ?? []).filter(Boolean) as typeof e.c.crises)].find((c) => cause.toLowerCase().includes(c.name.toLowerCase().replace(/^(la|le|l’) ?/, '')));
     if (f) {
       lesson = { text: t(pick(s, 2, [`Écoutez {H:${f}} avant qu’ils ne crient.`, `Ce ne sont pas {rival} qui nous ont eus. Ce sont {H:${f}}.`])), legacy: { label: '', gain: { [e.c.families[f].res]: 5 } } };
     } else if (cr) {

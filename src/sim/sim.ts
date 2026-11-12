@@ -64,7 +64,7 @@ export function playRun(c: Content, p: Profile, seed: number, opts: { transcript
       if (v.options.filter((o) => o.enabled).length === 1) st.forcedEra[s.era]++;
       if (raw.kind === 'proces') st.trials++;
     }
-    if (raw.kind === 'presage') L(`\n## Ère ${s.era + 1} — jalon : ${e.dessein(s).jalons[s.era].name} — crise : ${c.crises[s.era].name}`);
+    if (raw.kind === 'presage') L(`\n## Ère ${s.era + 1} — jalon : ${e.dessein(s).jalons[s.era].name} — crise : ${e.crisisOf(s).name}`);
     const i = chooseIndex(e, s, p, rng);
     if (opts.transcript && raw.kind !== 'presage') {
       L(`\n[${s.res.vivres}V ${s.res.armee}A ${s.res.savoir}S ${s.res.tresor}T | ${s.quartiers} quartiers | ${Object.entries(s.fam).map(([f, x]) => `${f} ${x.loy >= 0 ? '+' : ''}${x.loy}`).join(' ')}]`);

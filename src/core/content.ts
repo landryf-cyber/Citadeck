@@ -16,6 +16,8 @@ export interface Content {
   origins: OriginDef[];
   routes: RouteDef[];
   crises: CrisisDef[];
+  /** crises alternatives par ère (la graine choisit) */
+  crisisAlts?: (CrisisDef | undefined)[];
   /** événements par ère */
   events: string[][];
   rivalCards: { hostile: string[]; neutral: string[]; friendly: string[] };
