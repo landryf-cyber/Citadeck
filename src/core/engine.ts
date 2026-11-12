@@ -754,6 +754,16 @@ export class Engine {
     const dir: Partial<Record<FamilyId, number>> = {};
     for (const f of FAMILIES) if (loyNow[f] !== s.fam[f].loy) dir[f] = loyNow[f]! - s.fam[f].loy;
     if (Object.keys(dir).length) v.famDir = dir;
+    // prévenir d'une révolte : une famille qui passerait à −3 brûlera un quartier au bilan
+    const riot = FAMILIES.filter((f) => dir[f] && loyNow[f]! <= -3 && s.fam[f].loy > -3);
+    if (riot.length) v.risk = [v.risk, `${riot.map((f) => capitalize(this.c.families[f].house[s.era])).join(' et ')} passeraient à −3 : révolte au bilan, un quartier brûle`].filter(Boolean).join(' · ');
+    // dernière carte avant le bilan : dire noir sur blanc ce que coûteront les révoltes
+    const lastBeforeBilan = (card.kind === 'crise' && !s.pile.length) || card.id === 'disette';
+    if (lastBeforeBilan) {
+      const rebels = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && loyNow[f]! <= -3 && !riot.includes(f));
+      const q = s.quartiers + (o.effect.quartiers ?? 0);
+      if (rebels.length) v.risk = [v.risk, `Au bilan, ${rebels.map((f) => this.c.families[f].house[s.era]).join(' et ')} se révolteront${q - rebels.length - riot.length <= 0 ? ' : la cité tombera' : ` : ${rebels.length > 1 ? `${rebels.length} quartiers brûleront` : 'un quartier brûlera'}`}`].filter(Boolean).join(' · ');
+    }
     // ce qui rentre, en fourchette chiffrée et fixe (la même à toutes les ères), pas le montant exact
     const gl: Partial<Record<Res, number>> = {};
     for (const r of RES) {
