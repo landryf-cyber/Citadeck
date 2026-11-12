@@ -79,7 +79,10 @@ P4 variété
 - [x] filets et fin : rachat payant (palissade, observatoire, vaccin), Peintures qui réconcilient, merveilles hors du compte des mots-clés, famine proportionnelle et disette (acheter du grain), tribut dès cinq merveilles rivales, réponse finale payante
 - [x] moule : chantier ouvert dès la fin de la première saison, trahisons et cartes des deux dernières parties écartées, découvertes de la bonne ère, anachronismes, réponse lisible, flèches plus grandes, silhouette d'ère, portraits modelés
 - [x] mesures (E13), tests (27), README, DECISIONS 33-40
-- [ ] republication (version 9), captures, trois nouveaux juges (tour 4)
+- [x] republication (version 9, 12/11), captures (mobile, bureau, tablette, petit écran, scène, planches)
+## Juges — tour 4 (en cours, version 9)
+- Trois nouveaux juges : critique d'un grand site de jeux (graine 1212), optimisatrice qui cherche à casser le jeu (graine 3434), romancière qui joue dans le bus (graine 5656). Verdicts attendus dans `scratchpad/juges/juge-10..12.md`.
+- Pendant qu'ils jouent, ne pas toucher au jeu de la branche de travail (copie `../citadeck-dev` pour tout changement).
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
