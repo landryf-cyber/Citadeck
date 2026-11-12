@@ -36,7 +36,15 @@ P3 textes
 P4 variété
 - [x] suites liées aux souvenirs toujours tirées (priorité) ; variantes d'âge de pierre par famille ; voix propres à chaque rivale ; deux cartes de l'éditeur (Quarantième Génération, Brevet de la roue)
 - [x] retours des joueurs A et B (6/10 chacun) : sacrifices en crise, entretien des merveilles, exigences annoncées, triomphe de la rivale, 3 cartes par saison (E9)
-Ensuite : captures et passe DA, avocat du diable, juges.
+- [x] passe DA animations (planches `scripts/film.ts`), écran « Votre civilisation », V2 publiée (version 5)
+## Tour « avocat du diable » (rapport : scratchpad/rapport-avocat.md)
+- [ ] A. bugs et risques cachés : gabarits dans les causes ({rival}), « le quartier tient » alors qu'un quartier tombe, jour décisif parmi les choix libres, risque d'échec des paris affiché, avance de la rivale annoncée, test anti-accolades sur épitaphes/chroniques
+- [ ] B. rancune : l'acquittement n'efface pas la rancune (seule la réparation payante), excuses de la grève payantes, verdicts et trahisons variés, loyautés ±1 hors cartes de famille et de crise
+- [ ] C. dessein : pas de sacrifice au Grand Filtre, « Survie » nommée comme fin médiocre (et « dans l'ombre de la rivale »), une découverte du mot-clé du dessein proposée à chaque ère
+- [ ] D. fin de partie : mesurer les choix imposés par ère ; seuils de crise des ères III-V abaissés ; entretien allégé
+- [ ] E. une crise alternative par ère (II à IV), tirée par la graine
+- [ ] F. souvenirs qui changent les options (options visibles seulement si le souvenir existe)
+Ensuite : republier, puis trois juges.
 
 ## Reste à faire (dans l'ordre)
 1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
