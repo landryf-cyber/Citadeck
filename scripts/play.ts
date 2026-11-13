@@ -70,7 +70,7 @@ function presage(s: GameState): void {
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
-  if (s.era >= 4) P('Pas de bilan : l’histoire s’arrête après la dernière crise.');
+  if (s.era >= 4) P('Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.');
   else P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
   const lonely = e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => e.c.families[f].house[s.era]);
   if (lonely.length) P(`${capitalize(lonely.join(' et '))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`);
@@ -92,7 +92,7 @@ function card(s: GameState): void {
       o.loss ? `perte ${bag(o.loss)}` : '',
       o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
-      o.spend ? `dépense ${bag(o.spend)} si la réserve suffit` : '',
+      o.spend ? `dépense ${bag(o.spend)} seulement si le seuil est atteint (sinon rien n’est dépensé, et la perte annoncée tombe)` : '',
       o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${gainText(o.gains![r]!, ' à ')} ${RES_LABEL[r]}`).join(', ')}` : '',
       o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])} ${d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}` : '? (selon l’issue)'}`; }).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
@@ -136,6 +136,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
     if (x.type === 'income') bil.push(`Une famille fervente apporte ${bag(x.bag, '+')}.`);
     if (x.type === 'mend') bil.push(`Les Peintures apaisent ${e.c.families[x.family].house[s.era]} : ils remontent d’un cran.`);
+    if (x.type === 'spoil') bil.push(`Les greniers débordent : ${x.amount} Vivres se gâtent (au-delà de trois repas d’avance).`);
     if (x.type === 'peace') bil.push('LA PAIX CIVILE : aucune famille fâchée, un quartier de plus.');
     if (x.type === 'disette') bil.push(`DISETTE : il manquait ${x.missing} Vivres ; pas de quartier perdu, mais toutes les familles grognent (−1).`);
     if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);

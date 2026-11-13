@@ -13,6 +13,8 @@ import {
 
 export const SAVE_VERSION = 27;
 export const ERAS = 5;
+/** la Course : la rivale achève sa merveille à la fin de cette saison */
+export const RACE_END = 3;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
 export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
@@ -116,6 +118,9 @@ export function variant(text: string, key: string, seed: number, prior: number, 
   return parts[(hashString(`${key}#${seed}`) + prior) % parts.length];
 }
 
+/** Une citation entre guillemets, jamais doublés. */
+const quoted = (t: string) => (/^«/.test(t.trim()) ? t.trim() : `« ${t.replace(/^[«\s]+|[»\s]+$/g, '')} »`);
+
 /** Ce qui finit par emporter même une civilisation victorieuse. */
 export const VICTORY_CAUSE: Record<string, string> = {
   etoiles: 'le départ : ils sont tous partis, en laissant la lumière allumée',
@@ -144,6 +149,7 @@ export type Ev =
   | { type: 'rot'; amount: number; cap: number; hunt: number }
   | { type: 'raceStep'; stage: number; of: number; won: boolean; lost: boolean }
   | { type: 'peace' }
+  | { type: 'spoil'; amount: number }
   | { type: 'mend'; family: FamilyId }
   | { type: 'disette'; missing: number }
   | { type: 'loy'; family: FamilyId; delta: number; value: number }
@@ -753,7 +759,7 @@ export class Engine {
     }
     if (card.kind === 'proces' && p.plaintiff) {
       const h = s.history[p.quote ?? -1];
-      extra.citation = h ? `« ${h.label} »` : '« rien de précis, mais tout »';
+      extra.citation = h ? quoted(h.label) : '« rien de précis, mais tout »';
       extra.quand = h ? h.date : 'depuis toujours';
       extra.objet = h ? h.title : 'votre règne';
       extra.depuis = !h || h.era === s.era ? '' : h.era === s.era - 1 ? 'Cela date de l’ère précédente. ' : `Cela remonte à ${ERA_NAMES[h.era].charAt(0).toLowerCase()}${ERA_NAMES[h.era].slice(1)}. `;
@@ -763,7 +769,7 @@ export class Engine {
     }
     if (card.kind === 'hommage') {
       const h = s.history[p.quote ?? -1];
-      extra.citation = h ? `« ${h.label} »` : '« tout »';
+      extra.citation = h ? quoted(h.label) : '« tout »';
       extra.quand = h ? h.date : 'depuis toujours';
       extra.objet = h ? h.title : 'Votre règne';
       header = 'L’Hommage';
@@ -782,7 +788,7 @@ export class Engine {
     if (card.kind === 'trahison') header = 'Trahison';
     if (card.kind === 'rivale') header = `Rivale · ${capitalize(this.rival(s).name)}`;
     if (card.kind === 'decouverte') header = 'Découverte';
-    if (card.kind === 'carrefour') header = s.saison === 0 ? 'Première saison' : 'Seconde saison';
+    if (card.kind === 'carrefour') header = `${['Première', 'Deuxième', 'Troisième', 'Quatrième'][s.saison] ?? 'Dernière'} saison${this.form(s).seasons > 1 && s.saison === this.form(s).seasons - 1 ? ' (la dernière)' : ''}`;
     const options = this.options(s, p).map((o, i) => this.optionView(s, card, o, p, i));
     const fam = card.family;
     return {
@@ -830,7 +836,7 @@ export class Engine {
       enabled: affordable && reqOk,
       families: [...fams],
       later,
-      warn: o.warn ? fill(o.warn, s, this.c) : undefined,
+      warn: o.warn ? fill(o.warn, s, this.c) + (o.effect.if?.mem ? (s.mem.includes(o.effect.if.mem) ? ' (c’est fait)' : ' (pas encore)') : '') : undefined,
     };
     if (o.effect.bet) v.odds = this.betChance(s, o.effect.bet);
     // l'effet exact sur chaque famille, mépris compris : on rejoue les loyautés sur une copie
@@ -1098,6 +1104,8 @@ export class Engine {
     // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
     if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
     if (card.id === 'colonie' && (o.effect.quartiers ?? 0) > 0) s.colonies = (s.colonies ?? 0) + 1;
+    // un acte cité par un hommage ne sera plus cité (ni par un autre hommage, ni par un procès)
+    if (card.kind === 'hommage' && p.quote !== undefined && p.quote >= 0 && !s.mem.includes(`juge_${p.quote}`)) s.mem.push(`juge_${p.quote}`);
     if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) {
       const se = ev.find((x) => x.type === 'quartiers' && x.shielded) as { by?: string; paid?: Bag };
       const shName = se.by ?? 'Une merveille';
@@ -1388,6 +1396,8 @@ export class Engine {
     // revenu des découvertes et merveilles, à chaque saison
     const inc: Bag = {};
     for (const p of this.passives(s)) if (p.type === 'income') inc[p.res] = (inc[p.res] ?? 0) + p.amount;
+    // des revenus plafonnés : trois par ressource et par saison, pas une rente qui écrase tout
+    for (const r of Object.keys(inc) as Res[]) inc[r] = Math.min(3, inc[r]!);
     if (Object.keys(inc).length) {
       for (const k of Object.keys(inc) as Res[]) s.res[k] += inc[k]!;
       ev.push({ type: 'passive', bag: inc });
@@ -1440,7 +1450,8 @@ export class Engine {
         // le chantier ouvre dès la fin de la première saison (à chaque saison pendant la Course)
         const course = fm.id === 'course';
         const key = course ? `chantier_tot_${s.era}_${s.saison}` : `chantier_tot_${s.era}`;
-        if ((course || (s.saison === 0 && !last)) && !s.jalons[s.era] && !s.mem.includes(key)) {
+        // pendant la Course, le chantier ouvre à la fin des deuxième et troisième saisons (pas dès la première)
+        if ((course ? s.saison >= 1 && s.saison <= RACE_END - 1 : s.saison === 0 && !last) && !s.jalons[s.era] && !s.mem.includes(key)) {
           s.mem.push(key);
           // seulement si la merveille est déjà à portée : sinon, rendez-vous avant la crise
           const early: Prompt = { card: 'jalon', early: true };
@@ -1455,10 +1466,10 @@ export class Engine {
           const decided = s.mem.includes(`course_gagnee_${s.era}`) || s.mem.includes(`course_perdue_${s.era}`);
           if (!decided) {
             const won = !!s.jalons[s.era];
-            const lost = !won && s.saison + 1 >= fm.seasons;
+            const lost = !won && s.saison + 1 >= RACE_END;
             if (won) s.mem.push(`course_gagnee_${s.era}`);
             if (lost) s.mem.push(`course_perdue_${s.era}`);
-            ev.push({ type: 'raceStep', stage: s.saison + 1, of: fm.seasons, won, lost });
+            ev.push({ type: 'raceStep', stage: Math.min(RACE_END, s.saison + 1), of: RACE_END, won, lost });
           }
         }
         if (!last) {
@@ -1741,6 +1752,13 @@ export class Engine {
     else if (s.res.vivres >= upkeep) {
       s.res.vivres -= upkeep;
       ev.push({ type: 'upkeep', amount: upkeep });
+      // les greniers ne gardent pas tout : au-delà de trois repas d'avance, un tiers du surplus se gâte
+      const spare = s.res.vivres - 3 * upkeep;
+      if (spare > 2) {
+        const lost = Math.ceil(spare / 3);
+        s.res.vivres -= lost;
+        ev.push({ type: 'spoil', amount: lost });
+      }
     }
     else {
       // un petit manque est une disette (les familles grognent), un grand manque une famine (un quartier se vide)
@@ -1767,7 +1785,8 @@ export class Engine {
     const tribute = s.rivalJalons >= 5 && s.spent.includes('triomphe');
     // la rivale avance son propre dessein, sauf si on l'en a empêchée
     // la Course gagnée : la rivale n'achève pas sa merveille cette ère
-    if (s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.fam && this.c.rivals.length) {
+    const capitulated = s.dessein === 'empire' && s.jalons[4];
+    if (!final && !capitulated && s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.fam && this.c.rivals.length) {
       s.rivalJalons = Math.min(5, s.rivalJalons + 1);
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
@@ -1911,10 +1930,10 @@ export class Engine {
       const loy = s.fam[adv].loy;
       const plead: Effect =
         loy >= 1
-          ? { loy: { [adv]: -1 }, mem: judged, reply: WIN[adv][nth % WIN[adv].length] }
+          ? { loy: { [adv]: -1 }, mem: judged, reply: WIN[adv].join('‖') }
           : loy === 0
-            ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: MEH[nth % 3].replace(/ADV/g, adv) }
-            : { loy: { [pl]: -1, [adv]: -1 }, reply: AGAINST[nth % 3].replace(/ADV/g, adv) };
+            ? { loy: { [pl]: 1 }, gain: { tresor: -(3 + s.era) }, mem: judged, reply: MEH.map((x) => x.replace(/ADV/g, adv)).join('‖') }
+            : { loy: { [pl]: -1, [adv]: -1 }, reply: AGAINST.map((x) => x.replace(/ADV/g, adv)).join('‖') };
       return { label: `Défendu par {F:${adv}}`, effect: plead };
     });
     const r = this.c.families[pl].res;

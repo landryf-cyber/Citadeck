@@ -219,9 +219,12 @@ function turningPoint(e: Engine, s: GameState): number {
   s.history.forEach((h, i) => {
     const k = e.card(h.card).kind;
     // les décisions de fond, pas les rouages (procès, hommages, chantiers…)
-    if (['carrefour', 'presage', 'croissance', 'decouverte', 'jalon', 'proces', 'hommage', 'trahison', 'ruines', 'revenant', 'crise'].includes(k)) return;
+    if (['carrefour', 'presage', 'croissance', 'decouverte', 'jalon', 'proces', 'hommage', 'trahison', 'ruines', 'revenant', 'crise', 'regle', 'conseil'].includes(k)) return;
     if (h.alts !== undefined && h.alts < 2) return;
-    const w = Object.values(h.loy ?? {}).reduce((a, v) => a + Math.abs(v ?? 0), 0) + (h.quartiers ? Math.abs(h.quartiers) * 2 : 0);
+    // ce qui a pesé : l'effet immédiat, mais surtout les suites qu'il a eues et les procès ou hommages qui l'ont cité
+    const followers = s.history.filter((x, j) => j > i && x.from === h.card).length;
+    const cited = s.mem.includes(`juge_${i}`) ? 1 : 0;
+    const w = Object.values(h.loy ?? {}).reduce((a, v) => a + Math.abs(v ?? 0), 0) + (h.quartiers ? Math.abs(h.quartiers) * 2 : 0) + followers * 4 + cited * 5;
     if (w > top) {
       top = w;
       best = i;
@@ -250,9 +253,9 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   const enemy = present.slice().sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
   const H = (f: FamilyId) => capitalize(e.c.families[f].house[s.era]);
   const gone = FAMILIES.filter((f) => s.fam[f].state === 'eteinte');
-  if (ally && s.fam[ally].loy >= 1 && enemy && s.fam[enemy].loy <= -1) lines.push(`${H(ally)} l’ont aimée jusqu’au bout. ${H(enemy)}, jamais.`);
+  if (ally && s.fam[ally].loy >= 1 && enemy && s.fam[enemy].loy <= -1) lines.push(`${H(ally)} l’ont aimée jusqu’au bout. ${H(enemy)} lui en voulaient, à la fin.`);
   else if (ally && s.fam[ally].loy >= 1) lines.push(`${H(ally)} l’ont aimée jusqu’au bout.`);
-  else if (enemy && s.fam[enemy].loy <= -1) lines.push(`${H(enemy)} ne lui ont jamais pardonné.`);
+  else if (enemy && s.fam[enemy].loy <= -1) lines.push(`${H(enemy)} lui en voulaient, à la fin.`);
   else lines.push('Aucune famille ne l’a vraiment aimée. Ni haïe. C’est pire.');
   if (gone.length) lines[lines.length - 1] += ` ${capitalize(listFr(gone.map((f) => e.c.families[f].house[s.era])))} sont partis chez ${e.rival(s).name}.`;
   const rn = e.rival(s).name;

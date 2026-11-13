@@ -171,7 +171,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .fdot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px hsl(var(--h) 70% 65%); background: hsla(var(--h), 60%, 30%, 0.6); }
 .fdot svg { width: 18px; height: 18px; overflow: visible; }
 .fdot { position: relative; }
-.fdot .dir { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 10px; font-weight: 800; line-height: 1; padding: 1px 2px; border-radius: 5px; background: rgba(10, 8, 14, 0.9); }
+.fdot .dir { position: absolute; right: -9px; bottom: -7px; font-style: normal; font-size: 12px; font-weight: 800; line-height: 1; padding: 1px 3px; border-radius: 5px; background: rgba(10, 8, 14, 0.92); }
 .fdot .dir.up { color: #b9e6a8; } .fdot .dir.down { color: #ff8a6e; } .fdot .dir.unk { color: #d9cbb0; }
 .chip.spend { background: none; box-shadow: inset 0 0 0 1px rgba(255, 190, 120, 0.4); border-radius: 8px; opacity: 0.95; }
 .chip.gain { background: none; box-shadow: inset 0 0 0 1px rgba(170, 230, 150, 0.28); padding: 2px 5px 2px 4px; font-weight: 700; opacity: 0.92; }
@@ -364,8 +364,6 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 }
 @media (max-width: 520px) {
   .stat.q small, .era-name span { display: none; }
-  .fam .fh .long { display: none; }
-  .fam .fh .short { display: inline; }
   .icon-btn.deck-btn { width: 30px; }
   .stat { padding: 4px 6px 4px 4px; font-size: 14px; gap: 3px; }
   .stat svg { width: 15px; height: 15px; }
@@ -373,7 +371,7 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   .fams { gap: 4px; }
   .fam { padding: 3px 4px 3px 2px; gap: 3px; }
   .fam svg.med { width: 30px; height: 30px; }
-  .fam .fh { font-size: 11px; }
+  .fam .fh { font-size: 10px; letter-spacing: -0.01em; }
   .fam .pips i { width: 4px; height: 4px; }
   .race { padding: 3px 5px; }
   .race .rr i { width: 6px; height: 6px; }
@@ -467,3 +465,4 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .brief .bl.rule > span { font-size: 13.5px; color: var(--ink); }
 .chip.note.good { color: #c8efb4; } .chip.note.bad { color: #ffb0a0; }
 .presage .rule-line { margin: -4px 0 2px; font-size: 13.5px; color: var(--dim); text-align: center; text-wrap: balance; }
+.chip.spend small { font-size: 9.5px; font-weight: 700; opacity: .75; margin-left: 2px; }

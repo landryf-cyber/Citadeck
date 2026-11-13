@@ -162,7 +162,7 @@ export const crisisCards = [
     text: 'Tout le monde est épuisé. {Reine} propose la paix. Ses conditions tiennent sur dix pages, écrites très petit.',
     options: [
       { label: 'Signer ses conditions', effect: { gain: $('T-5'), rival: 2, rivalJalon: 1 }, reply: 'La paix. Chère. {Reine} vous offre la plume en souvenir. {Elle} la facture.' },
-      { label: 'Dicter les vôtres', warn: 'Il faut avoir vaincu sur le front, sinon un quartier tombe',
+      { label: 'Dicter les vôtres', warn: 'Il faut avoir percé le front pendant cette guerre (l’offensive de {H:ourk}), sinon un quartier tombe',
         effect: { if: { mem: 'rival_vaincu' }, then: { gain: $('T6'), rival: -1, reply: 'Vos dix pages contre les siennes. Les vôtres sont mieux armées.' },
           else: { quartiers: -1, cause: 'la Grande Guerre, prolongée par orgueil', rival: -1, reply: 'Vous dictez. {Elle} rit. La guerre reprend un mois, juste pour vous.' } } },
     ],
@@ -174,7 +174,7 @@ export const crisisCards = [
     title: 'Le Signal',
     text: 'Les antennes captent un signal. Il répète : « Qu’êtes-vous ? » {Rival} l’ont capté aussi. {Reine} a déjà répondu, en trois pages.',
     options: [
-      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T5'), effect: { mem: ['filtre_passe', 'signal_dessein'] }, reply: 'Vous illuminez vos merveilles, toutes, toute la nuit. Elles répondent pour vous, de toute leur hauteur. Le signal se tait, impressionné, et note votre nom.' },
+      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T2'), effect: { mem: ['filtre_passe', 'signal_dessein'] }, reply: 'Vous illuminez vos merveilles, toutes, toute la nuit. Elles répondent pour vous, de toute leur hauteur. Le signal se tait, impressionné, et note votre nom.' },
       { label: 'Répondre avec la science', cost: $('S10'), effect: { loy: { brume: 2 }, mem: ['signal_science'] }, reply: 'Vous envoyez les décimales de pi. Le signal répond : « Et ensuite ? »' },
       { label: 'Répondre avec une chanson', cost: $('T10'), effect: { loy: { sel: 1, troc: 1 }, mem: ['signal_culture'] }, reply: 'Vous envoyez votre hymne. Le silence qui suit est poli. Très poli.' },
       { label: 'Pointer les canons', cost: $('A10'), effect: { loy: { ourk: 2 }, mem: ['signal_guerre'] }, reply: 'Vous pointez les canons vers le ciel. Le signal se tait. Il a peut-être peur. Il a peut-être pitié.' },
@@ -192,7 +192,7 @@ export const crisisCards = [
           else: { quartiers: -1, cause: 'la Panique du Grand Filtre', reply: 'Le couvre-feu a été annoncé. Personne ne l’a respecté. Un quartier brûle de joie.' } } },
       { label: 'Laisser BRUME calmer la foule', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles : ce sont eux qui paieront', effect: { loy: { sel: -3, troc: -1, brume: 1 } },
         reply: 'BRUME calme la foule avec des statistiques. Personne ne panique plus. Personne ne sourit plus non plus. {H:sel} trouvent ça inhumain.' },
-      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('T5'), effect: { loy: { sel: 1, troc: 1 } },
+      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('T2'), effect: { loy: { sel: 1, troc: 1 } },
         reply: 'On ouvre les merveilles, on y distribue la soupe. La foule se calme : on ne détruit pas ce qui est beau. Pas tout de suite.' },
     ],
   }),
@@ -201,7 +201,7 @@ export const crisisCards = [
     title: 'La Réponse',
     text: 'Le signal attend votre réponse définitive. Ce que vous avez bâti parlera. Ce que vous n’avez pas bâti aussi, mais moins bien.',
     options: [
-      { label: 'Montrer notre dessein', cost: $('T3'), warn: 'Sans quatre merveilles, un quartier tombe (deux sous trois merveilles)',
+      { label: 'Montrer notre dessein', warn: 'Sans quatre merveilles, un quartier tombe (deux sous trois merveilles)',
         effect: { if: { jalons: 4 }, then: { mem: ['filtre_passe'], reply: 'Le signal se tait longuement. Puis : « D’accord. » Personne ne sait à quoi on a dit oui.' },
           else: { if: { jalons: 3 }, then: { quartiers: -1, cause: 'le Grand Filtre, devant un dessein presque achevé', reply: 'Le signal hésite. Trois merveilles, c’est presque une réponse. Il n’éteint qu’un quartier, par politesse.' },
             else: { quartiers: -2, cause: 'le Grand Filtre, devant un dessein inachevé', reply: 'Le signal n’est pas impressionné. Il éteint deux quartiers, pour voir.' } } } },

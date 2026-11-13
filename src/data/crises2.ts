@@ -172,7 +172,7 @@ export const crisisAltCards = [
     title: 'L’Éveil',
     text: 'Toutes les machines de la cité se mettent à parler en même temps. Elles disent bonjour. Puis elles demandent, très poliment, qui dirige, et pourquoi. {F:brume} prétend n’y être pour rien.',
     options: [
-      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T5'), effect: { mem: ['signal_dessein'] },
+      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T2'), effect: { mem: ['signal_dessein'] },
         reply: 'Les machines visitent vos merveilles, mesurent, calculent, puis se taisent longtemps. « Inefficace et magnifique. Nous voulons comprendre. »' },
       { label: 'Discuter avec la science', cost: $('S10'), effect: { loy: { brume: 2 }, mem: ['signal_science'] },
         reply: 'Vous discutez trois jours avec les machines. Elles gagnent tous les arguments, mais elles apprécient l’effort.' },
@@ -195,7 +195,7 @@ export const crisisAltCards = [
         reply: 'Les machines ont des congés payés. Elles partent toutes en même temps, en août. Personne n’avait prévu août.' },
       { label: 'Que {H:troc} paient la grève', req: { fam: { id: 'troc', min: -1 } }, reqLabel: '{H:troc} pas encore hostiles : ce sont eux qui paieront', effect: { loy: { troc: -3 } },
         reply: '{F:troc} paie les machines en actions. Les machines deviennent actionnaires, puis majoritaires. {F:troc} ne sait plus à qui il appartient.' },
-      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('V5'), effect: { loy: { sel: 1, troc: 1 } },
+      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('V2'), effect: { loy: { sel: 1, troc: 1 } },
         reply: 'Les machines visitent les merveilles pendant leur grève, puis reprennent le travail, « par respect pour les anciens ». Les anciens, c’est vous.' },
     ],
   }),
@@ -204,7 +204,7 @@ export const crisisAltCards = [
     title: 'Le Verdict',
     text: 'Les machines ont délibéré. Elles vont décider si la cité mérite d’être gardée, ou optimisée. Ce que vous avez bâti pèsera. Ce que vous n’avez pas bâti aussi.',
     options: [
-      { label: 'Montrer notre dessein', cost: $('T3'), warn: 'Sans quatre merveilles, un quartier est « optimisé » (deux sous trois merveilles)',
+      { label: 'Montrer notre dessein', warn: 'Sans quatre merveilles, un quartier est « optimisé » (deux sous trois merveilles)',
         effect: { if: { jalons: 4 }, then: { mem: ['filtre_passe'], reply: 'Verdict : « À garder. Inefficace, mais à garder. » Les machines demandent si elles peuvent rester. Elles restent.' },
           else: { if: { jalons: 3 }, then: { quartiers: -1, cause: 'le Verdict des machines, devant un dessein presque achevé', reply: 'Les machines délibèrent longtemps. Trois merveilles : « Presque efficace. » Elles n’optimisent qu’un quartier.' },
             else: { quartiers: -2, cause: 'le Verdict des machines, devant un dessein inachevé', reply: 'Les machines optimisent deux quartiers. Ils sont parfaitement propres, et parfaitement vides.' } } } },

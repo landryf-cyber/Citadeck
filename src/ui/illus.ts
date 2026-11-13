@@ -157,7 +157,14 @@ function person(c: Ctx, x: number, y: number, s: number, o: { fam?: PortraitFam;
   // tête
   g += C(x, hy, 7 * s, c.dark, c.st, W1);
   g += C(x + 2.2 * s * k, hy - 0.8 * s, 0.9 * s, c.st, 'none');
-  // coiffes
+  // coiffes : la famille, ou à défaut la mode de l'ère (mèche, laurier, capuche, chapeau melon, casque)
+  if (!o.fam) {
+    if (c.era === 0) g += P(`M${f(x - 4 * s)} ${f(hy - 6 * s)} L${f(x - 1 * s)} ${f(hy - 10 * s)} L${f(x + 1 * s)} ${f(hy - 6.5 * s)} L${f(x + 4 * s)} ${f(hy - 9.5 * s)}`, 'none', c.st, W1);
+    else if (c.era === 1) g += P(`M${f(x - 7 * s)} ${f(hy - 2 * s)} Q${f(x)} ${f(hy - 7 * s)} ${f(x + 7 * s)} ${f(hy - 2 * s)}`, 'none', 'rgba(170,220,120,.95)', W1 + 0.4);
+    else if (c.era === 2) g += P(`M${f(x - 8 * s)} ${f(hy + 5 * s)} Q${f(x - 9 * s)} ${f(hy - 10 * s)} ${f(x + 2 * s)} ${f(hy - 11 * s)} L${f(x + 8 * s)} ${f(hy - 4 * s)}`, 'none', c.st, W1);
+    else if (c.era === 3) g += P(`M${f(x - 9 * s)} ${f(hy - 4 * s)} H${f(x + 9 * s)} M${f(x - 5.5 * s)} ${f(hy - 4 * s)} Q${f(x - 5.5 * s)} ${f(hy - 11 * s)} ${f(x)} ${f(hy - 11 * s)} Q${f(x + 5.5 * s)} ${f(hy - 11 * s)} ${f(x + 5.5 * s)} ${f(hy - 4 * s)}`, c.dark, c.st, W1);
+    else g += `<circle cx="${f(x)}" cy="${f(hy)}" r="${f(9 * s)}" fill="rgba(150,230,255,.1)" stroke="${c.st}" stroke-width="${W1}"/>` + P(`M${f(x - 5 * s)} ${f(hy - 1 * s)} H${f(x + 5 * s)}`, 'none', 'rgba(150,240,255,.95)', W1 + 0.6);
+  }
   if (o.fam === 'ourk') g += P(`M${f(x - 5 * s)} ${f(hy - 4 * s)} Q${f(x - 11 * s)} ${f(hy - 8 * s)} ${f(x - 9 * s)} ${f(hy - 14 * s)} M${f(x + 5 * s)} ${f(hy - 4 * s)} Q${f(x + 11 * s)} ${f(hy - 8 * s)} ${f(x + 9 * s)} ${f(hy - 14 * s)}`, 'none', c.st, W1);
   if (o.fam === 'sel') g += P(`M${f(x - 8 * s)} ${f(hy + 6 * s)} Q${f(x - 9 * s)} ${f(hy - 9 * s)} ${f(x)} ${f(hy - 10 * s)} Q${f(x + 9 * s)} ${f(hy - 9 * s)} ${f(x + 8 * s)} ${f(hy + 6 * s)}`, 'none', c.st, W1);
   if (o.fam === 'brume') g += P(`M${f(x - 6.5 * s)} ${f(hy - 4 * s)} L${f(x)} ${f(hy - 19 * s)} L${f(x + 6.5 * s)} ${f(hy - 4 * s)} Z`, c.dark, c.st, W1);
@@ -173,6 +180,9 @@ function person(c: Ctx, x: number, y: number, s: number, o: { fam?: PortraitFam;
   if (o.hold === 'flag') g += P(`M${f(ax)} ${f(ay + 10 * s)} L${f(ax)} ${f(ay - 20 * s)}`, 'none', c.st, W1) + P(`M${f(ax)} ${f(ay - 20 * s)} l${f(13 * s * k)} ${f(4 * s)} l${f(-13 * s * k)} ${f(5 * s)} Z`, `hsl(${c.h} 70% 50%)`, c.st, W1 * 0.8);
   return g;
 }
+
+/** La chèvre des colons, une fois sur trois : un gag qui revient, pas un logo. */
+const maybeGoat = (c: Ctx, x: number, y: number, s: number, flip = false) => (c.rng.chance(0.33) ? goat(c, x, y, s, flip) : '');
 
 /** La chèvre des colons : elle apparaît là où on ne l'attend pas. */
 function goat(c: Ctx, x: number, y: number, s: number, flip = false): string {
@@ -353,7 +363,7 @@ ${water(c, 86)}
 <path d="M0 98 Q60 96 120 99 T300 98" fill="none" stroke="rgba(120,80,40,.7)" stroke-width="3"/>
 ${halo(c, 60, 66, 40)}
 ${focus(c, `${treeAt(c, 60, 104, 1.6)}${fishAt(c, 46, 66, 1.7)}${fishAt(c, 74, 74, 1.5, true)}${fishAt(c, 62, 54, 1.4)}`)}
-${goat(c, 238, 76, 1.1, true)}${person(c, 140, 75, 0.62, { arm: 'up' })}
+${maybeGoat(c, 238, 76, 1.1, true)}${person(c, 140, 75, 0.62, { arm: 'up' })}
 <path d="${rain}" fill="none" stroke="${c.st}" stroke-opacity=".3" stroke-width=".9"/>`;
   return frame(c, 230, 10, body);
 };
@@ -388,7 +398,7 @@ const sceneRuines: Scene = (sp, c) => {
 ${ridge(c, 84, 12, col(c.far, 0.95), 0.25)}
 ${column(c, 30, GROUND, 52, 12, false)}${column(c, 62, GROUND, 36, 12, true)}${column(c, 100, GROUND, 44, 12, true)}
 ${P('M54 112 L68 104 L118 108 L114 112 Z', c.mid, c.st)}
-${goat(c, 100, GROUND - 44, 1.05)}
+${maybeGoat(c, 100, GROUND - 44, 1.05)}
 ${halo(c, 196, 84, 46)}
 ${focus(c, P('M174 112 L174 74 Q196 60 218 74 L218 112 Z', c.mid, c.st, W2) + P('M182 82 H210 M182 89 H210 M182 96 H204 M182 103 H198', 'none', 'rgba(255,214,150,.95)', 1.6))}
 ${ghosts}${ground(c)}
@@ -403,7 +413,7 @@ ${house(c, 120, GROUND, 1.6, false)}${house(c, 168, GROUND, 1.9, false)}${house(
 ${smoke(c, 150, 52, 1.2, 5)}${fireGlow(c, 168, 84, 70)}
 ${focus(c, flameAt(120, 86, 1.2) + flameAt(168, 80, 1.8) + flameAt(214, 88, 1.3))}
 ${ground(c)}
-${person(c, 40, GROUND, 0.8, { arm: 'out', hold: 'bucket' })}${person(c, 64, GROUND, 0.8, { arm: 'out', hold: 'bucket', flip: true })}${person(c, 262, GROUND, 0.85, { arm: 'up' })}${goat(c, 286, GROUND, 0.8, true)}`;
+${person(c, 40, GROUND, 0.8, { arm: 'out', hold: 'bucket' })}${person(c, 64, GROUND, 0.8, { arm: 'out', hold: 'bucket', flip: true })}${person(c, 262, GROUND, 0.85, { arm: 'up' })}${maybeGoat(c, 286, GROUND, 0.8, true)}`;
   return frame(c, 168, 86, body);
 };
 
@@ -415,7 +425,7 @@ const sceneCiel: Scene = (sp, c) => {
   else if (v === 'sun') sky = `${halo(c, 150, 40, 50)}${focus(c, C(150, 40, 18, 'rgba(255,214,120,.95)', c.st, W2) + C(158, 36, 16, col(c.sky[0], 0.95), 'none'))}`;
   else if (v === 'moon') sky = `${halo(c, 150, 36, 44)}${focus(c, C(150, 36, 16, 'rgba(255,246,220,.95)', c.st, W2))}`;
   else sky = `${halo(c, 150, 34, 46)}${focus(c, P('M150 14 L155 29 L170 34 L155 39 L150 54 L145 39 L130 34 L145 29 Z', 'rgba(255,240,200,.95)', c.st, W2))}`;
-  const body = `${stars(c, 46, 70)}${sky}${skyline(c, GROUND - 6)}${ground(c)}${crowd(c, 30, 280, GROUND, 0.95)}${goat(c, 286, GROUND, 0.75, true)}`;
+  const body = `${stars(c, 46, 70)}${sky}${skyline(c, GROUND - 6)}${ground(c)}${crowd(c, 30, 280, GROUND, 0.95)}${maybeGoat(c, 286, GROUND, 0.75, true)}`;
   return frame(c, 150, 30, body);
 };
 
@@ -427,7 +437,7 @@ const sceneMarche: Scene = (sp, c) => {
 ${halo(c, 150, 76, 54)}
 ${stall(c, 70, GROUND, 1.5, c.h)}${stall(c, 230, GROUND, 1.5, (c.h + 50) % 360)}
 ${scales || key || focus(c, C(150, 82, 9, 'rgba(255,214,120,.95)', c.st, W2) + C(140, 92, 7, 'rgba(255,200,110,.95)', c.st, W2) + C(160, 92, 7, 'rgba(255,200,110,.95)', c.st, W2))}
-${person(c, 112, GROUND, 0.85, { fam: 'troc', arm: 'out' })}${person(c, 196, GROUND, 0.8, { arm: 'out', flip: true })}${goat(c, 268, GROUND, 0.9, true)}`;
+${person(c, 112, GROUND, 0.85, { fam: 'troc', arm: 'out' })}${person(c, 196, GROUND, 0.8, { arm: 'out', flip: true })}${maybeGoat(c, 268, GROUND, 0.9, true)}`;
   return frame(c, 150, 70, body);
 };
 
@@ -438,7 +448,7 @@ const sceneArmee: Scene = (sp, c) => {
 ${soldiers(c, 150, 300, 98, 0.8)}${ground(c)}
 ${halo(c, 84, 70, 48)}
 ${focus(c, person(c, 84, GROUND, 1.25, { fam: sp.variant === 'shield' ? undefined : 'ourk', arm: 'up', hold: 'flag' }) + (sp.variant === 'shield' ? P('M60 84 Q60 100 72 106 Q84 100 84 84 Q72 80 60 84 Z', c.mid, c.st, W2) : ''))}
-${goat(c, 34, GROUND, 0.75)}`;
+${maybeGoat(c, 34, GROUND, 0.75)}`;
   return frame(c, 80, 60, body);
 };
 
@@ -466,7 +476,7 @@ const sceneSavoir: Scene = (_sp, c) => {
 ${fireGlow(c, 120, 80, 70)}
 ${P('M60 96 H200 V102 H60 Z M70 102 V122 M190 102 V122', c.mid, c.st)}
 ${focus(c, P('M100 96 V84 H108 V96 Z', 'rgba(240,226,190,.95)', c.st, W2) + flameAt(104, 82, 0.5) + P('M128 94 Q150 86 172 94 Q150 98 128 94 Z', 'rgba(240,226,190,.95)', c.st, W2))}
-${person(c, 40, GROUND + 6, 0.95, { fam: 'brume', arm: 'out', hold: 'scroll' })}${ground(c)}${goat(c, 232, GROUND, 0.8)}`;
+${person(c, 40, GROUND + 6, 0.95, { fam: 'brume', arm: 'out', hold: 'scroll' })}${ground(c)}${maybeGoat(c, 232, GROUND, 0.8)}`;
   return frame(c, 104, 80, body);
 };
 
@@ -476,7 +486,7 @@ const sceneMachine: Scene = (_sp, c) => {
 ${P('M180 112 V70 L200 60 V70 L220 60 V70 L240 60 V112 Z M226 70 V30 H234 V70', c.dark, c.st)}
 ${halo(c, 110, 70, 56)}
 ${focus(c, gear(c, 98, 70, 22) + gear(c, 136, 88, 14))}
-${ground(c)}${person(c, 52, GROUND, 0.9, { arm: 'out' })}${goat(c, 270, GROUND, 0.8, true)}`;
+${ground(c)}${person(c, 52, GROUND, 0.9, { arm: 'out' })}${maybeGoat(c, 270, GROUND, 0.8, true)}`;
   return frame(c, 110, 70, body);
 };
 
@@ -512,7 +522,7 @@ const sceneChamps: Scene = (sp, c) => {
 ${halo(c, 150, 70, 50)}
 ${focus(c, sp.variant === 'leaf' ? treeAt(c, 150, GROUND, 1.7) : P('M150 112 V58 M136 70 H164 M150 58 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0', c.dark, c.st, W2) + P('M144 50 H156 L152 44 H148 Z', c.mid, c.st, W1))}
 <path d="${birds}" fill="none" stroke="${c.st}" stroke-width="1.4"/>
-${goat(c, 220, GROUND - 2, 1)}${person(c, 70, GROUND, 0.85, { arm: 'down', hold: 'fork' })}`;
+${maybeGoat(c, 220, GROUND - 2, 1)}${person(c, 70, GROUND, 0.85, { arm: 'down', hold: 'fork' })}`;
   return frame(c, 150, 30, body);
 };
 
@@ -522,18 +532,19 @@ const scenePort: Scene = (_sp, c) => {
 ${water(c, 92)}
 ${halo(c, 160, 70, 52)}
 ${focus(c, ship(c, 160, 96, 1.5))}${ship(c, 260, 98, 0.8)}
-${P('M0 104 H70 V112 H0 Z', c.mid, c.st)}${person(c, 40, 104, 0.8, { fam: 'troc', arm: 'out' })}${goat(c, 14, 104, 0.6)}`;
+${P('M0 104 H70 V112 H0 Z', c.mid, c.st)}${person(c, 40, 104, 0.8, { fam: 'troc', arm: 'out' })}${maybeGoat(c, 14, 104, 0.6)}`;
   return frame(c, 160, 70, body);
 };
 
 /** La route : un chemin qui file vers l'horizon, un voyageur, un panneau. */
 const sceneRoute: Scene = (sp, c) => {
   const branches = sp.variant === 'carrefour' ? P('M150 112 L150 88 M150 88 L96 70 M150 88 L150 64 M150 88 L204 70', 'none', 'rgba(230,200,150,.8)', 3) : '';
-  const body = `${stars(c, 22, 50)}${ridge(c, 80, 14, col(c.far, 0.95), 0.25)}${ground(c)}
-${P('M100 130 L144 80 L156 80 L200 130 Z', 'rgba(140,110,80,.55)', c.st, 1)}${branches}
+  const road = c.era >= 3 ? 'rgba(90,90,100,.65)' : 'rgba(140,110,80,.55)';
+  const body = `${stars(c, 22, 50)}${ridge(c, 80, 14, col(c.far, 0.95), 0.25)}${skyline(c, 86, 10, 120, 0.7)}${skyline(c, 86, 200, 300, 0.7)}${ground(c)}
+${P('M100 130 L144 80 L156 80 L200 130 Z', road, c.st, 1)}${c.era >= 3 ? P('M150 128 L150 82', 'none', 'rgba(255,240,200,.55)', 1.2, ' stroke-dasharray="4 4"') : ''}${branches}
 ${halo(c, 196, 74, 40)}
 ${focus(c, P('M196 112 V64 M196 70 H226 L232 75 L226 80 H196 M196 84 H170 L164 89 L170 94 H196', c.mid, c.st, W2))}
-${person(c, 120, GROUND, 0.9, { arm: 'down', hold: 'staff' })}${goat(c, 92, GROUND, 0.7)}`;
+${person(c, 120, GROUND, 0.9, { arm: 'down', hold: 'staff' })}${maybeGoat(c, 92, GROUND, 0.7)}`;
   return frame(c, 150, 70, body);
 };
 
@@ -544,7 +555,7 @@ const sceneVillage: Scene = (sp, c) => {
   const main = v === 'tower' ? tower(c, 150, GROUND, 1.5) : v === 'mountain'
     ? P('M60 112 L120 40 L150 70 L170 50 L240 112 Z', c.mid, c.st, W2) + P('M110 52 L120 40 L130 52', 'none', 'rgba(255,246,220,.9)', W2)
     : house(c, 120, GROUND, 1.6) + house(c, 160, GROUND, 2) + house(c, 200, GROUND, 1.5);
-  const body = `${stars(c, 20, 50)}${skyline(c, GROUND - 2)}${halo(c, 150, 76, 56)}${focus(c, main)}${ground(c)}${crack}${person(c, 250, GROUND, 0.85, { arm: 'out', flip: true })}${goat(c, 276, GROUND, 0.75, true)}`;
+  const body = `${stars(c, 20, 50)}${skyline(c, GROUND - 2)}${halo(c, 150, 76, 56)}${focus(c, main)}${ground(c)}${crack}${person(c, 250, GROUND, 0.85, { arm: 'out', flip: true })}${maybeGoat(c, 276, GROUND, 0.75, true)}`;
   return frame(c, 150, 60, body);
 };
 
@@ -559,7 +570,7 @@ const sceneLieu: Scene = (sp, c) => {
   else if (v === 'comptoir_troc') { main = stall(c, 120, GROUND, 1.6, c.h) + stall(c, 186, GROUND, 1.5, (c.h + 60) % 360) + P('M232 112 H262 V96 H232 Z M240 96 V88 H254 V96', c.mid, c.st); fig = person(c, 80, GROUND, 0.95, { fam: 'troc', arm: 'out' }); }
   else if (v === 'frontiere') { main = P('M40 112 V80 M60 112 V84 M80 112 V82 M100 112 V86 M30 92 H110', 'none', c.st, W2) + tower(c, 200, GROUND, 1.3) + P('M150 130 L176 112 L224 112 L250 130', 'rgba(140,110,80,.4)', 'none', 0); fig = person(c, 248, GROUND, 0.9, { arm: 'out', hold: 'spear', flip: true }); }
   else { main = P('M110 112 V60 M190 112 V60 M104 60 H196 V52 H104 Z', c.mid, c.st, W2) + `<ellipse cx="150" cy="90" rx="26" ry="22" fill="rgba(180,200,255,.18)"/>` + C(150, 88, 3, 'rgba(220,235,255,.95)'); fig = person(c, 236, GROUND, 0.9, { arm: 'up', flip: true }); }
-  const body = `${stars(c, 26, 56)}${ridge(c, 84, 12, col(c.far, 0.95), 0.25)}${halo(c, 150, 74, 60)}${focus(c, main)}${ground(c)}${fig}${goat(c, 34, GROUND, 0.75)}`;
+  const body = `${stars(c, 26, 56)}${ridge(c, 84, 12, col(c.far, 0.95), 0.25)}${halo(c, 150, 74, 60)}${focus(c, main)}${ground(c)}${fig}${maybeGoat(c, 34, GROUND, 0.75)}`;
   return frame(c, 150, 60, body);
 };
 
@@ -612,7 +623,7 @@ ${P('M40 100 H260 V106 H40 Z M54 106 V130 M246 106 V130', c.mid, c.st)}
 ${halo(c, 150, 62, 54)}
 ${focus(c, `<g transform="translate(150 62) scale(.48) translate(-150 -98)">${obj}</g>`)}
 ${P('M226 100 V72 M220 72 H232 L230 66 H222 Z', c.mid, c.st)}${flameAt(226, 64, 0.45)}
-${goat(c, 64, 100, 0.7)}`;
+${maybeGoat(c, 64, 100, 0.7)}`;
   return frame(c, 150, 60, body);
 };
 
@@ -631,7 +642,7 @@ const sceneCroissance: Scene = (_sp, c) => {
   const body = `${stars(c, 16, 44)}${skyline(c, GROUND - 2, -4, 120)}
 ${halo(c, 190, 76, 52)}
 ${focus(c, house(c, 176, GROUND, 1.9) + P('M196 112 V60 M224 112 V60 M196 74 H224 M196 92 H224 M196 74 L224 92', 'none', c.st, W2))}
-${ground(c)}${person(c, 210, 74, 0.6, { arm: 'up' })}${person(c, 250, GROUND, 0.9, { hold: 'bucket', flip: true })}${goat(c, 140, GROUND, 0.8)}`;
+${ground(c)}${person(c, 210, 74, 0.6, { arm: 'up' })}${person(c, 250, GROUND, 0.9, { hold: 'bucket', flip: true })}${maybeGoat(c, 140, GROUND, 0.8)}`;
   return frame(c, 190, 60, body);
 };
 

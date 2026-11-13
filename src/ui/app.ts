@@ -606,7 +606,7 @@ export class App {
     const b = el('button', 'opt');
     const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}${s.res[r] < (o.loss![r] ?? 0) ? ' short' : ''}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
       + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '')
-      + (o.spend ? RES.filter((r) => o.spend![r]).map((r) => `<span class="chip spend r-${r}" title="Dépensé si la réserve suffit">${RES_ICON[r]}<b>−${o.spend![r]}</b></span>`).join('') : '');
+      + (o.spend ? RES.filter((r) => o.spend![r]).map((r) => `<span class="chip spend r-${r}" title="Dépensé seulement si le seuil est atteint ; sinon, rien n’est dépensé et la perte annoncée tombe">${RES_ICON[r]}<b>−${o.spend![r]}</b><small>si seuil</small></span>`).join('') : '');
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
@@ -845,7 +845,7 @@ export class App {
             <p class="note">Réponses qui tiennent déjà : ${ready.covered} sur ${ready.total}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}</p>`));
           inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
             <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur dessein : ils réclament un tribut à chaque ère.` : `${esc(p.rival.leader)} bâtit ${esc(p.rival.next)}, à achever en fin d’ère si personne ne l’en empêche. À cinq merveilles, la vallée leur paie tribut.`}</p>`));
-          inner.appendChild(el('p', 'note', s.era >= 4 ? 'Pas de bilan : l’histoire s’arrête après la dernière crise.' : `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
+          inner.appendChild(el('p', 'note', s.era >= 4 ? 'Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.' : `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
         }
         const btns = el('div', 'btns stick');
         btns.appendChild(this.button('En route', go));
@@ -873,6 +873,7 @@ export class App {
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? '<b>Famine.</b> Les greniers sont vides ; une merveille rachète le quartier.' : '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
+      if (x.type === 'spoil') lines.push({ cls: '', ico: RES_ICON.vivres, html: `Les greniers débordent : au-delà de trois repas d’avance, une part se gâte. ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'peace') lines.push({ cls: 'good', ico: ICON.star, html: `<b>La paix civile.</b> Aucune famille fâchée : un quartier de plus. <span class="chip q">${ICON.house}<b>+1</b></span>` });
       if (x.type === 'annex') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(capitalize(x.name))} annexent un quartier.</b> Leur dessein est achevé ; ils s’étendent, sauf chez leurs amis.` });
       if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
@@ -1193,12 +1194,12 @@ export class App {
   private cardHints(v: View): void {
     const seen = (k: string) => this.settings.hints.includes(k);
     const tips: [string, boolean, string][] = [
-      ['carrefour', v.kind === 'carrefour', 'Deux <b>saisons</b> par ère : chaque route mène à une famille, et celles qu’on ne visite pas se vexent.'],
+      ['carrefour', v.kind === 'carrefour', 'À chaque <b>saison</b>, une route : elle mène à une famille, et celles qu’on ne visite pas se vexent.'],
       ['jalon', v.kind === 'jalon', 'Le <b>chantier</b> : chaque merveille rapproche du dessein, et rend la crise suivante plus dure.'],
       ['proces', v.kind === 'proces', 'Le <b>procès</b> : la famille la plus lésée cite contre vous votre pire décision.'],
       ['famille', v.kind === 'famille', 'Les familles <b>se souviennent</b> : leurs descendants vous citeront ce choix.'],
       ['rivale', v.kind === 'rivale', 'La <b>rivale</b> bâtit aussi : à cinq merveilles, la vallée lui paie tribut.'],
-      ['regle', v.kind === 'regle', 'Une carte de <b>règle</b> : à cette ère, elle ouvre chaque saison.'],
+      ['regle', v.kind === 'regle', 'Une <b>colonie</b> : un quartier de plus, c’est une vie de plus pour la cité ; celui-ci se nourrit lui-même.'],
       ['conseil', v.kind === 'conseil', 'Le <b>Conseil</b> : soutenir une famille froisse sa rivale.'],
       ['credit', v.options.some((o) => o.label.endsWith('(à crédit)')), 'À <b>crédit</b> : les Troc avancent la somme, à rendre plus cher deux saisons plus tard.'],
       ['pari', v.options.some((o) => o.odds !== undefined), 'Un <b>pari</b> : la chance affichée est la vraie.'],

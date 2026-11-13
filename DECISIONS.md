@@ -240,3 +240,13 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     focal sous le halo radial (la signature des anciennes cartes), contour lumineux épais et lueur sur le sujet, un
     seul accent chaud, personnages en aplat sombre à grosse tête, et la chèvre des colons qui traîne un peu partout
     (sur une colonne, dans le blé, sur un toit inondé) : le gag récurrent.
+69. **Après le premier tour de juges de la ronde 2** : la fin ne contredit plus la victoire (la rivale n'avance plus au
+    dernier bilan, ni après sa Capitulation ; « Montrer notre dessein » est gratuit : le dessein parle seul, et les
+    autres réponses « merveilles » coûtent 2) ; la Course se joue sur trois saisons (le chantier n'ouvre qu'aux
+    deuxième et troisième) ; les revenus des merveilles et découvertes sont plafonnés à 3 par ressource et par
+    saison ; au bilan, au-delà de trois repas d'avance, un tiers du surplus de vivres se gâte ; la colonie se paie en
+    soldats et en Trésor, pas en vivres.
+70. **Mémoire** : un acte cité par un hommage ne l'est plus ensuite ; les plaidoiries tournent comme les autres
+    variantes ; le jour décisif de la chronique est celui qui a eu des suites ou a été cité, pas seulement le plus
+    remuant sur le moment ; une condition de souvenir dit votre état (« c'est fait » / « pas encore ») ; les saisons
+    ont leur rang (troisième, quatrième, « la dernière ») ; les familles gardent le nom de leur ère dans le bandeau.
