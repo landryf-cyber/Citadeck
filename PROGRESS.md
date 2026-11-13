@@ -99,13 +99,8 @@ P4 variété
 - [x] mesures finales (E15), 27 tests, performance (pire moyenne 37 i/s au palier 2, profil mobile sans GPU), aucune erreur de console sur le parcours complet
 - [x] version 11 publiée (page hébergée) ; branche poussée
 
-## Reste à faire (dans l'ordre)
-1. Relire 3-4 transcriptions (`npm run sim -- --transcript lecteur N`) : répétitions, textes plats, incohérences ; enrichir
-2. Agents « joueurs qui découvrent » (sur captures + transcriptions) et lecteurs de transcriptions ; corriger ce qui ennuie
-3. Avocat du diable sur le jeu fini ; mesures finales (`npm run sim -- 200`, `npm run campaign -- 10`)
-4. 3 passes DA captures (mobile/bureau, dont animations), relecture de tous les textes, cas limites, perf
-5. Trois juges indépendants (notes ≥ 8 sur 7 critères, 5 tours max)
-6. Déploiement : `npm run single` → page hébergée https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom (version 11, finale, le 12/11) ; message final
+## Reste à faire
+- Rien : le plan (relectures, joueurs, avocat du diable, passes DA, cinq tours de juges, déploiement) est exécuté. Campagne de 10 parties vérifiée sur la version finale (origines débloquées, ruines, héritages, noms distincts). Message final envoyé.
 
 ## Dépôt
 - Branche `claude/inspiring-cerf-jcrkjo` poussée sur GitHub le 12/11 (l'accès a été rétabli). Le déploiement GitHub Pages ne se déclenche que sur `main` ; publication courante : page hébergée.
