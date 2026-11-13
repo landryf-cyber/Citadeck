@@ -10,14 +10,14 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 ### B. Écriture (point 3)
 - [x] mesure des répliques répétées (`npm run repeats`, test) : 0 dans une partie, ~4 % de la partie précédente (E17)
 ### C. Clarté des écrans (point 4)
-- [ ] fondation : accroche + « détails », Fonder visible, première partie = dessein seul (recommandé présélectionné), origines après la première partie
-- [ ] origines : nom + style de jeu, atout/handicap générés des données, emblème, scène qui change au survol, « Qui êtes-vous ? » ; mesure de leur effet réel
-- [ ] briefing d'ère : un message, trois lignes (objectif, menace, rivale), détails repliés, « prêt / pas prêt », bouton toujours visible ; menace et chantier rival dans la scène
-- [ ] dévoilement progressif des notions ; agents « nouveau joueur » à 10 secondes, itérer
+- [x] fondation : accroche + ressource en clair + « détails », Fonder visible, première partie = dessein seul (conseillé présélectionné), origines après la première partie, desseins compacts ensuite (DECISIONS 56)
+- [x] origines : nom + style d'une ligne, atout/handicap calculés, emblème, scène teintée au survol avec légende chiffrée, détails (départ comparé au Feu, règle, cartes à elles) ; règle et cartes propres, effet mesuré (DECISIONS 57-58, E18)
+- [x] briefing d'ère : une phrase, trois lignes en mots (coûts et réserves, « vous êtes prêt » ou ce qui manque pour quelle réponse), détails repliés, bouton collant ; menace de l'ère et grue de la rivale dans la scène (DECISIONS 59)
+- [x] bulles d'aide d'une phrase, une par carte, au premier contact (DECISIONS 61) ; agents « nouveau joueur » à 10 s : 5 tours (E19)
 ### D. Fourchettes (point 5)
-- [ ] fourchettes qui se resserrent (Savoir, découvertes, merveilles) et « voir les chiffres » payant
+- [x] fourchettes larges, fines (2 points de Science/merveilles/Savoir), exactes (5 points) ; « Voir les chiffres exacts » contre 1 à 3 Savoir ; test (DECISIONS 62, E20)
 ### E. Vérifications (point 7)
-- [ ] rejuger révoltes annoncées, palissade, bilan après disette, nom de la nouvelle cité
+- [x] rejouées dans l'interface par `scripts/verify.ts` (captures dans shots/verify, 4/4 OK, aucune erreur console) ; jugées sur preuves
 ### F. Déploiement intermédiaire (A-E), puis structure des ères (point 1) et illustrations (point 6), juges jusqu'à l'arrêt
 
 

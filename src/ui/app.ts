@@ -515,7 +515,7 @@ export class App {
     const from = s.prompt?.from;
     const card = el('article', `card enter${v.kind === 'crise' || v.kind === 'trahison' ? ' alarm' : ''}`);
     const art = v.kind === 'jalon' ? this.wonderArt(s) : cardArt(this.artFor(v));
-    card.innerHTML = `<div class="card-art">${art}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
+    card.innerHTML = `<div class="card-art">${art}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${v.kind === 'carrefour' ? esc(s.name) : esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
       <div class="card-body"><h2 class="card-title">${esc(v.title)}</h2>${v.speaker && v.kind !== 'carrefour' ? `<p class="card-speaker">${esc(capitalize(v.speaker))}</p>` : ''}<div class="card-rule"></div><p class="card-text">${rich(v.text)}</p></div>`;
     const opts = el('div', 'opts');
     v.options.forEach((o, i) => opts.appendChild(this.optButton(o, i, v)));
@@ -644,7 +644,7 @@ export class App {
     }
     for (const x of ev) {
       if (x.type === 'quartiers' && x.delta) chips.push(`<span class="chip q${x.delta > 0 ? ' gain' : ''}">${ICON.house}<b>${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}</b>&nbsp;${Math.abs(x.delta) > 1 ? 'quartiers' : 'quartier'}${x.delta < 0 ? ` · ${esc(x.cause)}` : ''}</span>`);
-      if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">Une merveille rachète le quartier${x.paid ? ` : ${bagChips(x.paid, '−')}` : ''}</span>`);
+      if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">${esc(x.by ?? 'Une merveille')} rachète le quartier</span>`);
       if (x.type === 'sched') chips.push(`<span class="chip note">${ICON.hourglass}&nbsp;Cela aura des suites</span>`);
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
@@ -755,9 +755,9 @@ export class App {
         const notes = [
           ...(missed.length ? [`${esc(missed.join(', '))} : à rattraper à la seconde saison`] : []),
           ...(lonely.length ? [`${esc(capitalize(lonely.join(' et ')))} attendent votre visite cette ère`] : []),
-          ...(shared.length ? [`la merveille et la crise puisent dans le même ${shared.map((r) => RES_LABEL[r]).join(' et ')}`] : []),
+          ...(shared.length ? [`l’objectif et la menace puisent dans le même ${shared.map((r) => RES_LABEL[r]).join(' et ')}`] : []),
         ];
-        inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2>
+        inner.innerHTML = `<div class="over">${esc(s.name)} · Ère ${ROMAN[p.era]} · ${esc(p.date.replace(' avant le Calendrier', ' av. C.'))}</div><h2 class="big">${esc(p.name)}</h2>
           <p class="mission">${main}</p>
           <div class="brief">
             <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)} <span class="have">(vous : ${RES.filter((r) => p.jalon!.cost[r]).map((r) => `${s.res[r]}`).join(', ')})</span>${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
@@ -813,12 +813,12 @@ export class App {
     const lines: { cls: string; ico: string; html: string }[] = [];
     const H = (f: FamilyId) => capitalize(this.e.c.families[f].house[s.era]);
     for (const x of ev) {
-      if (x.type === 'revolt') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(H(x.family))} se révoltent.</b> Un quartier brûle. Ils se calment, pour l’instant.` });
+      if (x.type === 'revolt') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(H(x.family))} se révoltent.</b> Un quartier brûle. Ils se calment, pour l’instant. <span class="chip loss q">${ICON.house}<b>−1</b></span>` });
       if (x.type === 'defect') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(H(x.family))} passent chez ${esc(this.e.rival(s).name)}.</b> Avec un quartier entier.` });
       if (x.type === 'neglect') lines.push({ cls: 'bad', ico: ICON.warn, html: `${esc(H(x.family))} se sentent délaissés : vous n’êtes pas passé chez eux depuis deux ères.` });
       if (x.type === 'income') lines.push({ cls: 'good', ico: ICON.star, html: `Une famille fervente apporte sa part : ${bagChips(x.bag, '+')}` });
       if (x.type === 'mend') lines.push({ cls: 'good', ico: ICON.star, html: `Les Peintures de la grotte apaisent ${esc(this.e.c.families[x.family].house[s.era])} : ils remontent d’un cran.` });
-      if (x.type === 'disette') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>Disette.</b> Il manquait ${x.missing} Vivres : pas de quartier perdu, mais toutes les familles grognent.` });
+      if (x.type === 'disette') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>Disette.</b> Il manquait ${x.missing} Vivres : pas de quartier perdu, mais toutes les familles grognent (−1 chacune).` });
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? '<b>Famine.</b> Les greniers sont vides ; une merveille rachète le quartier.' : '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });

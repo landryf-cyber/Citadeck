@@ -6,7 +6,7 @@ import { Rng, hashString } from '../core/rng';
 import type { Content } from './content';
 import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLES, ERA_SCALE } from './text';
 import {
-  FAMILIES, FAMILY_ROLE, RES, RES_LABEL, TAGS,
+  FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
   type Jalon, type OriginDef, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
@@ -136,7 +136,7 @@ export interface Setup {
 
 export type Ev =
   | { type: 'res'; before: Resources; after: Resources }
-  | { type: 'quartiers'; delta: number; cause: string; shielded?: boolean; paid?: Bag }
+  | { type: 'quartiers'; delta: number; cause: string; shielded?: boolean; paid?: Bag; by?: string }
   | { type: 'mend'; family: FamilyId }
   | { type: 'disette'; missing: number }
   | { type: 'loy'; family: FamilyId; delta: number; value: number }
@@ -357,6 +357,19 @@ export class Engine {
 
   present(s: GameState): FamilyId[] {
     return FAMILIES.filter((f) => s.fam[f].state === 'presente');
+  }
+
+  /** La protection active (merveille ou découverte qui rachète un quartier) : son nom et son prix à cette ère. */
+  shieldInfo(s: GameState): { name: string; res: Res; price: number; ready: boolean } | undefined {
+    for (const id of s.deck) {
+      const p = this.c.cards[id]?.passive?.find((x) => x.type === 'shield') as { type: 'shield'; amount: number; res: Res } | undefined;
+      if (p) { const price = scaleN(p.amount, s.era); return { name: this.c.cards[id].title, res: p.res, price, ready: !s.shieldUsed && s.res[p.res] >= price }; }
+    }
+    for (let i = 0; i < 5; i++) {
+      const j = s.jalons[i] ? this.jalonOf(s, i) : undefined;
+      if (j?.passive?.type === 'shield') { const price = scaleN(j.passive.amount, s.era); return { name: j.name, res: j.passive.res, price, ready: !s.shieldUsed && s.res[j.passive.res] >= price }; }
+    }
+    return undefined;
   }
 
   passives(s: GameState): Passive[] {
@@ -810,12 +823,19 @@ export class Engine {
     const riot = mended ? [] : FAMILIES.filter((f) => dir[f] && loyNow[f]! <= -3 && s.fam[f].loy > -3);
     if (riot.length) v.risk = [v.risk, `${riot.map((f) => capitalize(this.c.families[f].house[s.era])).join(' et ')} passeraient à −3 : révolte au bilan, un quartier brûle`].filter(Boolean).join(' · ');
     // dernière carte avant le bilan : dire noir sur blanc ce que coûteront les révoltes
-    const lastBeforeBilan = (card.kind === 'crise' && !s.pile.length) || card.id === 'disette';
+    const lastBeforeBilan = (card.kind === 'crise' && !s.pile.length && s.phase === 'crise') || card.id === 'disette';
     if (lastBeforeBilan && !mended) {
       const rebels = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && loyNow[f]! <= -3 && !riot.includes(f));
       const q = s.quartiers + (o.effect.quartiers ?? 0);
       if (rebels.length) v.risk = [v.risk, `Au bilan, ${rebels.map((f) => this.c.families[f].house[s.era]).join(' et ')} se révolteront${q - rebels.length - riot.length <= 0 ? ' : la cité tombera' : ` : ${rebels.length > 1 ? `${rebels.length} quartiers brûleront` : 'un quartier brûlera'}`}`].filter(Boolean).join(' · ');
+      // et l'option qui apaise une famille révoltée le dit
+      const calmed = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && s.fam[f].loy <= -3 && loyNow[f]! > -3);
+      if (calmed.length) v.detail = [v.detail, `Évite la révolte de${calmed.length > 1 ? 's' : ''} ${calmed.map((f) => this.c.families[f].house[s.era].replace(/^les /, '')).join(' et ')} au bilan`].filter(Boolean).join(' · ');
     }
+    // une perte de quartier subie (seuil raté, pari perdu) serait rachetée par la merveille protectrice : le dire avant
+    const sh = this.shieldInfo(s);
+    const suffered = (!!o.effect.if && (o.effect.else?.quartiers ?? 0) < 0 && !this.check(s, o.effect.if)) || (o.effect.bet?.lose?.quartiers ?? 0) < 0;
+    if (sh?.ready && suffered) v.detail = [v.detail, `${sh.name} rachèterait le quartier (${sh.price} ${RES_LABEL[sh.res]})`].filter(Boolean).join(' · ');
     // ce qui rentre, en fourchette : large, plus fine avec la Science et les merveilles, exacte si l'on a payé pour voir
     const gl: Partial<Record<Res, [number, number]>> = {};
     const sight = s.peek === s.turn ? 2 : this.insight(s).level;
@@ -1034,9 +1054,12 @@ export class Engine {
     // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
     if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
     if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) {
+      const se = ev.find((x) => x.type === 'quartiers' && x.shielded) as { by?: string; paid?: Bag };
+      const shName = se.by ?? 'Une merveille';
+      const shPaid = RES.filter((r) => se.paid?.[r]).map((r) => `${se.paid![r]} ${RES_LABEL[r]}`).join(', ') || 'des réserves';
       reply = ev.some((x) => x.type === 'quartiers' && x.delta < 0)
-        ? `${reply} Une merveille a racheté un quartier ; pas l’autre.`
-        : `${reply} Du moins, c’est ce qui serait arrivé sans votre merveille : elle a racheté le quartier, à prix d’or.`;
+        ? `${reply} ${shName} a racheté un quartier ; pas l’autre.`
+        : `${reply} Du moins, c’est ce qui serait arrivé sans ${shName.charAt(0).toLowerCase() + shName.slice(1)} : le quartier est racheté, contre ${shPaid}.`;
     }
     if (card.arc) {
       if (!s.arcs.open.includes(card.arc)) s.arcs.open.push(card.arc);
@@ -1207,7 +1230,7 @@ export class Engine {
         s.shieldUsed = true;
         s.res[sh.res] -= price;
         d += 1;
-        ev.push({ type: 'quartiers', delta: 0, cause, shielded: true, paid: { [sh.res]: price } });
+        ev.push({ type: 'quartiers', delta: 0, cause, shielded: true, paid: { [sh.res]: price }, by: this.shieldInfo(s)?.name });
         if (d === 0) return;
       }
     }
@@ -1439,8 +1462,8 @@ export class Engine {
     for (const id of o.deck ?? []) for (const p of this.c.cards[id]?.passive ?? []) if (p.type === 'income') up.push(`+${p.amount} ${RES_LABEL[p.res]} par saison`);
     const loys = FAMILIES.map((f) => o.loy?.[f] ?? 0);
     if (loys.every((x) => x > 0)) up.push(`Les 4 familles amicales`);
-    if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(FAMILY_ROLE[f])} amicaux`);
-    for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(FAMILY_ROLE[f])} méfiants`);
+    if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} amicaux`);
+    for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} méfiants`);
     if (o.quartiers > 3) up.push(`${o.quartiers} quartiers au départ`);
     if (o.quartiers < 3) down.push(`${o.quartiers} quartiers seulement`);
     const ref: Resources = { vivres: 6, armee: 4, savoir: 3, tresor: 4 };
