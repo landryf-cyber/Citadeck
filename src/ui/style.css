@@ -462,3 +462,8 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 /* survol d'une origine : un contour froid, pour ne pas le confondre avec la sélection (dorée) */
 @media (hover: hover) { .tile.origin:not(.sel):not(:disabled):hover { box-shadow: inset 0 0 0 1px rgba(159, 211, 255, 0.55), 0 0 18px -6px rgba(159, 211, 255, 0.5); } }
 .tile .odet em, .scene-cap em { display: inline; font-style: normal; font-weight: 700; font-size: inherit; letter-spacing: 0; text-transform: none; } .tile .odet em.up, .scene-cap em.up { color: #c8efb4; } .tile .odet em.down, .scene-cap em.down { color: #ffb0a0; }
+.presage .form-line { margin: -2px 0 0; font-size: 13px; letter-spacing: 0.04em; color: var(--dim); text-align: center; }
+.presage .form-line b { color: var(--ui); font-family: var(--title); font-size: 15px; letter-spacing: 0.06em; }
+.brief .bl.rule > span { font-size: 13.5px; color: var(--ink); }
+.chip.note.good { color: #c8efb4; } .chip.note.bad { color: #ffb0a0; }
+.presage .rule-line { margin: -4px 0 2px; font-size: 13.5px; color: var(--dim); text-align: center; text-wrap: balance; }

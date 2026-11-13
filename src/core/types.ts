@@ -219,12 +219,18 @@ export interface EraForm {
   cards: number;
   /** la règle propre à l'ère, une phrase */
   rule: string;
+  /** la même, en quelques mots, sous la phrase du présage ({cap} : ce que la tribu peut porter) */
+  short: string;
   /** l'objectif propre à l'ère, une phrase */
   objective: string;
   /** comment la menace arrive, une phrase */
   threat: string;
-  /** la phrase principale du présage : {j} la merveille, {c} la crise (avec « à » contracté), {rival} la rivale */
+  /** la phrase principale du présage : {j} la merveille, {cn} la crise, {rival} la rivale */
   mission: string;
+  /** quand et comment la crise frappe, en quelques mots (ligne « Menace » du présage) */
+  when: string;
+  /** ce que l'objectif ajoute à la merveille, en quelques mots (ligne « Objectif » du présage) */
+  goal?: string;
 }
 
 export interface OriginDef {

@@ -19,11 +19,11 @@ import { store, type Settings } from './store';
 const KIND_LABEL: Record<string, string> = {
   evenement: 'Événement', intrigue: 'Suite', rencontre: 'Rencontre', ruines: 'Les ruines', revenant: 'Les revenants',
   trahison: 'Trahison', croissance: 'Croissance', tutoriel: 'Conseil', institution: 'Institution',
+  regle: 'Règle de l’ère', conseil: 'Le Conseil',
 };
 const KIND_MOTIF: Record<string, string> = {
   carrefour: 'road', jalon: 'tower', decouverte: 'scroll', croissance: 'house', proces: 'scales', hommage: 'crown', ruines: 'skull', revenant: 'hand', presage: 'eye',
 };
-const PHASES = ['saison0', 'saison1', 'chantier', 'crise', 'finere'];
 
 export class App {
   private root = document.getElementById('app')!;
@@ -406,7 +406,9 @@ export class App {
     const hud = document.getElementById('hud')!;
     const upkeep = this.e.presageInfo(s).upkeep;
     const rv = this.e.rival(s);
-    const phaseIdx = s.phase === 'saison' ? s.saison : s.phase === 'chantier' ? 2 : s.phase === 'crise' ? 3 : s.phase === 'finere' ? 4 : -1;
+    const fm = this.e.form(s);
+    const nSeasons = fm.seasons;
+    const phaseIdx = s.phase === 'saison' ? s.saison : s.phase === 'chantier' ? nSeasons : s.phase === 'crise' ? nSeasons + 1 : s.phase === 'finere' ? nSeasons + 2 : -1;
     // une créance en cours : son montant et le nombre de cartes avant l'huissier
     const dues = s.sched.filter((x) => /^creance/.test(x.card));
     const debt = dues.length ? `<span class="debt" title="Créance : ${dues.map((d) => `${d.pay ?? '?'} Trésor dans ${Math.max(1, d.at - s.turn + 1)} carte(s), ou un quartier`).join(' ; ')}">−${dues.reduce((a, d) => a + (d.pay ?? 0), 0)} ⌛${Math.max(1, Math.min(...dues.map((d) => d.at - s.turn + 1)))}</span>` : '';
@@ -414,8 +416,8 @@ export class App {
       <div class="stat q${s.quartiers <= 2 ? ' low' : ''}" data-k="q" title="Quartiers : votre cité. À zéro, elle tombe.">${ICON.house}<b>${s.quartiers}</b><small>${s.quartiers > 1 ? 'quartiers' : 'quartier'}</small><span class="delta"></span></div>
       ${RES.map((r) => `<div class="stat r-${r}${r === 'vivres' && s.res.vivres < upkeep ? ' hunger' : ''}" data-k="${r}" title="${RES_LABEL[r]}${r === 'vivres' ? ` — la cité en mangera ${upkeep} en fin d’ère` : ''}">${RES_ICON[r]}<b>${s.res[r]}</b><span class="delta"></span>${r === 'tresor' ? debt : ''}</div>`).join('')}
       <div class="hud-sp"></div>
-      <div class="era-pill" title="${esc(ERA_NAMES[s.era])} : deux saisons, le chantier, la crise, le bilan"><div class="era-name"><b>${ROMAN[s.era]}</b><span>${esc(ERA_NAMES[s.era].replace(/^L’|^L'|^Le |^La /, ''))}</span></div>
-        <div class="phase">${PHASES.map((_, i) => `<i class="${i === 3 ? 'cr ' : ''}${i < phaseIdx ? 'done' : i === phaseIdx ? 'now' : ''}"></i>`).join('')}</div></div>
+      <div class="era-pill" title="${esc(ERA_NAMES[s.era])} · ${esc(fm.name)} : ${esc(fm.rhythm)}, le chantier, la crise, le bilan"><div class="era-name"><b>${ROMAN[s.era]}</b><span>${esc(ERA_NAMES[s.era].replace(/^L’|^L'|^Le |^La /, ''))}</span></div>
+        <div class="phase">${Array.from({ length: nSeasons + 3 }, (_, i) => `<i class="${i === nSeasons + 1 ? 'cr ' : ''}${i < phaseIdx ? 'done' : i === phaseIdx ? 'now' : ''}"></i>`).join('')}</div></div>
       RACE
       <button class="icon-btn deck-btn" data-act="deck" aria-label="Votre civilisation">${ICON.book}<span class="count">${s.deck.length + s.jalons.filter(Boolean).length}</span></button>
       <button class="icon-btn" data-act="settings" aria-label="Réglages">${ICON.gear}</button>
@@ -648,6 +650,8 @@ export class App {
       if (x.type === 'sched') chips.push(`<span class="chip note">${ICON.hourglass}&nbsp;Cela aura des suites</span>`);
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
+      if (x.type === 'rot') chips.push(`<span class="chip note">La chasse : ${bagChips({ vivres: x.hunt }, '+')}${x.amount ? ` ; on ne porte pas plus de ${x.cap} : ${bagChips({ vivres: x.amount }, '−')} pourrissent` : ''}</span>`);
+      if (x.type === 'raceStep') chips.push(`<span class="chip note${x.won ? ' good' : x.lost ? ' bad' : ''}">${x.won ? `Course gagnée : ${esc(this.e.rival(s).name)} n’achèveront pas leur merveille cette ère` : x.lost ? `Course perdue : ${esc(this.e.rival(s).name)} ont fini ; la crise frappera plus fort` : `${esc(capitalize(this.e.rival(s).name))} avancent : étape ${x.stage} sur ${x.of}`}</span>`);
       if (x.type === 'rival') chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'}</span>`);
       if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
     }
@@ -713,7 +717,8 @@ export class App {
     this.renderHud();
     document.getElementById('stage')!.innerHTML = '';
     (this.root.querySelector('.after') as HTMLElement).innerHTML = '';
-    await this.banner(`Ère ${ROMAN[era]}`, ERA_NAMES[era], '', ERA_SUBTITLES[era]);
+    const fm = this.e.form(s, era);
+    await this.banner(`Ère ${ROMAN[era]}`, ERA_NAMES[era], '', `${fm.name} · ${ERA_SUBTITLES[era]}`);
   }
 
   // ----------------------------------------------------------------------- présage
@@ -738,8 +743,14 @@ export class App {
         // « à » + article : au Grand Hiver, à la Horde, à l'Éveil
         const n = p.crisis.name;
         const toCrisis = n.startsWith('Le ') ? `au ${n.slice(3)}` : n.startsWith('La ') ? `à la ${n.slice(3)}` : n.startsWith('Les ') ? `aux ${n.slice(4)}` : n.startsWith('L’') ? `à l’${n.slice(2)}` : `à ${n}`;
-        // un message principal : l'objectif de l'ère, en une phrase
-        const main = p.jalon ? `Bâtir ${esc(jName)}, puis tenir face ${esc(toCrisis)}.` : `Tenir face ${esc(toCrisis)}.`;
+        // un message principal : l'objectif de l'ère, dans la forme de l'ère, en une phrase
+        const fm = this.e.form(s);
+        const cn = /^(Le|La|Les|L’) /.test(n) || n.startsWith('L’') ? n.charAt(0).toLowerCase() + n.slice(1) : n;
+        // la course n'a plus d'enjeu quand la rivale a déjà ses cinq merveilles
+        const mission = fm.id === 'course' && p.rival.count >= 5 ? 'Bâtir {j}, puis tenir face {c}.' : fm.mission;
+        const main = p.jalon
+          ? esc(mission.replace('{j}', jName).replace('{cn}', cn).replace('{c}', toCrisis).replace('{rival}', p.rival.name.charAt(0).toLowerCase() + p.rival.name.slice(1)))
+          : `Tenir face ${esc(toCrisis)}.`;
         const words = (b: Partial<Record<Res, number>>) => RES.filter((r) => b[r]).map((r) => `<span class="w r-${r}">${RES_ICON[r]}${b[r]} ${RES_LABEL[r]}</span>`).join(', ');
         const miss = words(ready.missing);
         // pas de « presque prêt » : ce qui manque, pour quelle réponse, ce qu'elle coûte et ce que vous avez
@@ -753,15 +764,17 @@ export class App {
         const missed = this.e.dessein(s).jalons.filter((_, k) => k < s.era && !s.jalons[k]).map((j) => j.name);
         const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
         const notes = [
-          ...(missed.length ? [`${esc(missed.join(', '))} : à rattraper à la seconde saison`] : []),
+          ...(missed.length ? [fm.seasons > 1 ? `${esc(missed[missed.length - 1])} : vous pourrez la rattraper, plus cher, à la dernière saison` : `${missed.length > 1 ? 'des merveilles manquées' : 'une merveille manquée'} : trop tard pour la rattraper`] : []),
           ...(lonely.length ? [`${esc(capitalize(lonely.join(' et ')))} attendent votre visite cette ère`] : []),
           ...(shared.length ? [`l’objectif et la menace puisent dans le même ${shared.map((r) => RES_LABEL[r]).join(' et ')}`] : []),
         ];
         inner.innerHTML = `<div class="over">${esc(s.name)} · Ère ${ROMAN[p.era]} · ${esc(p.date.replace(' avant le Calendrier', ' av. C.'))}</div><h2 class="big">${esc(p.name)}</h2>
+          <p class="form-line"><b>${esc(fm.name)}</b> · ${esc(fm.rhythm)}</p>
           <p class="mission">${main}</p>
+          <p class="rule-line">${esc(fm.short.replace('{cap}', String(this.e.carryCap(s))))}</p>
           <div class="brief">
-            <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)} <span class="have">(vous : ${RES.filter((r) => p.jalon!.cost[r]).map((r) => `${s.res[r]}`).join(', ')})</span>${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
-            <div class="bl"><i class="k">Menace</i><span><b>${esc(p.crisis.name)}</b>, en fin d’ère<br><em class="ready ${ready.level}">${readyTxt}</em></span></div>
+            <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)} <span class="have">(vous : ${RES.filter((r) => p.jalon!.cost[r]).map((r) => `${s.res[r]}`).join(', ')})</span>${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}${fm.goal && !(fm.id === 'course' && p.rival.count >= 5) ? ` ; ${esc(fm.goal)}` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
+            <div class="bl"><i class="k">Menace</i><span><b>${esc(p.crisis.name)}</b>, ${esc(fm.when)}<br><em class="ready ${ready.level}">${readyTxt}</em></span></div>
             <div class="bl"><i class="k">Rivale</i><span>${rivalTxt}</span></div>
             ${p.legacy && p.legacy.label ? `<div class="bl"><i class="k">Héritage</i><span>Grâce à ${esc(p.legacy.from)}, votre ancienne cité : ${esc(p.legacy.label.charAt(0).toLowerCase() + p.legacy.label.slice(1))}${p.legacy.heirs ? ' (compté double)' : ''}</span></div>` : ''}
             ${notes.length ? `<div class="bl note"><i class="k">À noter</i><span>${notes.join(' · ')}</span></div>` : ''}
@@ -785,7 +798,8 @@ export class App {
               ${p.tag ? `<p class="note">${esc(p.tag.tag)} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${esc(p.tag.parts.join(', '))})` : ''}. On en gagne avec ${esc(p.tag.how)}.</p>` : ''}
               ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}</div>` : ''}`
             : '';
-          const rule = '<p class="note">Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau avant la crise. Quatre merveilles à la fin des temps : la victoire ; les cinq : le triomphe.</p>';
+          const rule = `<p class="note">${fm.id === 'course' ? 'Le chantier ouvre à la fin de chaque saison si vous en avez les moyens, et de nouveau avant la crise.' : fm.seasons > 1 ? 'Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau avant la crise.' : 'Le chantier ouvre avant la crise.'} Quatre merveilles à la fin des temps : la victoire ; les cinq : le triomphe.</p>`;
+          inner.appendChild(el('div', 'panel', `<h3>La forme de l’ère · ${esc(fm.name)}</h3><p><b>Rythme :</b> ${esc(fm.rhythm)} de ${fm.cards} cartes, puis le chantier, la crise et le bilan.</p><p><b>Règle :</b> ${esc(fm.rule)}</p><p><b>Objectif :</b> ${esc(fm.objective)}</p><p><b>Menace :</b> ${esc(fm.threat)}</p>`));
           const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
           inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${rule}${nxt}`));
           const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
@@ -794,7 +808,7 @@ export class App {
             <p class="note">Réponses qui tiennent déjà : ${ready.covered} sur ${ready.total}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}</p>`));
           inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
             <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur dessein : ils réclament un tribut à chaque ère.` : `${esc(p.rival.leader)} bâtit ${esc(p.rival.next)}, à achever en fin d’ère si personne ne l’en empêche. À cinq merveilles, la vallée leur paie tribut.`}</p>`));
-          inner.appendChild(el('p', 'note', `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
+          inner.appendChild(el('p', 'note', s.era >= 4 ? 'Pas de bilan : l’histoire s’arrête après la dernière crise.' : `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
         }
         const btns = el('div', 'btns stick');
         btns.appendChild(this.button('En route', go));
@@ -822,6 +836,7 @@ export class App {
       if (x.type === 'decay') lines.push({ cls: '', ico: RES_ICON.armee, html: `Les vétérans rentrent chez eux, les comptables se servent : ${bagChips({ armee: x.armee, tresor: x.tresor }, '−')}` });
       if (x.type === 'upkeep') lines.push({ cls: '', ico: RES_ICON.vivres, html: `La cité mange, et ses merveilles s’entretiennent : ${bagChips({ vivres: x.amount }, '−')}` });
       if (x.type === 'famine') lines.push({ cls: 'bad', ico: ICON.warn, html: ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? '<b>Famine.</b> Les greniers sont vides ; une merveille rachète le quartier.' : '<b>Famine.</b> Les greniers sont vides. Un quartier se vide aussi.' });
+      if (x.type === 'peace') lines.push({ cls: 'good', ico: ICON.star, html: `<b>La paix civile.</b> Aucune famille hostile : un quartier de plus. <span class="chip q">${ICON.house}<b>+1</b></span>` });
       if (x.type === 'annex') lines.push({ cls: 'bad', ico: ICON.warn, html: `<b>${esc(capitalize(x.name))} annexent un quartier.</b> Leur dessein est achevé ; ils s’étendent, sauf chez leurs amis.` });
       if (x.type === 'rivalJalon') lines.push({ cls: x.delta < 0 ? 'good' : 'bad', ico: ICON.star, html: `${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} <b>${esc(x.name)}</b> (${x.count}/5).` });
     }
@@ -1146,6 +1161,8 @@ export class App {
       ['proces', v.kind === 'proces', 'Le <b>procès</b> : la famille la plus lésée cite contre vous votre pire décision.'],
       ['famille', v.kind === 'famille', 'Les familles <b>se souviennent</b> : leurs descendants vous citeront ce choix.'],
       ['rivale', v.kind === 'rivale', 'La <b>rivale</b> bâtit aussi : à cinq merveilles, la vallée lui paie tribut.'],
+      ['regle', v.kind === 'regle', 'Une carte de <b>règle</b> : à cette ère, elle ouvre chaque saison.'],
+      ['conseil', v.kind === 'conseil', 'Le <b>Conseil</b> : soutenir une famille froisse sa rivale.'],
       ['credit', v.options.some((o) => o.label.endsWith('(à crédit)')), 'À <b>crédit</b> : les Troc avancent la somme, à rendre plus cher deux saisons plus tard.'],
       ['pari', v.options.some((o) => o.odds !== undefined), 'Un <b>pari</b> : la chance affichée est la vraie.'],
       ['cout', v.options.some((o) => Object.keys(o.cost).length > 0), 'Le <b>coût</b> est sûr ; ce qui rentre est une fourchette, et les flèches disent l’effet sur chaque famille.'],

@@ -48,10 +48,14 @@ function hud(s: GameState): void {
 function presage(s: GameState): void {
   const p = e.presageInfo(s);
   P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date})`);
+  const fm = e.form(s);
+  P(`Forme de l'ère : ${fm.name}, ${fm.rhythm} de ${fm.cards} cartes. ${fm.short.replace('{cap}', String(e.carryCap(s)))}`);
+  P(`  (règle : ${fm.rule} Objectif : ${fm.objective} Menace : ${fm.threat})`);
   // ce que l'écran montre d'emblée : une phrase, trois lignes, prêt ou pas
   const n = p.crisis.name;
   const toCrisis = n.startsWith('Le ') ? `au ${n.slice(3)}` : n.startsWith('La ') ? `à la ${n.slice(3)}` : n.startsWith('Les ') ? `aux ${n.slice(4)}` : n.startsWith('L’') ? `à l’${n.slice(2)}` : `à ${n}`;
-  P(p.jalon ? `Bâtir ${p.jalon.name.charAt(0).toLowerCase() + p.jalon.name.slice(1)}, puis tenir face ${toCrisis}.` : `Tenir face ${toCrisis}.`);
+  const cn = /^(Le|La|Les) /.test(n) || n.startsWith('L’') ? n.charAt(0).toLowerCase() + n.slice(1) : n;
+  P(p.jalon ? fm.mission.replace('{j}', p.jalon.name.charAt(0).toLowerCase() + p.jalon.name.slice(1)).replace('{cn}', cn).replace('{rival}', p.rival.name) : `Tenir face ${toCrisis}.`);
   const ready = e.crisisReadiness(s);
   P(`  Objectif : ${p.jalon ? `${p.jalon.name} (${bag(p.jalon.cost)})${p.tag && p.tag.total < p.tag.need ? ` — ${p.tag.tag} ${p.tag.total}/${p.tag.need}` : ''}` : 'la merveille de l’ère est debout'}`);
   P(`  Menace : ${p.crisis.name} — ${ready.level === 'pret' ? 'Prêt' : ready.level === 'presque' ? 'Presque prêt' : 'Pas prêt'}`);
@@ -62,11 +66,12 @@ function presage(s: GameState): void {
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);
   if (p.alt) P(`  ou ${p.alt.name} (${bag(p.alt.cost)}${p.alt.req ? `, exige ${p.alt.req}` : ''}). ${p.alt.text} ${p.alt.gift}`);
   const missed = e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
-  if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. À la seconde saison, vous pourrez en rattraper une, plus cher.`);
+  if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. ${e.form(s).seasons > 1 ? `À la dernière saison, vous pourrez rattraper ${missed[missed.length - 1]}, plus cher.` : 'Trop tard pour la rattraper.'}`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
-  P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
+  if (s.era >= 4) P('Pas de bilan : l’histoire s’arrête après la dernière crise.');
+  else P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
   const lonely = e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => e.c.families[f].house[s.era]);
   if (lonely.length) P(`${capitalize(lonely.join(' et '))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`);
   if (p.nextJalon) P(`À l’ère suivante : ${p.nextJalon.name}${p.nextJalon.req ? `, qui exigera ${p.nextJalon.req}` : ''}.`);
@@ -115,6 +120,8 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'quartiers' && x.delta) parts.push(`${x.delta > 0 ? '+' : ''}${x.delta} quartier${Math.abs(x.delta) > 1 ? 's' : ''}${x.delta < 0 ? ` (${x.cause})` : ''}`);
     if (x.type === 'quartiers' && x.shielded) parts.push(`une merveille rachète le quartier (${x.cause})${x.paid ? ` contre ${bag(x.paid, '-')}` : ''}`);
     if (x.type === 'sched') parts.push('cela aura des suites');
+    if (x.type === 'rot') parts.push(`la chasse rapporte +${x.hunt} Vivres${x.amount ? ` ; on ne porte pas plus de ${x.cap} : ${x.amount} pourrissent` : ''}`);
+    if (x.type === 'raceStep') parts.push(x.won ? 'COURSE GAGNÉE : la rivale n’achèvera pas sa merveille cette ère' : x.lost ? 'COURSE PERDUE : la rivale a fini, la crise frappera plus fort' : `la rivale avance : étape ${x.stage} sur ${x.of}`);
     if (x.type === 'bet') parts.push(`pari ${x.win ? 'réussi' : 'raté'} (${Math.round(x.chance * 100)} %)`);
     if (x.type === 'jalon') parts.push(`★ MERVEILLE BÂTIE : ${x.name}`);
     if (x.type === 'card+' && e.card(x.id).kind === 'decouverte') parts.push(`découverte : ${e.card(x.id).title}`);
@@ -129,6 +136,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
     if (x.type === 'income') bil.push(`Une famille fervente apporte ${bag(x.bag, '+')}.`);
     if (x.type === 'mend') bil.push(`Les Peintures apaisent ${e.c.families[x.family].house[s.era]} : ils remontent d’un cran.`);
+    if (x.type === 'peace') bil.push('LA PAIX CIVILE : aucune famille hostile, un quartier de plus.');
     if (x.type === 'disette') bil.push(`DISETTE : il manquait ${x.missing} Vivres ; pas de quartier perdu, mais toutes les familles grognent (−1).`);
     if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);

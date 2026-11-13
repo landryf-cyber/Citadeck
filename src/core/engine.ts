@@ -357,6 +357,11 @@ export class Engine {
     return c;
   }
 
+  /** Ce que la tribu peut porter pendant l'Errance (au-delà, les vivres pourrissent). */
+  carryCap(s: GameState): number {
+    return Math.max(6, this.upkeepOf(s) + 2);
+  }
+
   /** La forme de l'ère en cours (règle, rythme, objectif, menace). */
   form(s: GameState, era = s.era): EraForm {
     return this.c.forms[era] ?? this.c.forms[0];
@@ -668,7 +673,7 @@ export class Engine {
       const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: inaug(j) }];
       if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: inaug(alt) });
       if (p.early) {
-        opts.push({ label: 'Après la seconde saison', effect: {}, reply: ['Les bâtisseurs attendront la fin de la saison. Ils en profitent pour tailler une pierre de plus, par prudence.‖On attendra une saison. Les bâtisseurs comptent leurs cordes, puis les recomptent.', 'Le chantier attendra une saison. Les architectes en profitent pour ajouter une colonne.‖Une saison de plus pour les plans. L’architecte y ajoute un fronton, puis une frise, puis s’arrête de justesse.', 'Le chantier attendra une saison. Les maçons bénissent les fondations, au cas où.‖Une saison de répit. Les tailleurs de pierre en profitent pour graver leur nom dans les fondations, en petit.', 'Le chantier attendra une saison. Les ingénieurs repeignent les plans, en plus grand.‖Une saison de plus. Les ingénieurs testent une machine pour aller plus vite ; elle va surtout plus fort.', 'Le chantier attendra une saison. Le compte à rebours repart à zéro, avec un bip.‖Une saison de plus. Les drones rangés en ligne attendent le signal, sans impatience, ce qui est inquiétant.'][s.era] });
+        opts.push({ label: this.form(s).id === 'course' && s.saison < this.form(s).seasons - 1 ? 'À la saison prochaine' : 'Plus tard, avant la crise', effect: {}, reply: ['Les bâtisseurs attendront la fin de la saison. Ils en profitent pour tailler une pierre de plus, par prudence.‖On attendra une saison. Les bâtisseurs comptent leurs cordes, puis les recomptent.', 'Le chantier attendra une saison. Les architectes en profitent pour ajouter une colonne.‖Une saison de plus pour les plans. L’architecte y ajoute un fronton, puis une frise, puis s’arrête de justesse.', 'Le chantier attendra une saison. Les maçons bénissent les fondations, au cas où.‖Une saison de répit. Les tailleurs de pierre en profitent pour graver leur nom dans les fondations, en petit.', 'Le chantier attendra une saison. Les ingénieurs repeignent les plans, en plus grand.‖Une saison de plus. Les ingénieurs testent une machine pour aller plus vite ; elle va surtout plus fort.', 'Le chantier attendra une saison. Le compte à rebours repart à zéro, avec un bip.‖Une saison de plus. Les drones rangés en ligne attendent le signal, sans impatience, ce qui est inquiétant.'][s.era] });
         return opts;
       }
       opts.push({ label: 'Pas cette fois', effect: {}, reply: [
@@ -995,7 +1000,7 @@ export class Engine {
         from: r0.name, label: r0.legacy?.label, testament: r0.testament, heirs: s.origin === 'heritiers',
         memory: [r0.ally ? `${capitalize(this.c.families[r0.ally].house[0])} servaient ${r0.name} jusqu’au bout : ils vous font confiance d’avance.` : '', r0.enemy ? `${capitalize(this.c.families[r0.enemy].house[0])} haïssaient ${r0.name} : ils se méfient déjà de vous.` : ''].filter(Boolean).join(' ') || undefined,
       } : undefined,
-      upkeep: this.upkeepOf(s),
+      upkeep: s.era >= ERAS - 1 ? 0 : this.upkeepOf(s),
       needs: this.crisisNeeds(s),
       needsIfBuilt: s.jalons[s.era] ? undefined : this.crisisNeeds({ ...s, jalons: s.jalons.map((b, i) => b || i === s.era) }).bag,
       wonderUpkeep: Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep),
@@ -1338,7 +1343,7 @@ export class Engine {
     const fm = this.form(s);
     // l'Errance : la tribu chasse et cueille à chaque saison, mais ne porte pas tout ; au-delà, les vivres pourrissent
     if (fm.id === 'errance') {
-      const cap = Math.max(6, this.upkeepOf(s) + 2);
+      const cap = this.carryCap(s);
       const v = s.res.vivres + 2;
       s.res.vivres = Math.min(cap, v);
       ev.push({ type: 'rot', amount: Math.max(0, v - cap), cap, hunt: 2 });
@@ -1431,7 +1436,7 @@ export class Engine {
           }
         }
         // la Course : la rivale avance d'une étape par saison ; bâtir avant sa dernière étape, c'est gagner
-        if (course && !s.mem.includes(`course_${s.era}_${s.saison}`)) {
+        if (course && s.rivalJalons < 5 && !s.mem.includes(`course_${s.era}_${s.saison}`)) {
           s.mem.push(`course_${s.era}_${s.saison}`);
           const decided = s.mem.includes(`course_gagnee_${s.era}`) || s.mem.includes(`course_perdue_${s.era}`);
           if (!decided) {
@@ -1493,7 +1498,7 @@ export class Engine {
           return;
         }
         // les greniers ne suffiront pas : on le dit avant le bilan, et on peut encore acheter du grain
-        if (s.res.vivres < this.upkeepOf(s) && !s.mem.includes(`disette_${s.era}`)) {
+        if (s.era < ERAS - 1 && s.res.vivres < this.upkeepOf(s) && !s.mem.includes(`disette_${s.era}`)) {
           s.mem.push(`disette_${s.era}`);
           s.prompt = { card: 'disette' };
           return;
