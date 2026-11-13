@@ -647,7 +647,7 @@ export class Engine {
       });
     }
     if (card.id === 'disette') {
-      const d = Math.max(1, this.upkeepOf(s) - s.res.vivres);
+      const d = Math.max(1, this.upkeepOf(s) - s.res.vivres - this.bilanVivres(s));
       const g = { vivres: Math.ceil(d / TUNING.gain) };
       const opts: Option[] = [{ label: 'Acheter du grain, au prix fort', cost: { tresor: 2 * d }, effect: { gain: g, loy: { troc: 1 } }, reply: '{F:troc} livre le grain, pesé deux fois, facturé trois. Les greniers tiendront.‖Le grain arrive par charrettes, au prix des épices. Les greniers tiendront ; les coffres, moins.‖{F:troc} ouvre ses entrepôts « par amitié ». L’amitié est facturée à part.' }];
       if (s.fam.sel.state === 'presente') opts.push({ label: 'Réquisitionner chez {H:sel}', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles', effect: { gain: g, loy: { sel: -2 } }, reply: 'Les greniers du temple s’ouvrent, sous escorte. {F:sel} bénit chaque sac en vous regardant.‖On vide les réserves du temple. {F:sel} compte les sacs à voix haute, pour que le ciel entende.‖Les soldats emportent le grain sacré. {F:sel} prie pour eux, et contre vous, dans la même prière.' });
@@ -731,9 +731,10 @@ export class Engine {
     let text = card.text;
     if (card.id === 'disette') {
       const up = this.upkeepOf(s);
-      const d = Math.max(1, up - s.res.vivres);
+      const gift = this.bilanVivres(s);
+      const d = Math.max(1, up - s.res.vivres - gift);
       const small = d <= Math.max(1, Math.ceil(up / 3));
-      text = `La cité mangera ${up} Vivres à la fin de l’ère ; il en manque ${d}. ${small ? 'Un si petit manque fera grogner toutes les familles.' : 'Un tel manque videra un quartier.'} {F:troc} a du grain. À son prix.`;
+      text = `La cité mangera ${up} Vivres à la fin de l’ère ; ${gift ? `même avec les ${gift} qu’apporteront vos fidèles, ` : ''}il en manque ${d}. ${small ? 'Un si petit manque fera grogner toutes les familles.' : 'Un tel manque videra un quartier.'} {F:troc} a du grain. À son prix.`;
       header = 'Avant le bilan';
     }
     if (card.kind === 'jalon' && p.missed !== undefined) {
@@ -974,6 +975,11 @@ export class Engine {
   }
 
   /** Ce que la cité mange en fin d'ère : ses quartiers, et l'entretien de ses merveilles. */
+  /** Les vivres qui arriveront au bilan avant le repas : la part des familles ferventes qui donnent du grain. */
+  bilanVivres(s: GameState): number {
+    return this.present(s).filter((f) => s.fam[f].loy >= 3 && this.c.families[f].res === 'vivres').length * 3;
+  }
+
   upkeepOf(s: GameState): number {
     // les colonies se nourrissent elles-mêmes
     const fed = Math.max(0, s.quartiers - Math.min(s.colonies ?? 0, s.quartiers - 1));
@@ -1392,7 +1398,8 @@ export class Engine {
   advance(s: GameState, rng: Rng, ev: Ev[]): void {
     for (let guard = 0; guard < 40; guard++) {
       // une suite programmée passe avant tout (sauf pendant le présage et les carrefours)
-      const due = s.sched.findIndex((x) => x.at <= s.turn);
+      // après la dernière carte de crise, seules les créances passent : le bilan vient tout de suite (les suites attendront l'ère suivante)
+      const due = s.sched.findIndex((x) => x.at <= s.turn && (s.phase !== 'crise' || s.pile.length > 0 || /^creance/.test(x.card)));
       if (due >= 0 && (s.phase === 'saison' || s.phase === 'crise') && s.prompt && this.c.cards[s.prompt.card]?.kind !== 'carrefour') {
         const d = s.sched.splice(due, 1)[0];
         const c = this.c.cards[d.card];
@@ -1506,7 +1513,7 @@ export class Engine {
           return;
         }
         // les greniers ne suffiront pas : on le dit avant le bilan, et on peut encore acheter du grain
-        if (s.era < ERAS - 1 && s.res.vivres < this.upkeepOf(s) && !s.mem.includes(`disette_${s.era}`)) {
+        if (s.era < ERAS - 1 && s.res.vivres + this.bilanVivres(s) < this.upkeepOf(s) && !s.mem.includes(`disette_${s.era}`)) {
           s.mem.push(`disette_${s.era}`);
           s.prompt = { card: 'disette' };
           return;
