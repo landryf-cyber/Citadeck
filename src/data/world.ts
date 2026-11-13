@@ -77,9 +77,9 @@ export const desseins: DesseinDef[] = [
 ];
 
 export const origins: OriginDef[] = [
-  { id: 'feu', name: 'Les Gens du Feu', text: 'Un feu, quatre familles, et déjà des problèmes.', style: 'Une tribu soudée autour d’un seul feu.', badge: 'Le plus simple',
+  { id: 'feu', name: 'Les Gens du Feu', text: 'Un feu, quatre familles, et déjà des problèmes.', style: 'Une tribu soudée autour d’un seul feu.', badge: 'Conseillé',
     res: { vivres: 5, armee: 3, savoir: 3, tresor: 3 }, quartiers: 3, families: ['ourk', 'sel', 'brume', 'troc'], loy: { ourk: 1, sel: 1, brume: 1, troc: 1 }, mem: ['origine_feu'] },
-  { id: 'fleuve', name: 'Les Gens du Fleuve', text: 'Une terre grasse, un fleuve qui déborde. On mange bien, on se bat mal.', style: 'Des paysans au bord d’un fleuve qui déborde.', badge: 'Le plus sûr',
+  { id: 'fleuve', name: 'Les Gens du Fleuve', text: 'Une terre grasse, un fleuve qui déborde. On mange bien, on se bat mal.', style: 'Des paysans au bord d’un fleuve qui déborde.',
     res: { vivres: 8, armee: 2, savoir: 3, tresor: 3 }, quartiers: 4, families: ['ourk', 'sel', 'brume', 'troc'], loy: { ourk: -1, sel: 1 }, deck: ['o_limon'], mem: ['origine_fleuve'], unlock: 'atteindre le Moyen Âge' },
   { id: 'heritiers', name: 'Les Héritiers', text: 'Vous bâtissez sur les ruines d’une civilisation morte. Elle avait laissé de l’or. Et une famille qui vous en veut déjà.', style: 'Vous bâtissez sur les ruines de vos ancêtres.', badge: 'Pour les habitués',
     res: { vivres: 5, armee: 4, savoir: 5, tresor: 7 }, quartiers: 3, families: ['ourk', 'sel', 'brume', 'troc'], mem: ['heritiers'], unlock: 'laisser une première civilisation derrière soi' },

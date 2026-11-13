@@ -131,3 +131,17 @@ Journal des expériences : hypothèse, changement, test, résultat, décision.
 ## E17 — Ronde 2, point 3 : les répétitions
 - **Mesure** (20 à 40 parties enchaînées, quatre profils) : au départ, 0,7 texte relu par partie (la lettre de la rivale trois fois, les saisies, la croissance), 6,6 % de textes déjà lus à la partie précédente, et cinq textes lus dans plus de la moitié des parties (inaugurations, « Pas cette fois »).
 - **Après les variantes** : 0 relecture dans une partie pour les quatre profils, 3,6 à 4,8 % de textes de la partie précédente, aucun texte dans plus de la moitié des parties. Un piège : compter les usages par carte laissait revenir les répliques partagées (l'issue de repli, la saisie) ; on compte désormais par texte.
+
+## E18 — Ronde 2, point 4 : les origines changent-elles la partie ?
+- **Mesure** (120 parties par origine et par profil) : avant, les trois origines ne différaient que par les réserves de départ, et les profils les jouaient de la même façon. Après la refonte (règle et cartes propres), le Feu sert la postérité chez le profil pressé, les Héritiers l'ambition d'étoiles, le Fleuve la survie (89 % chez le pressé, la plus haute) au prix de moins de merveilles (14 % de grandes victoires au premier réglage, 12 % avant le +1 Sel).
+- **Les cartes rencontrées diffèrent** : chaque origine apporte deux ou trois cartes à elle, et ses souvenirs (la digue des ancêtres sauve un quartier lors de la Grande Crue).
+
+## E19 — Ronde 2, point 4 : nouveaux joueurs à 10 secondes
+- **Protocole** : trois profils (joueuse occasionnelle, stratège, ado distrait) regardent les captures téléphone et ordinateur de la fondation et du présage, première partie et suivante, dix secondes chacune.
+- **Tour 1** : envie de commencer partout, compréhension nulle part ; « Prêt » lu comme « l'hiver est prêt », « ◎ 5 » et « 1/5 » opaques, accroches de desseins trop poétiques, fondation des parties suivantes trop longue (la troisième origine sous les boutons), noms de familles inconnus.
+- **Tour 2** (desseins avec leur ressource, « Vous êtes prêt / il vous manque », coûts en mots, fondation compacte) : le stratège comprend les deux écrans ; restent la ligne rivale, un manque sans raison (« du Trésor contre une Horde ? »), des captures ordinateur périmées qui semaient des libellés contradictoires.
+- **Tour 3** (rivale en clair, réponse visée, origines d'une ligne avec conseil, légende de l'aperçu) : présage compris par les trois ; fondation comprise par deux ; le stratège veut des chiffres ; deux « tribut » se confondaient.
+- **Tour 4** : voir PROGRESS.md.
+
+## E20 — Ronde 2, point 5 : voir clair
+- **Fréquence des niveaux** (80 parties, cartes avec gains ; large / fine / exacte) : ère I 95/5/0, ère II 45/55/0, ère III 18/82/0, ère IV 6/82/12, ère V 2/67/30 pour le lecteur ; le joueur pressé reste un peu plus dans le flou (8/76/16 à l'ère V). Le flou du début est donc la règle, la précision une conquête de milieu de partie, l'exactitude un luxe de fin de partie, ou un achat.

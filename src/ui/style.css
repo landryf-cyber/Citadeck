@@ -443,12 +443,22 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 /* fondation : la légende de l'aperçu, sur la scène (grand écran) */
 .scene-cap { display: none; }
 @media (min-width: 900px) {
-  .scene-cap { display: block; position: fixed; left: 28px; bottom: 26px; max-width: 300px; padding: 8px 14px; border-radius: 12px; font-size: 13.5px; color: var(--ink); background: rgba(8, 6, 12, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 225, 170, 0.2); pointer-events: none; }
+  .scene-cap { display: none; position: fixed; transform: translateY(-50%); width: 270px; padding: 8px 14px; border-radius: 12px; font-size: 13.5px; color: var(--ink); background: rgba(8, 6, 12, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 225, 170, 0.2); pointer-events: none; }
   .scene-cap i { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ui); margin-right: 6px; }
-  .scene-cap.flash { animation: capIn 0.6s var(--ease-out); }
+  .scene-cap.room { display: block; }
+  .scene-cap.flash { animation: capIn 0.5s var(--ease-out); }
+  .scene-cap b { color: #fff4de; }
+  .scene-cap .nums { display: block; margin-top: 4px; font-size: 12.5px; color: var(--dim); }
 }
-@keyframes capIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes capIn { from { opacity: 0; margin-left: -8px; } to { opacity: 1; margin-left: 0; } }
+.tile .odet { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
+.tile .odet .w, .scene-cap .w { display: inline-flex; align-items: center; gap: 2px; vertical-align: -2px; font-weight: 700; color: #fff4de; }
+.tile .odet .w svg, .scene-cap .w svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.brief .have { font-size: 12.5px; color: var(--faint); white-space: nowrap; }
+.pick-line .more { font-size: 12px; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pick-line .req-line { width: 100%; font-size: 12px; color: var(--faint); }
 .tile .badge { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: -2px; }
 .tile .inherit { font-size: 12.5px; color: #e6d2ff; }
 /* survol d'une origine : un contour froid, pour ne pas le confondre avec la sélection (dorée) */
 @media (hover: hover) { .tile.origin:not(.sel):not(:disabled):hover { box-shadow: inset 0 0 0 1px rgba(159, 211, 255, 0.55), 0 0 18px -6px rgba(159, 211, 255, 0.5); } }
+.tile .odet em, .scene-cap em { display: inline; font-style: normal; font-weight: 700; font-size: inherit; letter-spacing: 0; text-transform: none; } .tile .odet em.up, .scene-cap em.up { color: #c8efb4; } .tile .odet em.down, .scene-cap em.down { color: #ffb0a0; }

@@ -180,3 +180,31 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     suivante ; la graine décale le départ. Écrites en priorité là où la mesure montrait les répétitions : lettres et
     tributs de la rivale, créances, saisies, croissance, disette, merveilles remises ou oubliées, inaugurations des 18
     merveilles, hommages.
+56. **Première partie : un seul choix.** Le dessein « Être chantés pour toujours » est présélectionné et marqué
+    « Conseillé pour commencer » : c'est le plus indulgent (les Peintures apaisent les familles, le Trésor sert à tout)
+    et celui où le lecteur gagne le plus souvent. L'origine vaut « Gens du Feu » sans être montrée ; origine, Héritiers
+    et Âge de fer apparaissent après une première partie terminée.
+57. **Des origines qui changent la partie, ou rien.** Chacune a une règle et des cartes à elle (Feu : familles
+    amicales, réserves maigres, la veillée et le feu sacré ; Fleuve : le limon, +1 Vivres par saison, guerriers
+    méfiants, la Crue, le Bac, la Grande Crue ; Héritiers : héritage et rancunes doublés, l'inventaire des ruines).
+    L'atout et le handicap affichés sont calculés à partir de ces données, jamais écrits à la main. Un conseil mesuré
+    s'y ajoute : Feu « Conseillé », Fleuve « Le plus sûr » (survie la plus haute des profils humains), Héritiers
+    « Pour les habitués ».
+58. **L'aperçu de l'origine se voit dans la scène** : chaque origine teinte la première ère (feu chaud, fleuve
+    bleu-vert, ruines au crépuscule violet), le fleuve coule devant la cité, et une légende chiffrée apparaît à côté
+    de la tuile survolée (grand écran). Sur téléphone, l'aperçu suit la sélection.
+59. **Le présage : une phrase, trois lignes, des mots.** « Bâtir X, puis tenir face à Y. » ; puis Objectif (coût en
+    toutes lettres et ce que vous avez), Menace (« Vous êtes prêt à l'affronter » ou « il vous manque 3 Trésor pour
+    « Payer le tribut » », calculé sur la réponse la plus proche), Rivale (« ont bâti 1 merveille sur 5 ; s'ils
+    achèvent les cinq, ils vous rançonneront à chaque ère »). Seuils, intensité, règles et bilan sont repliés sous
+    « Détails ». Les mots « Prêt » seul et « 1/5 » ont été abandonnés : aucun testeur ne savait qui était prêt.
+60. **Les familles se présentent par leur rôle** (guerriers, prêtres, savants, marchands) dans les étiquettes et
+    l'héritage, pour qui n'a pas encore retenu leurs noms.
+61. **Bulles d'aide : une phrase, la première fois, une par carte.** Les notions attendent leur carte (pari, crédit,
+    rivale, chantier…) ; si plusieurs se présentent ensemble, une seule bulle, les autres à la carte suivante. Le
+    bilan ne parle plus de ce qui vient après lui.
+62. **Voir clair (point 5).** Les gains s'affichent en fourchette large (1–2, 3–5, 6–9, 10–15, 16+) ; à 2 points de
+    clairvoyance, en fourchette fine (1, 2, 3–4, 5–6, 7–9, 10–12, 13–15, 16–20, 21+) ; à 5 points, au chiffre près.
+    Points : chaque carte ou famille qui compte pour la Science, une merveille sur deux, un Savoir de 10 ou plus.
+    Sinon, « Voir les chiffres exacts » coûte 1 à 3 Savoir (selon l'ère) pour la carte en cours. Les petites
+    valeurs (1, 2) deviennent exactes dès la fourchette fine : c'est voulu, l'écart compte peu.

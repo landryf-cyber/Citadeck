@@ -4,7 +4,7 @@
  */
 import { ERA_SCALE, gainText, TUNING, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
 import { chronicleLines, epitaph, nextSetup, recordRun, testaments, UNLOCKS, type Testament, type Unlock } from '../core/meta';
-import { FAMILIES, RES, RES_LABEL, type ChronicleEntry, type FamilyId, type GameState, type MetaState, type Res } from '../core/types';
+import { FAMILIES, FAMILY_ROLE, RES, RES_LABEL, type ChronicleEntry, type FamilyId, type GameState, type MetaState, type Res } from '../core/types';
 import { civName, ERA_NAMES, ERA_SUBTITLES, capitalize, fill } from '../core/text';
 import type { Scene } from '../scene/scene';
 import { LOOKS, rgb } from '../scene/palette';
@@ -169,7 +169,11 @@ export class App {
     let origin = 'feu';
     let iron = false;
     const open = new Set<string>();
-    const preview = (o: string) => {
+    // le départ d'une origine, comparé à celui des Gens du Feu (l'origine de la première partie)
+    const ref = this.e.c.origins.find((x) => x.id === 'feu')!;
+    const delta = (n: number, m: number) => (n === m || ref === undefined ? '' : ` <em class="${n > m ? 'up' : 'down'}">(${n > m ? '+' : '−'}${Math.abs(n - m)})</em>`);
+    const startLine = (od: (typeof this.e.c.origins)[number]) => `${RES.map((r) => `<span class="w r-${r}">${RES_ICON[r]}${od.res[r]} ${RES_LABEL[r]}</span>${od.id === 'feu' ? '' : delta(od.res[r], ref.res[r])}`).join(', ')} ; ${od.quartiers} quartiers${od.id === 'feu' ? '' : delta(od.quartiers, ref.quartiers)} (la cité tombe à zéro).`;
+    const preview = (o: string, tile?: HTMLElement | null) => {
       const ruins = nextSetup(this.meta, { dessein, origin: o }).ruins ?? [];
       const demo = this.e.newGame(seed, { dessein, origin: o, ruins: o === 'heritiers' ? ruins : [] });
       const snap = snapshot(this.e, demo);
@@ -182,7 +186,16 @@ export class App {
         let cap = sc.querySelector('.scene-cap') as HTMLElement | null;
         if (!cap) sc.appendChild((cap = el('div', 'scene-cap')));
         const what = o === 'fleuve' ? 'le fleuve, qui déborde chaque printemps' : o === 'heritiers' ? 'les ruines de vos ancêtres, sur la colline' : 'le grand feu de la tribu';
-        cap.innerHTML = `<i>Aperçu</i> ${esc(this.e.c.origins.find((x) => x.id === o)?.name ?? '')} : ${esc(what)}`;
+        const od = this.e.c.origins.find((x) => x.id === o)!;
+        cap.innerHTML = `<i>Aperçu</i><b>${esc(od.name)}</b> : ${esc(what)}<span class="nums">Au départ : ${startLine(od)}</span>`;
+        // à côté de la tuile survolée (ou choisie), près du regard
+        const tl = tile ?? (sc.querySelector('.tile.origin.sel') as HTMLElement | null);
+        if (tl) {
+          const r = tl.getBoundingClientRect();
+          cap.style.top = `${Math.round(r.top + r.height / 2)}px`;
+          cap.style.left = `${Math.round(r.right + 18)}px`;
+          cap.classList.toggle('room', r.right + 18 + 290 < window.innerWidth);
+        }
         cap.classList.remove('flash');
         void cap.offsetWidth;
         cap.classList.add('flash');
@@ -194,6 +207,11 @@ export class App {
         inner.innerHTML = `<div class="over">Votre civilisation</div><h2 class="big">${esc(name)}</h2>
           <div class="label">Que voulez-vous devenir ?</div>`;
         const hook = (d: (typeof this.e.c.desseins)[number]) => esc(d.pitch.replace('{rival}', 'la cité voisine').replace('{cite}', name));
+        const reqLine = (d: (typeof this.e.c.desseins)[number]) => {
+          const reqs = d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ');
+          const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux' : 'découvertes de Culture, familles dévouées';
+          return `Une merveille par ère. Quatre à la fin des temps : la victoire ; les cinq : le triomphe. Elles exigent ${reqs} de ${esc(d.tag)} (${src}).`;
+        };
         const need = (d: (typeof this.e.c.desseins)[number]) => `<span class="need r-${d.res}">${RES_ICON[d.res]}<b>${RES_LABEL[d.res]}</b> et ${esc(d.need)}</span>`;
         // parties suivantes : les desseins, déjà connus, tiennent sur une ligne ; l'origine a la place
         if (!first) {
@@ -209,16 +227,20 @@ export class App {
           }
           inner.appendChild(row);
           const d = this.e.c.desseins.find((x) => x.id === dessein)!;
-          inner.appendChild(el('p', 'pick-line', `${need(d)} <span class="hook">${hook(d)}</span>`));
+          const pl = el('p', 'pick-line', `${need(d)} <span class="hook">${hook(d)}</span> <span class="more" role="button" tabindex="0">${open.has(d.id) ? 'Masquer' : 'Détails'}</span>${open.has(d.id) ? `<span class="req-line">${reqLine(d)}</span>` : ''}`);
+          pl.querySelector('.more')!.addEventListener('click', () => {
+            if (open.has(d.id)) open.delete(d.id);
+            else open.add(d.id);
+            render();
+          });
+          inner.appendChild(pl);
         }
         const tiles = el('div', 'tiles');
         if (first) for (const d of this.e.c.desseins) {
-          const reqs = d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ');
-          const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux' : 'découvertes de Culture, familles dévouées';
           const rec = first && d.id === 'posterite';
           const t = el('button', `tile dessein${d.id === dessein ? ' sel' : ''}`, `<b>${esc(d.name)}${rec ? ' <i class="rec">Conseillé pour commencer</i>' : ''}</b>${need(d)}<span class="hook">${hook(d)}</span>
             <span class="more" role="button" tabindex="0">${open.has(d.id) ? 'Masquer les détails' : 'Détails'}</span>
-            ${open.has(d.id) ? `<span class="req-line">Une merveille par ère. Quatre à la fin des temps : la victoire ; les cinq : le triomphe. Elles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>` : ''}`);
+            ${open.has(d.id) ? `<span class="req-line">${reqLine(d)}</span>` : ''}`);
           t.addEventListener('click', (ev) => {
             if ((ev.target as HTMLElement).classList.contains('more')) {
               if (open.has(d.id)) open.delete(d.id);
@@ -234,6 +256,19 @@ export class App {
         if (!first) {
           inner.appendChild(el('div', 'label', `Qui êtes-vous ?${this.meta.runs === 1 ? ' <i class="rec">Nouveau</i>' : ''}`));
           const r0 = nextSetup(this.meta, { dessein, origin: 'heritiers' }).ruins?.[0];
+          // le détail chiffré d'une origine : réserves, quartiers, familles, règle propre, cartes à elle
+          const originDetails = (o: (typeof this.e.c.origins)[number]) => {
+            const fams = FAMILIES.filter((f) => o.loy?.[f]).map((f, k) => `${esc(k ? this.e.c.families[f].house[0] : capitalize(this.e.c.families[f].house[0]))} (${FAMILY_ROLE[f]}) ${o.loy![f]! > 0 ? 'amicaux' : 'méfiants'}`);
+            const rule = (o.deck ?? []).map((id) => this.e.c.cards[id]).filter((c) => c?.passive).map((c) => `${esc(c.title)} : ${esc(c.gift ?? '')}`);
+            const own = Object.values(this.e.c.cards).filter((c) => c.id.startsWith('or_') && c.cond?.mem && o.mem?.includes(c.cond.mem)).map((c) => esc(c.title));
+            return `<span class="odet">
+              <span>Au départ : ${startLine(o)}</span>
+              ${fams.length ? `<span>Familles : ${fams.length === 4 && FAMILIES.every((f) => (o.loy?.[f] ?? 0) > 0) ? 'les quatre vous aiment déjà (+1)' : fams.join(', ')}.</span>` : ''}
+              ${rule.map((x) => `<span>Règle : ${x}</span>`).join('')}
+              ${o.mem?.includes('heritiers') ? '<span>Ce que la cité précédente a laissé compte double : son héritage, ses amitiés et ses rancunes.</span>' : ''}
+              ${own.length ? `<span>Des cartes à vous : ${own.join(', ')}.</span>` : ''}
+            </span>`;
+          };
           const ot = el('div', 'tiles origins');
           for (const o of this.e.c.origins) {
             const unlocked = o.id === 'feu' || this.meta.unlocked.includes(o.id);
@@ -241,14 +276,18 @@ export class App {
             const tr = this.e.originTraits(o);
             const emblem = `<svg class="emblem" viewBox="78 26 144 144" aria-hidden="true">${motif(o.id === 'fleuve' ? 'wave' : o.id === 'heritiers' ? 'arch' : 'flame', new Rng(7), 'hsl(36 90% 80%)', 'hsla(30,90%,60%,.35)', 'hsla(36,70%,78%,.4)')}</svg>`;
             const t = el('button', `tile origin${o.id === origin ? ' sel' : ''}`, unlocked
-              ? `${emblem}<div>${o.badge ? `<em class="badge">${esc(o.badge)}</em>` : ''}<b>${esc(o.name)}</b><span>${esc(o.style)}</span>${o.id === 'heritiers' && r0 ? `<span class="inherit">Héritage de ${esc(r0.name)}${r0.legacy?.label ? ` : ${esc(r0.legacy.label.charAt(0).toLowerCase() + r0.legacy.label.slice(1))}` : ''}</span>` : ''}<span class="tags" title="${esc([...tr.ups.map((x) => '+ ' + x), ...tr.downs.map((x) => '− ' + x)].join('\n'))}"><i class="good">${esc(tr.atout)}</i><i class="bad">${esc(tr.handicap)}</i></span></div>`
+              ? `${emblem}<div>${o.badge ? `<em class="badge">${esc(o.badge)}</em>` : ''}<b>${esc(o.name)}</b><span>${esc(o.style)}</span>${o.id === 'heritiers' && r0 ? `<span class="inherit">Héritage de ${esc(r0.name)}${r0.legacy?.label ? ` : ${esc(r0.legacy.label.charAt(0).toLowerCase() + r0.legacy.label.slice(1))}` : ''}</span>` : ''}<span class="tags" title="${esc([...tr.ups.map((x) => '+ ' + x), ...tr.downs.map((x) => '− ' + x)].join('\n'))}"><i class="good">${esc(tr.atout)}</i><i class="bad">${esc(tr.handicap)}</i></span>
+                <span class="more" role="button" tabindex="0">${open.has(o.id) ? 'Masquer les détails' : 'Détails'}</span>${open.has(o.id) ? originDetails(o) : ''}</div>`
               : `${emblem}<div><em>${ICON.lock} Pas encore</em><b>${esc(o.name)}</b><span>${esc(u?.how ?? '')}</span></div>`);
             if (!unlocked) t.disabled = true;
-            t.addEventListener('mouseenter', () => unlocked && preview(o.id));
-            t.addEventListener('focus', () => unlocked && preview(o.id));
+            t.addEventListener('mouseenter', () => unlocked && preview(o.id, t));
+            t.addEventListener('focus', () => unlocked && preview(o.id, t));
             t.addEventListener('mouseleave', () => preview(origin));
-            t.addEventListener('click', () => {
-              origin = o.id;
+            t.addEventListener('click', (ev) => {
+              if ((ev.target as HTMLElement).classList.contains('more')) {
+                if (open.has(o.id)) open.delete(o.id);
+                else open.add(o.id);
+              } else origin = o.id;
               this.audio.ui();
               preview(origin);
               render();
@@ -703,19 +742,25 @@ export class App {
         const main = p.jalon ? `Bâtir ${esc(jName)}, puis tenir face ${esc(toCrisis)}.` : `Tenir face ${esc(toCrisis)}.`;
         const words = (b: Partial<Record<Res, number>>) => RES.filter((r) => b[r]).map((r) => `<span class="w r-${r}">${RES_ICON[r]}${b[r]} ${RES_LABEL[r]}</span>`).join(', ');
         const miss = words(ready.missing);
-        const readyTxt = ready.level === 'pret' ? 'Vous êtes prêt à l’affronter' : `${ready.level === 'presque' ? 'Presque prêt' : 'Pas encore prêt'}${miss ? ` : il vous manque ${miss}${ready.answer ? ` pour « ${esc(ready.answer)} »` : ''}` : ''}`;
-        const rivalTxt = p.rival.count >= 5 ? `${esc(capitalize(p.rival.name))}, la cité rivale, ont achevé leurs cinq merveilles : vous leur payez tribut.`
-          : `${esc(capitalize(p.rival.name))}, la cité rivale, ont bâti <b>${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''} sur 5</b>. S’ils achèvent les cinq, vous leur paierez tribut.`;
+        // pas de « presque prêt » : ce qui manque, pour quelle réponse, ce qu'elle coûte et ce que vous avez
+        const needTxt = ready.answerNeed ? RES.filter((r) => ready.answerNeed![r]).map((r) => `${ready.answerNeed![r]} ${RES_LABEL[r]} (vous : ${s.res[r]})`).join(', ') : '';
+        const readyTxt = ready.level === 'pret' ? 'Vous êtes prêt à l’affronter'
+          : miss ? `Il vous manque ${miss}${ready.answer ? ` pour « ${esc(ready.answer)} », qui demande ${needTxt}` : ''}` : 'Pas encore prêt : certaines réponses exigent des familles qui vous aiment';
+        // la merveille et la réponse à la crise puisent-elles dans la même réserve ?
+        const shared = p.jalon && ready.answerNeed ? RES.filter((r) => (p.jalon!.cost[r] ?? 0) > 0 && (ready.answerNeed![r] ?? 0) > 0 && s.res[r] < (p.jalon!.cost[r] ?? 0) + (ready.answerNeed![r] ?? 0)) : [];
+        const rivalTxt = p.rival.count >= 5 ? `${esc(capitalize(p.rival.name))}, la cité rivale, ont achevé leurs cinq merveilles : ils vous rançonnent à chaque ère.`
+          : `${esc(capitalize(p.rival.name))}, la cité rivale, ont bâti <b>${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''} sur 5</b>. S’ils achèvent les cinq, ils vous rançonneront à chaque ère.`;
         const missed = this.e.dessein(s).jalons.filter((_, k) => k < s.era && !s.jalons[k]).map((j) => j.name);
         const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
         const notes = [
           ...(missed.length ? [`${esc(missed.join(', '))} : à rattraper à la seconde saison`] : []),
           ...(lonely.length ? [`${esc(capitalize(lonely.join(' et ')))} attendent votre visite cette ère`] : []),
+          ...(shared.length ? [`la merveille et la crise puisent dans le même ${shared.map((r) => RES_LABEL[r]).join(' et ')}`] : []),
         ];
         inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2>
           <p class="mission">${main}</p>
           <div class="brief">
-            <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)}${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
+            <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)} <span class="have">(vous : ${RES.filter((r) => p.jalon!.cost[r]).map((r) => `${s.res[r]}`).join(', ')})</span>${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
             <div class="bl"><i class="k">Menace</i><span><b>${esc(p.crisis.name)}</b>, en fin d’ère<br><em class="ready ${ready.level}">${readyTxt}</em></span></div>
             <div class="bl"><i class="k">Rivale</i><span>${rivalTxt}</span></div>
             ${p.legacy && p.legacy.label ? `<div class="bl"><i class="k">Héritage</i><span>Grâce à ${esc(p.legacy.from)}, votre ancienne cité : ${esc(p.legacy.label.charAt(0).toLowerCase() + p.legacy.label.slice(1))}${p.legacy.heirs ? ' (compté double)' : ''}</span></div>` : ''}

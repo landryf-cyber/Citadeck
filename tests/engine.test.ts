@@ -264,3 +264,46 @@ describe('pas de redite', () => {
     expect(r.fromPrevious).toBeLessThanOrEqual(0.06);
   }, 120000);
 });
+
+describe('voir clair', () => {
+  const e = new Engine(content);
+  it('la Science resserre les fourchettes de gains, et le Savoir paie les chiffres exacts', () => {
+    // une carte qui rapporte, jouée sans aucune Science
+    const s = e.newGame(21, { dessein: 'empire' });
+    let guard = 0;
+    // une carte dont un gain d'au moins 3 s'affiche en fourchette
+    const big = () => e.view(s)?.options.find((o) => o.gains && Object.values(o.gains).some((g) => g && g[0] !== g[1] && g[0] >= 3));
+    while (s.phase !== 'fin' && guard++ < 300 && !big()) e.act(s, 0);
+    const wide = () => e.view(s)?.options.find((o) => o.gains && Object.values(o.gains).some((g) => g && g[0] >= 3));
+    expect(big()).toBeTruthy();
+    for (const f of ['ourk', 'sel', 'brume', 'troc'] as const) s.fam[f].loy = 0;
+    s.deck = s.deck.filter((id) => !content.cards[id]?.tags?.includes('Science'));
+    s.jalons = [false, false, false, false, false];
+    s.res.savoir = 3;
+    expect(e.insight(s).level).toBe(0);
+    const w = (o: ReturnType<typeof wide>) => Math.max(...Object.values(o!.gains!).map((g) => Math.min(g![1], 20) - g![0]));
+    const before = w(wide());
+    // deux points de Science : des fourchettes plus fines
+    s.deck.push('d_ecriture');
+    s.fam.brume.loy = 1;
+    expect(e.insight(s).level).toBe(1);
+    expect(w(wide())).toBeLessThan(before);
+    // payer pour voir : le Savoir baisse, les gains s'affichent au chiffre près, et c'est bien ce qui rentre
+    const cost = e.peekCost(s);
+    expect(e.canPeek(s).afford).toBe(true);
+    expect(e.peek(s)).toBe(true);
+    expect(s.res.savoir).toBe(3 - cost);
+    const v = e.view(s)!;
+    const i = v.options.findIndex((o) => o.enabled && o.gains && !Object.keys(o.cost).length && !o.loss && !o.spend && o.odds === undefined);
+    for (const o of v.options) for (const g of Object.values(o.gains ?? {})) expect(g![0]).toBe(g![1]);
+    if (i >= 0) {
+      const r = (Object.keys(v.options[i].gains!) as (keyof typeof s.res)[])[0];
+      const was = s.res[r];
+      const o = e.options(s)[i];
+      e.act(s, i);
+      if (!o.effect.if && !o.effect.bet) expect(s.res[r] - was).toBe(v.options[i].gains![r]![0]);
+    }
+    // une fois la carte jouée, l'aperçu ne vaut plus
+    expect(s.peek === s.turn).toBe(false);
+  });
+});

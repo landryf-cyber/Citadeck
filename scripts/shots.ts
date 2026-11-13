@@ -138,6 +138,11 @@ async function main(): Promise<void> {
     await page.hover('.tile.origin >> nth=1').catch(() => undefined);
     await page.waitForTimeout(900);
     await shot(page, vp.name, '23c-origine-survol');
+    await page.click('.tile.origin >> nth=1 >> .more').catch(() => undefined);
+    await page.waitForTimeout(500);
+    await page.evaluate(() => document.querySelector('.tile.origin:nth-child(2)')?.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(300);
+    await shot(page, vp.name, '23d-origine-details');
     await page.click('.btns .btn >> nth=0');
     await page.waitForTimeout(1200);
     await shot(page, vp.name, '24-presage-heritage');

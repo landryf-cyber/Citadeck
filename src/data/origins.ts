@@ -10,7 +10,7 @@ export const originCards = [
   // ------------------------------------------------------------------ le limon du fleuve (règle passive)
   card({
     id: 'o_limon', kind: 'decouverte', eras: [], art: { motif: 'wave', hue: 190 },
-    passive: [{ type: 'income', res: 'vivres', amount: 1 }], gift: '+1 Vivre par saison : le fleuve nourrit qui vit sur ses rives.',
+    passive: [{ type: 'income', res: 'vivres', amount: 1 }], gift: '+1 Vivres par saison : le fleuve nourrit qui vit sur ses rives.',
     title: 'Le Limon du fleuve', text: 'Chaque crue laisse une terre noire où tout pousse, même ce qu’on n’a pas semé.', options: [],
   }),
 

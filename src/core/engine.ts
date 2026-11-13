@@ -1434,11 +1434,11 @@ export class Engine {
   originTraits(o: OriginDef): { atout: string; handicap: string; ups: string[]; downs: string[] } {
     const up: string[] = [];
     const down: string[] = [];
-    if (o.mem?.includes('heritiers')) { up.push('Bonus des ruines doublé'); down.push('Vieilles rancunes doublées'); }
+    if (o.mem?.includes('heritiers')) { up.push('Héritage compté double'); down.push('Vieux ennemis plus hostiles'); }
     // une règle propre (le limon du fleuve) passe avant les chiffres de départ
     for (const id of o.deck ?? []) for (const p of this.c.cards[id]?.passive ?? []) if (p.type === 'income') up.push(`+${p.amount} ${RES_LABEL[p.res]} par saison`);
     const loys = FAMILIES.map((f) => o.loy?.[f] ?? 0);
-    if (loys.every((x) => x > 0)) up.push(`Familles amicales`);
+    if (loys.every((x) => x > 0)) up.push(`Les 4 familles amicales`);
     if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(FAMILY_ROLE[f])} amicaux`);
     for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(FAMILY_ROLE[f])} méfiants`);
     if (o.quartiers > 3) up.push(`${o.quartiers} quartiers au départ`);
@@ -1488,11 +1488,12 @@ export class Engine {
    * Prêt pour la crise ? Pour chaque carte de la crise, existe-t-il dès maintenant une réponse qui tient (seuil atteint,
    * coût payable) sans sacrifier une famille ni un quartier ? Un indicateur simple pour le présage.
    */
-  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag; answer?: string } {
+  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag; answer?: string; answerNeed?: Bag } {
     let covered = 0;
     let total = 0;
     const missing: Bag = {};
     let answer: string | undefined;
+    let answerNeed: Bag | undefined;
     for (const id of this.crisisOf(s).cards) {
       const c = this.c.cards[id];
       if (!c || c.qui) continue;
@@ -1510,6 +1511,7 @@ export class Engine {
         let best: Bag | null = null;
         let bestN = Infinity;
         let bestLabel: string | undefined;
+        let bestNeed: Bag | undefined;
         for (const o of this.options(s, { card: id })) {
           if (!this.check(s, o.req) || (o.effect.quartiers ?? 0) < 0) continue;
           const need: Bag = {};
@@ -1520,14 +1522,17 @@ export class Engine {
             const d = (need[r] ?? 0) - s.res[r];
             if (d > 0) { short[r] = d; n += d; }
           }
-          if (n > 0 && n < bestN) { best = short; bestN = n; bestLabel = o.label; }
+          if (n > 0 && n < bestN) { best = short; bestN = n; bestLabel = o.label; bestNeed = need; }
         }
         if (best) for (const r of RES) if (best[r]) missing[r] = Math.max(missing[r] ?? 0, best[r]!);
-        if (bestLabel && !answer) answer = fill(bestLabel, s, this.c, this.ruinExtras(s));
+        if (bestLabel && !answer) {
+          answer = fill(bestLabel, s, this.c, this.ruinExtras(s));
+          answerNeed = Object.fromEntries(RES.filter((r) => bestNeed![r]).map((r) => [r, bestNeed![r]])) as Bag;
+        }
       }
     }
     const level = covered >= total ? 'pret' : covered * 2 >= total ? 'presque' : 'non';
-    return { covered, total, level, missing, answer };
+    return { covered, total, level, missing, answer, answerNeed };
   }
 
   /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */
