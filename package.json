@@ -14,7 +14,8 @@
     "sweep": "tsx src/sim/sweep.ts",
     "shots": "tsx scripts/shots.ts",
     "perf": "tsx scripts/perf.ts",
-    "single": "tsx scripts/single-file.ts"
+    "single": "tsx scripts/single-file.ts",
+    "dominance": "tsx src/sim/dominance.ts"
   },
   "repository": {
     "type": "git",

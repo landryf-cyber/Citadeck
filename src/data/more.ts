@@ -297,8 +297,8 @@ export const moreEncounters = [
     text: 'Un pont relie vos terres à celles de {rival}. Il est vieux et branlant. Chacun dit que l’autre doit le réparer. Pendant ce temps, les chèvres traversent sans payer.',
     options: [
       { label: 'Le réparer seul', cost: $('T3'), effect: { gain: $('T2'), rival: 1, loy: { troc: 1 } }, reply: 'Le pont est neuf. Les marchands de {rival} passent par chez vous. Ils paient.' },
-      { label: 'Le faire sauter', cost: $('A1'), effect: { rival: -1, loy: { ourk: 1, troc: -1 } }, reply: 'Plus de pont. {Rival} devront faire le tour. Les chèvres aussi, et elles sont furieuses.' },
-      { label: 'Un péage', effect: { gain: $('T4'), rival: -1, loy: { troc: 1 } }, reply: 'Les chèvres de {reine} paient désormais le passage. {Elle} vous envoie une lettre de protestation, et une chèvre.' },
+      { label: 'Le faire sauter', cost: $('A1'), effect: { gain: $('A3'), rival: -1, loy: { ourk: 1, troc: -1 } }, reply: 'Plus de pont ; ses pierres renforcent vos remparts. {Rival} devront faire le tour. Les chèvres aussi, et elles sont furieuses.' },
+      { label: 'Un péage', effect: { gain: $('T4'), rival: -1, loy: { ourk: 1 } }, reply: '{F:ourk} garde le péage, lance au poing. Les chèvres de {reine} paient désormais le passage. {Elle} vous envoie une lettre de protestation, et une chèvre.' },
     ],
   }),
   // l'inconnu
@@ -342,7 +342,7 @@ export const moreRival = [
     options: [
       { label: 'Y aller', cost: $('T3'), effect: { rival: 2, gain: $('S2') }, reply: 'Vous dansez avec {reine}. {Elle} vous marche sur le pied, deux fois, avec précision.' },
       { label: 'Envoyer {F:ourk}', effect: { rival: -1, loy: { ourk: 2 } }, reply: '{F:ourk} a cassé un vase, un buffet et un ambassadeur. Il a trouvé la fête excellente.' },
-      { label: 'Décliner', effect: { rival: -1 }, reply: '{Reine} vous répond qu’on vous a beaucoup regretté. La lettre sent le parfum et la vengeance.' },
+      { label: 'Décliner', effect: { rival: -1, gain: $('T2') }, reply: 'Vous économisez le voyage. {Reine} vous répond qu’on vous a beaucoup regretté. La lettre sent le parfum et la vengeance.' },
     ],
   }),
   card({

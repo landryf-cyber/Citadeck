@@ -107,7 +107,7 @@ export const moreEventCards = [
     options: [
       { label: 'Un procès en règle', effect: { gain: $('V2'), loy: { sel: 1, brume: -1 } }, reply: 'Le procès dure trois mois. Elle est acquittée, puis embauchée par l’abbesse, discrètement.' },
       { label: 'La prendre sous protection', cost: $('A2'), effect: { gain: $('S4'), loy: { brume: 1, sel: -1 } }, reply: 'L’herboriste soigne la cour. Vous n’avez plus jamais mal au dos. On dit que vous êtes ensorcelé ; vous ne démentez pas.' },
-      { label: 'La bannir', effect: { loy: { brume: -1 }, rival: -1 }, reply: 'Elle part chez {rival} avec ses recettes. Chez {rival}, on ne tousse plus.' },
+      { label: 'La bannir', effect: { gain: $('T3'), loy: { brume: -1 }, rival: -1 }, reply: 'Elle part chez {rival} avec ses recettes ; sa maison est vendue aux enchères. Chez {rival}, on ne tousse plus.' },
     ],
   }),
   card({

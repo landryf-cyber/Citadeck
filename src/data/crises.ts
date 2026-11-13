@@ -192,7 +192,7 @@ export const crisisCards = [
           else: { quartiers: -1, cause: 'la Panique du Grand Filtre', reply: 'Le couvre-feu a été annoncé. Personne ne l’a respecté. Un quartier brûle de joie.' } } },
       { label: 'Laisser BRUME calmer la foule', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles : ce sont eux qui paieront', effect: { loy: { sel: -3, troc: -1, brume: 1 } },
         reply: 'BRUME calme la foule avec des statistiques. Personne ne panique plus. Personne ne sourit plus non plus. {H:sel} trouvent ça inhumain.' },
-      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('V5'), effect: { loy: { sel: 1, troc: 1 } },
+      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('T5'), effect: { loy: { sel: 1, troc: 1 } },
         reply: 'On ouvre les merveilles, on y distribue la soupe. La foule se calme : on ne détruit pas ce qui est beau. Pas tout de suite.' },
     ],
   }),

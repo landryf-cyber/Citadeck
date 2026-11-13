@@ -3,6 +3,7 @@ import { content } from '../src/data';
 import { Engine } from '../src/core/engine';
 import { PROFILES, chooseIndex } from '../src/sim/bots';
 import { Rng } from '../src/core/rng';
+import { findDominated } from '../src/sim/dominance';
 
 const e = new Engine(content);
 
@@ -250,4 +251,8 @@ describe('pas de redite', () => {
     const hold = v.options.find((o) => o.label === 'Tenir les murs')!;
     expect(hold.spend?.armee).toBeGreaterThan(0);
   });
+
+  it('aucune option n’est dominée dans tous les états de jeu rencontrés', () => {
+    expect(findDominated(25)).toEqual([]);
+  }, 120000);
 });
