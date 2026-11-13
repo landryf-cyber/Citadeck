@@ -10,10 +10,11 @@ import type { Scene } from '../scene/scene';
 import { LOOKS, rgb } from '../scene/palette';
 import { drawElem, type DrawEnv, type Elem } from '../scene/city';
 import type { AudioEngine } from '../audio';
-import { cardArt, medallion, motif, type ArtSpec } from './art';
+import { medallion, motif, type ArtSpec } from './art';
 import { Rng } from '../core/rng';
 import { bagChips, el, esc, ICON, rich, RES_ICON, ROMAN, wait } from './dom';
-import { replaySnapshots, snapshot } from './snapshot';
+import { replaySnapshots, snapshot, THREAT } from './snapshot';
+import { illustration, MOTIF_SCENE, type IllusSpec } from './illus';
 import { store, type Settings } from './store';
 
 const KIND_LABEL: Record<string, string> = {
@@ -509,6 +510,42 @@ export class App {
     return spec;
   }
 
+  /** La scène qui illustre une carte : un personnage, un lieu, un événement, une crise, un objet. */
+  private illusFor(v: View): IllusSpec {
+    const s = this.s!;
+    const c = v.card;
+    const a = this.artFor(v);
+    const base = { key: c.id + s.era, era: s.era, hue: a.hue };
+    const rv = this.e.rival(s);
+    const fam = (f: FamilyId | undefined) => (f ? { fam: f as IllusSpec['fam'], mood: s.fam[f].loy, hue: this.e.c.families[f].hue } : {});
+    // les gens : familles, trahisons, hommages, procès, la rivale, les créanciers
+    if (c.kind === 'famille' || c.kind === 'trahison') return { ...base, scene: 'portrait', ...fam(v.family ?? c.family), alarm: c.kind === 'trahison' };
+    if (c.kind === 'proces' && s.prompt?.plaintiff) return { ...base, scene: 'portrait', ...fam(s.prompt.plaintiff as FamilyId) };
+    if (/^hommage_/.test(c.id)) return { ...base, scene: 'portrait', ...fam(c.id.slice(8) as FamilyId) };
+    if (c.kind === 'rivale' || c.id === 'creance_rivale' || c.id === 'tribut' || c.id === 'triomphe') return { ...base, scene: 'portrait', fam: 'rival', mood: s.rivalRel, hue: rv.hue, rivalHue: rv.hue };
+    if (/^creance/.test(c.id)) return { ...base, scene: 'portrait', ...fam('troc') };
+    // les lieux et les moments de la partie
+    if (c.kind === 'rencontre') {
+      const route = this.e.c.routes.find((r) => r.encounters.includes(c.id));
+      if (route) return { ...base, scene: 'lieu', variant: route.id };
+    }
+    if (c.kind === 'crise') {
+      const cr = [...this.e.c.crises, ...(this.e.c.crisisAlts ?? [])].find((x) => x?.cards.includes(c.id));
+      return { ...base, scene: 'crise', variant: cr ? THREAT[cr.cards[0]] : 'horde', alarm: true };
+    }
+    if (c.kind === 'decouverte') return { ...base, scene: 'decouverte', variant: c.id === 'decouverte' ? 'scroll' : a.motif };
+    if (c.kind === 'ruines') return { ...base, scene: 'ruines' };
+    if (c.kind === 'revenant') return { ...base, scene: 'ruines', variant: 'revenant' };
+    if (c.kind === 'carrefour') return { ...base, scene: 'route', variant: 'carrefour' };
+    if (c.kind === 'croissance') return { ...base, scene: 'croissance' };
+    if (c.id === 'colonie') return { ...base, scene: 'colonie' };
+    if (c.kind === 'conseil') return { ...base, scene: 'cour', variant: 'ring' };
+    if (c.id === 'disette') return { ...base, scene: 'champs', alarm: true };
+    // les événements : la scène du motif
+    const [scene, variant] = MOTIF_SCENE[a.motif] ?? ['village', 'house'];
+    return { ...base, scene, variant, alarm: a.alarm };
+  }
+
   private renderCard(v: View): void {
     const s = this.s!;
     const stage = document.getElementById('stage')!;
@@ -516,7 +553,7 @@ export class App {
     const head = v.header ?? (v.kind === 'famille' && fi ? fi.house : KIND_LABEL[v.kind] ?? '');
     const from = s.prompt?.from;
     const card = el('article', `card enter${v.kind === 'crise' || v.kind === 'trahison' ? ' alarm' : ''}`);
-    const art = v.kind === 'jalon' ? this.wonderArt(s) : cardArt(this.artFor(v));
+    const art = v.kind === 'jalon' ? this.wonderArt(s) : illustration(this.illusFor(v));
     card.innerHTML = `<div class="card-art">${art}<div class="card-head"><span${from ? ' class="from"' : ''}>${esc(head)}</span><span>${v.kind === 'carrefour' ? esc(s.name) : esc((s.history.length ? s.history[s.history.length - 1].date : '').replace(' avant le Calendrier', ' av. C.'))}</span></div></div>
       <div class="card-body"><h2 class="card-title">${esc(v.title)}</h2>${v.speaker && v.kind !== 'carrefour' ? `<p class="card-speaker">${esc(capitalize(v.speaker))}</p>` : ''}<div class="card-rule"></div><p class="card-text">${rich(v.text)}</p></div>`;
     const opts = el('div', 'opts');

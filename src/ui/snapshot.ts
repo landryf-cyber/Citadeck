@@ -23,7 +23,7 @@ export function snapshot(e: Engine, s: GameState): CivSnapshot {
 }
 
 /** La menace de chaque crise, telle que la scène la montre. */
-const THREAT: Record<string, string> = {
+export const THREAT: Record<string, string> = {
   x0_eclaireurs: 'horde', x0b_neige: 'hiver', x1_port: 'peste', x1b_fumee: 'incendie', x2_rumeur: 'revolte',
   x2b_papes: 'schisme', x3_mobilisation: 'guerre', x3b_panique: 'krach', x4_signal: 'filtre', x4b_eveil: 'eveil',
 };

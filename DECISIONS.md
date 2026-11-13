@@ -230,3 +230,13 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
 66. **Les variantes de texte tournent d'une partie à l'autre** (selon le nombre de parties jouées, plus la graine) : deux
     parties de suite ne lisent pas les mêmes variantes. La carte des ruines ne se joue plus qu'une fois : la mesure,
     enfin enchaînée comme chez un vrai joueur (avec ses ruines), la montrait jusqu'à trois fois par partie.
+67. **Des scènes à la place des symboles (point 6).** Chaque carte a une illustration SVG dessinée par le code
+    (`src/ui/illus.ts`), sans fichier externe : les gens (familles, trahisons, procès, hommages, rivale, créanciers) en
+    portrait, devant leur décor ; les rencontres dans le lieu de leur route ; les crises par leur menace ; les
+    événements par leur motif (une trentaine de motifs ramenés à quinze scènes) ; les découvertes en nature morte sous
+    la lampe ; la colonie, le Conseil, la croissance, la disette, les ruines et les revenants ont la leur. Les
+    merveilles gardent leur silhouette.
+68. **Une grammaire commune**, issue du juge de l'essai : ciel toujours sombre, sol à la même hauteur, un seul point
+    focal sous le halo radial (la signature des anciennes cartes), contour lumineux épais et lueur sur le sujet, un
+    seul accent chaud, personnages en aplat sombre à grosse tête, et la chèvre des colons qui traîne un peu partout
+    (sur une colonne, dans le blé, sur un toit inondé) : le gag récurrent.

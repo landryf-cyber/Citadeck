@@ -24,7 +24,7 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 - [x] une forme par ère : règle, rythme, objectif, forme de la menace (Errance, Contagion, Conseil, Course, Jugement) ; présage, pastilles, bilan (DECISIONS 63-66)
 - [x] mesure de similarité de structure (0,75 → 0,53 entre ères ; `npm run structure`, test) ; test à l'aveugle : 5 paires sûres contre 3 en v12 (E22)
 ### H. Illustrations (point 6)
-- [ ] essai de style sur 3 cartes (personnage, événement, lieu), puis généralisation
+- [x] essai de style sur 3 cartes (personnage, événement, lieu) jugé (4/3/4 → 7/7/6), puis généralisation à toutes les cartes (20 scènes ; DECISIONS 67-68, E23)
 ### I. Juges sévères jusqu'à l'arrêt ; README ; déploiement final
 
 

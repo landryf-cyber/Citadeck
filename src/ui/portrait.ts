@@ -265,6 +265,22 @@ function rival(era: number, m: number, p: Pal): string {
 }
 
 /** Le portrait, découpé dans le disque du médaillon (cx, cy, r). */
+/** Le buste seul, dans son repère 100×100 (pour une illustration en pied, sans médaillon). */
+export function portraitBody(fam: PortraitFam, era: number, mood: number, hue: number): string {
+  const h = hue;
+  const p: Pal = {
+    st: `hsl(${h} 85% 84%)`,
+    skin: `hsl(${h} 30% 30%)`,
+    dark: `hsl(${h} 45% 13%)`,
+    acc: `hsl(${h} 90% 64%)`,
+    pale: `hsl(${h} 35% 80%)`,
+    dim: `hsla(${h}, 70%, 80%, .45)`,
+    mid: `hsl(${h} 50% 33%)`,
+  };
+  const e = Math.max(0, Math.min(4, era));
+  return fam === 'ourk' ? ourk(e, mood, p) : fam === 'sel' ? sel(e, mood, p) : fam === 'brume' ? brume(e, mood, p) : fam === 'troc' ? troc(e, mood, p) : rival(e, mood, p);
+}
+
 export function portrait(fam: PortraitFam, era: number, mood: number, hue: number, cx: number, cy: number, r: number, id: string): string {
   const h = hue;
   const p: Pal = {
