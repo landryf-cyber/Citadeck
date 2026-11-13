@@ -209,7 +209,7 @@ export const crisisAltCards = [
           else: { if: { jalons: 3 }, then: { quartiers: -1, cause: 'le Verdict des machines, devant un dessein presque achevé', reply: 'Les machines délibèrent longtemps. Trois merveilles : « Presque efficace. » Elles n’optimisent qu’un quartier.' },
             else: { quartiers: -2, cause: 'le Verdict des machines, devant un dessein inachevé', reply: 'Les machines optimisent deux quartiers. Ils sont parfaitement propres, et parfaitement vides.' } } } },
       { label: 'Tout donner', cost: $('V5 A5 S5 T5'), effect: { mem: ['filtre_passe'] }, reply: 'Vous leur donnez tout. Les machines comptent, recomptent, et vous rendent la monnaie, exacte. C’est une première.' },
-      { label: 'Retourner aux bougies', effect: { quartiers: -1, cause: 'le Verdict des machines, qu’on a fui', gain: $('V4') }, reply: 'Vous coupez tout et rallumez les bougies. Les machines éteignent un quartier, pour faire comme vous.' },
+      { label: 'Retourner aux bougies', effect: { loy: { ourk: -1, sel: -1, brume: -1, troc: -1 }, mem: ['filtre_cache'] }, reply: 'Vous coupez tout et rallumez les bougies. Les machines vous regardent faire, puis se désintéressent de vous. Vos familles, elles, n’oublieront pas qu’on a fui.' },
     ],
   }),
 ];

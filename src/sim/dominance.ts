@@ -15,16 +15,33 @@ const SKIP = new Set(['carrefour', 'presage', 'jalon', 'croissance', 'decouverte
 
 export interface Dominated { card: string; better: string; worse: string; states: number }
 
-function outcome(e: Engine, s: GameState, i: number, samples: number): number[] | null {
-  const acc: number[] = [];
-  for (let k = 0; k < samples; k++) {
-    const c: GameState = JSON.parse(JSON.stringify(s));
-    c.rng = new Rng(9001 + k * 7919).getState();
-    e.act(c, i);
-    const v = [c.result?.type === 'defaite' ? -100 : c.quartiers, ...RES.map((r) => c.res[r]), ...FAMILIES.map((f) => (c.fam[f].state === 'presente' ? c.fam[f].loy : -5)), c.rivalRel, -c.rivalJalons, c.jalons.filter(Boolean).length];
-    v.forEach((x, j) => (acc[j] = (acc[j] ?? 0) + x / samples));
+const vec = (c: GameState) => [c.result?.type === 'defaite' ? -100 : c.quartiers, ...RES.map((r) => c.res[r]), ...FAMILIES.map((f) => (c.fam[f].state === 'presente' ? c.fam[f].loy : -5)), c.rivalRel, -c.rivalJalons, c.jalons.filter(Boolean).length];
+
+/** Une graine dont le premier tirage tombe sous (ou au-dessus de) la chance : pour jouer un pari gagné ou perdu à coup sûr. */
+function seedFor(p: number, win: boolean): number {
+  for (let k = 1; k < 100000; k++) {
+    const x = new Rng(k).next();
+    if (win ? x < p : x >= p) return k;
   }
-  return acc;
+  return 1;
+}
+
+function outcome(e: Engine, s: GameState, i: number): number[] {
+  const opt = e.options(s)[i];
+  const play = (seed: number) => {
+    const c: GameState = JSON.parse(JSON.stringify(s));
+    c.rng = new Rng(seed).getState();
+    e.act(c, i);
+    return vec(c);
+  };
+  // un pari : l'espérance exacte, chance affichée × issue gagnée + le reste × issue perdue
+  if (opt.effect.bet) {
+    const p = e.betChance(s, opt.effect.bet);
+    const w = play(seedFor(p, true));
+    const l = play(seedFor(p, false));
+    return w.map((x, j) => p * x + (1 - p) * l[j]);
+  }
+  return play(9001);
 }
 
 /** Ce qu'une option laisse pour plus tard : deux options ne se comparent que si cette trace est la même. */
@@ -59,8 +76,7 @@ export function findDominated(games = 60): Dominated[] {
           const opts = e.options(s);
           const en = v.options.map((o, i) => (o.enabled ? i : -1)).filter((i) => i >= 0);
           const out = new Map<number, number[]>();
-          const samples = opts.some((o) => o.effect.bet) ? 6 : 1;
-          for (const i of en) out.set(i, outcome(e, s, i, samples)!);
+          for (const i of en) out.set(i, outcome(e, s, i));
           for (const a of en) for (const b of en) {
             if (a === b || trace(opts[a]) !== trace(opts[b])) continue;
             const va = out.get(a)!;

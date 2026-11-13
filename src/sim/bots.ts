@@ -35,6 +35,7 @@ export const PROFILES: Profile[] = [
   { name: 'empire', sight: 'reader', dessein: 'empire', safety: 1, ambition: 1.4, risk: 1, reserve: 4 },
   { name: 'postérité', sight: 'reader', dessein: 'posterite', safety: 1, ambition: 1.4, risk: 1, reserve: 4 },
   { name: 'distrait', sight: 'reader', safety: 1, ambition: 1, risk: 1, reserve: 4, noise: 25, blind: 0.2 },
+  { name: 'pressé', sight: 'reader', safety: 0.9, ambition: 1.1, risk: 1.2, reserve: 3, noise: 12, blind: 0.08 },
   { name: 'aléatoire', sight: 'random', safety: 1, ambition: 1, risk: 1, reserve: 0 },
 ];
 

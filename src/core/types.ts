@@ -65,6 +65,8 @@ export interface Effect {
   quartiers?: number;
   /** perte imposée (aucune autre option) : la palissade peut la parer, contrairement à un sacrifice choisi */
   forced?: boolean;
+  /** saisie d'une dette : tant de Trésor, puis de Vivres, d'Armée, de Savoir ; à sec, un quartier */
+  seize?: number;
   loy?: Partial<Record<FamilyId, number>>;
   mem?: string[];
   unmem?: string[];

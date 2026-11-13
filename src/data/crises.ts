@@ -206,7 +206,7 @@ export const crisisCards = [
           else: { if: { jalons: 3 }, then: { quartiers: -1, cause: 'le Grand Filtre, devant un dessein presque achevé', reply: 'Le signal hésite. Trois merveilles, c’est presque une réponse. Il n’éteint qu’un quartier, par politesse.' },
             else: { quartiers: -2, cause: 'le Grand Filtre, devant un dessein inachevé', reply: 'Le signal n’est pas impressionné. Il éteint deux quartiers, pour voir.' } } } },
       { label: 'Tout donner', cost: $('V5 A5 S5 T5'), effect: { mem: ['filtre_passe'] }, reply: 'Vous envoyez tout ce que vous avez. Le signal accepte. Il ne rend pas la monnaie.' },
-      { label: 'Se cacher', effect: { quartiers: -1, cause: 'le Grand Filtre, à qui l’on n’a pas répondu', gain: $('V4') }, reply: 'Vous éteignez tout. Le signal passe, sans vous voir. Il emporte un quartier, par distraction.' },
+      { label: 'Se cacher', effect: { loy: { ourk: -1, sel: -1, brume: -1, troc: -1 }, mem: ['filtre_cache'] }, reply: 'Vous éteignez tout. Le signal passe, sans vous voir. La cité survit, dans le noir, et vos familles ne vous le pardonnent pas : on ne se cache pas devant l’univers.' },
     ],
   }),
 ];

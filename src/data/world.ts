@@ -141,7 +141,7 @@ export const engineCards = [
     id: 'tribut', kind: 'intrigue', scale: true, title: 'Le Tribut de {rival}', speaker: '{Reine}', art: { motif: 'crown', hue: 268 },
     text: '{Rival} ont achevé leur dessein, et la vallée leur appartient un peu, de l’avis de {reine}. « Un petit tribut, ma chère voisine. Pour l’entretien de la vallée. Et de mes merveilles, qui vous font de l’ombre. »',
     options: [
-      { label: 'Payer le tribut', cost: $('T4'), effect: { rival: 1 }, reply: '{Reine} compte devant vous, puis vous rend une pièce : « Pour votre peine. » C’est la pièce la plus chère de votre vie.' },
+      { label: 'Payer le tribut', cost: $('T3'), effect: { rival: 1 }, reply: '{Reine} compte devant vous, puis vous rend une pièce : « Pour votre peine. » C’est la pièce la plus chère de votre vie.' },
       { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'le tribut de {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. On y parle déjà comme chez {rival}, avec l’accent.' },
       { label: 'Refuser, armes à la main', warn: 'Sans {s:4} Armée, ils prennent un quartier de force',
         effect: { rival: -1, if: { res: $('A4') }, then: { gain: $('A-2'), mem: ['tribut_refuse'], reply: 'Vos soldats tiennent la frontière. {Reine} remballe sa liste. {elle} la gardera pour l’ère prochaine.' },
@@ -156,7 +156,6 @@ export const engineCards = [
     text: '{F:troc} présente la note du crédit. « Le principal, les intérêts, les intérêts des intérêts, et un petit quelque chose pour l’émotion. » Il a apporté un huissier. L’huissier a apporté un autre huissier.',
     options: [
       { label: 'Payer rubis sur l’ongle', cost: $('T6'), effect: { loy: { troc: 1 } }, reply: 'Vous payez. {F:troc} compte deux fois, puis vous serre la main. Il garde le reçu pour la prochaine fois.' },
-      { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la créance des Troc', loy: { troc: 1 } }, reply: 'Un quartier passe aux mains de {H:troc}. Ils y installent des boutiques, et vous facturent le droit d’y passer.' },
       { label: 'Refuser de payer', effect: { loy: { troc: -3 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 3 }] }, reply: 'Vous refusez. {F:troc} sourit, range la note dans sa sacoche, et prend la route de chez {rival}. Une dette, ça se revend.' },
     ],
   }),
@@ -165,7 +164,6 @@ export const engineCards = [
     text: '{F:troc} revient avec la note. Elle est plus épaisse. « Nous avons ajouté les frais de la première, et les frais de rédaction de la seconde. » L’huissier salue : il commence à se sentir chez lui.',
     options: [
       { label: 'Payer, en grinçant', cost: $('T7'), effect: { loy: { troc: 1 } }, reply: 'Vous payez. {F:troc} vous offre un calendrier, avec les échéances déjà entourées.' },
-      { label: 'Gager un quartier', effect: { quartiers: -1, cause: 'la seconde créance des Troc' }, reply: 'Un quartier de plus passe aux mains de {H:troc}. Ils le rebaptisent « Quartier de la Confiance ». Il y a un péage.' },
       { label: 'Refuser de payer', effect: { loy: { troc: -3 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 3 }] }, reply: 'Vous refusez encore. {F:troc} soupire comme on soupire sur un mauvais placement, et part vendre votre dette à {rival}, avec une remise.' },
     ],
   }),
@@ -174,7 +172,6 @@ export const engineCards = [
     text: 'Cette fois, {F:troc} ne présente pas de note. Il présente des déménageurs. « Nous sommes des gens patients. Nous avons été patients trois fois. » Ils ont déjà mesuré vos fenêtres.',
     options: [
       { label: 'Tout rembourser', cost: $('T9'), effect: { loy: { troc: 2 } }, reply: 'Vous payez tout. {F:troc} est si ému qu’il vous propose aussitôt un nouveau crédit. Vous le raccompagnez.' },
-      { label: 'Laisser saisir un quartier', effect: { quartiers: -1, cause: 'la saisie des Troc', loy: { troc: -1 } }, reply: 'Les déménageurs emportent un quartier, maison par maison. Ils laissent les rues, qu’ils jugent invendables.' },
       { label: 'Faire jeter les huissiers dehors', effect: { loy: { troc: -3 }, mem: ['dette_refusee'], sched: [{ card: 'creance_rivale', in: 2 }] }, reply: 'Les huissiers volent par la fenêtre. Ils atterrissent chez {rival}, qui rachète votre dette en les relevant.' },
     ],
   }),
@@ -183,7 +180,6 @@ export const engineCards = [
     text: '« Ma chère voisine, vous me devez quelque chose. Je ne voudrais pas insister. J’insiste. » La lettre est accompagnée de soldats, à titre de rappel.',
     options: [
       { label: 'Payer', cost: $('T6'), effect: { rival: 1 }, reply: '{Reine} vous remercie de votre ponctualité, avec une surprise feinte.' },
-      { label: 'Céder un quartier', effect: { quartiers: -1, cause: 'la dette envers {rival}', rival: 1 }, reply: 'Un quartier change de drapeau. {Reine} y fait planter des fleurs, pour que vous les voyiez.' },
       { label: 'Ignorer la lettre', warn: '{Rival} se paieront : une merveille de plus chez eux, ou votre Trésor (à sec : un quartier) s’ils les ont toutes ; à la dernière ère, un quartier', effect: { rival: -2, if: { rivalJalons: 5 }, then: { if: { res: $('T8') }, then: { gain: $('T-8'), reply: '{Reine} n’a plus de merveille à bâtir : {elle} se sert dans vos coffres. Les soldats comptent devant vous, et laissent la monnaie.' }, else: { quartiers: -1, cause: '{rival}, qui se paient sur votre territoire', reply: 'Vos coffres sont vides : {reine} se paie en terrain. Un quartier change de drapeau.' } }, else: { if: { era: { min: 4 } }, then: { quartiers: -1, cause: '{rival}, qui se paient avant la fin des temps', reply: 'Plus le temps de bâtir quoi que ce soit : {reine} se paie en terrain, tout de suite. Un quartier change de drapeau.' }, else: { rivalJalon: 1, reply: '{Reine} se rembourse en pierres de taille : une merveille de plus chez {rival}.' } } } },
     ],
   }),

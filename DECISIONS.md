@@ -156,3 +156,20 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
 49. **« Pour que je puisse tester dans la foulée » et « pas de version intermédiaire ».** Lecture retenue : après les
     points 2, 3, 4, 5 et 7, la page hébergée est republiée (même adresse) pour qu'elle soit testable, sans message ni
     attente ; le travail continue aussitôt sur les points 1 et 6.
+50. **Le crédit refait.** Son prix croît avec la somme empruntée (1,4 fois le montant, plus 0,2 par crédit déjà pris,
+    plus un point de frais) ; seuls les Troc prêtent (hostiles, absents ou visés par la carte : pas de crédit) ; pas
+    de crédit pour payer une dette (cela bouclait) ; « gager un quartier » disparaît : à défaut de payer (en Trésor
+    ou en nature), on laisse saisir les réserves, Trésor d'abord, puis Vivres, Armée, Savoir, et un quartier
+    seulement à sec ; la saisie n'est proposée qu'à qui ne peut pas payer (sinon elle serait dominée). Le crédit est
+    sorti des causes de pertes (il en était la première).
+51. **Aucune option dominée, mesuré.** `npm run dominance` rejoue des états réels (trois profils) et cherche une option
+    au moins aussi bonne qu'une autre partout (quartiers, réserves, chaque famille, rivale, merveilles), paris compris
+    à leur espérance exacte ; les options qui laissent une trace différente (souvenir, suite) ne sont pas comparées.
+    Un test l'exige à zéro.
+52. **« Ne pas trancher ».** Quand la pauvreté ne laisse qu'une issue coûteuse sur une carte de récit, on peut ne pas
+    trancher, pour un Trésor (« les avocats se font payer ») : le choix ne disparaît plus, et l'issue de repli n'est
+    jamais dominée ni dominante.
+53. **La difficulté se règle sur deux profils humains** : « pressé » (bruit 12, un choix sur douze au jugé, 83 % de
+    survie) et « distrait » (bruit 25, un sur cinq, 61 %). Cibles : un joueur attentif survit presque toujours, un
+    joueur distrait une fois sur deux ou trois, le gourmand meurt plus tôt que le prudent. Gains à 1,12 ; se cacher du
+    Grand Filtre sauve la cité au prix de la confiance des familles.

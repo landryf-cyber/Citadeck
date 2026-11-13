@@ -4,9 +4,9 @@
 Point de retour : tag local `v11-avant-ronde-2` sur le commit `4c8dc9c` (la publication des tags est refusée à cette session : `git tag v11-avant-ronde-2 4c8dc9c` le recrée).
 Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 et 6. Arrêt : toutes les notes ≥ 8, ou deux tours de juges consécutifs sans amélioration.
 ### A. Vrais choix, crédit, difficulté (point 2)
-- [ ] mesure de dominance sur des états échantillonnés (une option meilleure dans tous les états) → 0
-- [ ] crédit : coût qui croît avec la somme, saisie des réserves avant le quartier, plus première cause de pertes, plus d'abus
-- [ ] profils humains (distrait, pressé) pour régler la difficulté ; gourmand meurt plus tôt que prudent ; chaque défaite expliquée
+- [x] mesure de dominance sur des états échantillonnés (`npm run dominance`, test) → 0
+- [x] crédit : coût qui croît avec la somme, saisie des réserves avant le quartier, seuls les Troc prêtent ; absent des causes de pertes
+- [x] profils humains (distrait 61 %, pressé 83 %) ; gourmand meurt plus tôt que prudent ; causes de pertes variées (E16)
 ### B. Écriture (point 3)
 - [ ] mesure des répliques répétées sur 20 parties (dans une partie, entre parties) ; variantes et textes composés jusqu'au seuil
 ### C. Clarté des écrans (point 4)

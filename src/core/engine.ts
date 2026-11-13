@@ -15,7 +15,7 @@ export const SAVE_VERSION = 25;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 1.05, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 1.12, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
@@ -514,9 +514,12 @@ export class Engine {
     const card = this.card(p.card);
     // une seule option jouable : la plus abordable des autres devient possible à crédit (chez les Troc, ou la rivale)
     const pending = s.sched.some((x) => /^creance/.test(x.card));
-    if (playable.length === 1 && !pending && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage'].includes(card.kind)) {
+    // pas de crédit pour payer une dette : ce serait une dette sans fin
+    if (playable.length === 1 && !pending && !/^creance/.test(card.id) && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage'].includes(card.kind)) {
       const blocked = opts.filter((o) => o.cost && !this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req));
-      if (blocked.length) {
+      // seuls les Troc prêtent : hostiles, absents, ou visés par la carte, ils ne prêtent pas, et il n'y a pas de crédit
+      const canLend = s.fam.troc.state === 'presente' && card.family !== 'troc' && s.fam.troc.loy >= -1;
+      if (blocked.length && canLend) {
         const o = blocked.sort((a, b) => Object.values(a.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0) - Object.values(b.cost ?? {}).reduce((x, y) => x + (y ?? 0), 0))[0];
         // les Troc ne prêtent pas pour qu'on les rattrape : contre eux, c'est la rivale qui avance la somme
         const lender = s.fam.troc.state === 'presente' && card.family !== 'troc' && s.fam.troc.loy >= -1 ? 'troc' : null;
@@ -525,13 +528,27 @@ export class Engine {
         const owed = s.history.filter((h) => /^creance(_\d)?$/.test(h.card)).length + s.sched.filter((x) => /^creance(_\d)?$/.test(x.card)).length;
         const dueCard = lender ? ['creance', 'creance_2', 'creance_3'][Math.min(2, owed)] : 'creance_rivale';
         // le crédit coûte toujours plus cher que le comptant : un quart de plus que le prix de l'option, au moins le tarif de la créance
+        // le prix croît avec la somme empruntée, et avec chaque crédit déjà pris dans la partie
         const cash = Object.values(this.costOf(s, o.cost)).reduce((a, x) => a + (x ?? 0), 0);
-        const due = { card: dueCard, in: s.phase === 'crise' || s.era >= ERAS - 1 ? 0 : 2, pay: Math.max(this.creditPrice(s, dueCard), Math.ceil(cash * 1.25)) };
+        const loans = s.history.filter((h) => h.label.endsWith('(à crédit)')).length;
+        const due = { card: dueCard, in: s.phase === 'crise' || s.era >= ERAS - 1 ? 0 : 2, pay: Math.ceil(cash * (1.4 + 0.2 * loans)) + 1 };
         const effect: Effect = lender
           ? { ...o.effect, loy: { ...(o.effect.loy ?? {}), troc: (o.effect.loy?.troc ?? 0) - 1 }, sched: [...(o.effect.sched ?? []), due] }
           : { ...o.effect, rival: (o.effect.rival ?? 0) - 1, sched: [...(o.effect.sched ?? []), due] };
         return [...opts, { ...o, label: `${o.label} (à crédit)`, cost: undefined, effect, credit: true }];
       }
+    }
+    // la pauvreté ne doit pas supprimer le choix : sur une carte de récit, s'il ne reste qu'une issue, on peut ne pas trancher
+    const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue', 'trahison'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut';
+    // (seulement si cette seule issue coûte quelque chose : sinon, ne pas trancher ne servirait à rien)
+    const only = playable[0];
+    // (une perte de quartier qu'une merveille rachèterait ne compte pas comme un vrai risque)
+    const sh = this.passives(s).find((x) => x.type === 'shield') as { type: 'shield'; amount: number; res: Res } | undefined;
+    const covered = !!sh && !s.shieldUsed && s.res[sh.res] >= scaleN(sh.amount, s.era);
+    const hurts = (e: Effect | undefined, risky = false): boolean => !!e && (RES.some((r) => (e.gain?.[r] ?? 0) < 0 && s.res[r] > 0) || (Object.keys(e.loy ?? {}) as FamilyId[]).some((f) => (e.loy![f] ?? 0) < 0 && s.fam[f]?.state === 'presente' && s.fam[f].loy > -3) || ((e.quartiers ?? 0) < 0 && !(risky && covered)) || ((e.rival ?? 0) < 0 && s.rivalRel > -3) || (e.rivalJalon ?? 0) > 0 || hurts(e.bet?.lose, true));
+    if (playable.length === 1 && story && s.res.tresor >= 1 && (only.cost || hurts(only.effect))) {
+      const replies = ['Vous ne tranchez pas. L’affaire traîne ; les avocats, eux, se font payer.', 'Vous laissez l’affaire en suspens. Elle se règle toute seule, de travers, et quelqu’un vous envoie la note.', 'Vous remettez la décision à plus tard. Plus tard arrive avec des frais de dossier.'];
+      return [...opts, { label: 'Ne pas trancher', effect: { gain: { tresor: -1 } }, reply: replies[(s.turn + s.era) % 3] }];
     }
     if (playable.length) return opts;
     if (card.kind === 'crise') {
@@ -614,10 +631,22 @@ export class Engine {
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
     const opts = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
     // une créance coûte ce qui a été annoncé au moment du crédit
-    if (p.pay && /^creance/.test(card.id) && opts[0]?.cost?.tresor) {
-      // on peut aussi payer en nature : du grain et des bras, un peu plus cher
-      const half = Math.ceil(p.pay * 0.6);
-      return [{ ...opts[0], cost: { tresor: p.pay } }, { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.' }, ...opts.slice(1)];
+    if (/^creance/.test(card.id) && opts[0]?.cost?.tresor) {
+      // une créance : payer, payer en nature, laisser saisir (les réserves d'abord, un quartier seulement à sec), ou refuser
+      const pay = p.pay ?? opts[0].cost.tresor;
+      const half = Math.ceil(pay * 0.6);
+      const rival = card.id === 'creance_rivale';
+      const refuse = opts[opts.length - 1];
+      // la saisie n'existe que pour qui ne peut pas payer : sinon, ce serait payer en se brouillant ;
+      // une rivale qui n'a plus rien à bâtir (ou plus le temps) ne se laisse pas ignorer : elle saisit
+      const cornered = rival && (s.rivalJalons >= 5 || s.era >= ERAS - 1);
+      const broke = !this.affordable(s, this.costOf(s, { tresor: pay }));
+      return [
+        { ...opts[0], cost: { tresor: pay } },
+        { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.' },
+        ...(!broke ? [] : [{ label: 'Laisser saisir', effect: { seize: pay, ...(rival ? { rival: -1 } : { loy: { troc: -1 } }) }, reply: rival ? 'Les soldats de {rival} font l’inventaire de vos greniers, puis de vos casernes. Ils signent un reçu, en double.' : 'Les huissiers de {H:troc} vident les coffres, puis les greniers. Ils laissent les murs : les murs, ça ne se revend pas.' } as Option]),
+        ...(cornered ? [] : [refuse]),
+      ];
     }
     return opts;
   }
@@ -747,7 +776,7 @@ export class Engine {
     for (const r of RES) if ((o.effect.gain?.[r] ?? 0) < 0 && s.res[r] + o.effect.gain![r]! < 0) {
       const f = this.owner(r);
       if (f) {
-        bump(f, -1, false);
+        bump(f, -Math.min(2, Math.ceil(-(s.res[r] + o.effect.gain![r]!) / 3)), false);
         if (!v.families.includes(f)) v.families.push(f);
       }
     }
@@ -815,7 +844,12 @@ export class Engine {
       const due = (o.effect.sched ?? []).find((x) => /^creance/.test(x.card));
       const who = due?.card === 'creance_rivale' ? capitalize(this.rival(s).name) : capitalize(this.c.families.troc.house[s.era]);
       const when = !due || due.in === 0 ? 'À la carte suivante' : 'Trois cartes plus tard';
-      v.detail = [v.detail, `${who} avancent la somme. ${when}, la note : ${due?.pay ?? '?'} Trésor, ou un quartier.`].filter(Boolean).join(' · ');
+      v.detail = [v.detail, `${who} avancent la somme. ${when}, la note : ${due?.pay ?? '?'} Trésor (ou en nature, ou par saisie de vos réserves).`].filter(Boolean).join(' · ');
+    }
+    if (o.effect.seize) {
+      const total = RES.reduce((a, r) => a + s.res[r], 0);
+      v.detail = `On saisit ${o.effect.seize} : le Trésor d’abord, puis les Vivres, l’Armée, le Savoir.`;
+      if (total < o.effect.seize) v.risk = [v.risk, 'Vos réserves ne couvrent pas la note : un quartier sera saisi'].filter(Boolean).join(' · ');
     }
     if (card.kind === 'croissance' && o.effect.quartiers) {
       const after = Math.ceil((s.quartiers + o.effect.quartiers) * TUNING.upkeep) + Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep);
@@ -1043,14 +1077,27 @@ export class Engine {
     if (e.gain) for (const r of RES) if (e.gain[r]) {
       // une perte plus grosse que la réserve n'est pas gratuite : la famille de cette ressource comble le trou, et s'en souvient
       if (e.gain[r]! < 0 && s.res[r] + e.gain[r]! < 0) {
+        // un cran par tranche de trois manquants (deux au plus)
         const f = this.owner(r);
-        if (f) this.changeLoy(s, f, -1, ev, false);
+        if (f) this.changeLoy(s, f, -Math.min(2, Math.ceil(-(s.res[r] + e.gain[r]!) / 3)), ev, false);
       }
       s.res[r] = Math.max(0, s.res[r] + (e.gain[r]! > 0 ? Math.max(1, Math.round(e.gain[r]! * TUNING.gain)) : e.gain[r]!));
     }
     if (e.loy) for (const f of Object.keys(e.loy) as FamilyId[]) this.changeLoy(s, f, e.loy[f]!, ev);
     // la palissade rachète une perte subie (seuil raté, pari perdu, trahison, bilan), jamais un quartier qu'on cède soi-même
     if (e.quartiers) this.changeQuartiers(s, e.quartiers, e.cause ?? card.title, card.id, ev, nested || !!e.forced || card.kind === 'trahison');
+    if (e.seize) {
+      // on saisit le Trésor, puis les Vivres, l'Armée, le Savoir ; s'il manque encore, un quartier
+      let due = e.seize;
+      const before = { ...s.res };
+      for (const r of ['tresor', 'vivres', 'armee', 'savoir'] as Res[]) {
+        const take = Math.min(due, s.res[r]);
+        s.res[r] -= take;
+        due -= take;
+      }
+      if (RES.some((r) => s.res[r] !== before[r])) ev.push({ type: 'res', before, after: { ...s.res } });
+      if (due > 0) this.changeQuartiers(s, -1, card.id === 'creance_rivale' ? '{rival}, qui saisissent un quartier faute de mieux' : 'la saisie des Troc, faute de réserves', card.id, ev, true);
+    }
     for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
     for (const m of e.unmem ?? []) s.mem = s.mem.filter((x) => x !== m);
     for (const sc of e.sched ?? []) {
