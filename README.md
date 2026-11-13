@@ -21,20 +21,32 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 
 - **Une carte = un dilemme.** On choisit une option (toucher, cliquer, ou touches 1 à 4). Le **coût** d'une
   option est affiché, ainsi que ce qu'elle consomme si elle tient un seuil, et ce qu'elle rapporte en
-  fourchette (« +3–5 Trésor ») ; le montant exact se découvre au choix, les souvenirs et les suites sont dans le
-  texte. Les pastilles disent de combien chaque famille y gagne (▲) ou y perd (▼), « ? » si cela dépend de
+  fourchette (« +3–5 Trésor ») : large au début, plus fine avec la Science et les merveilles, exacte en fin de
+  partie, ou tout de suite contre un peu de Savoir (« Voir les chiffres exacts »). Les souvenirs et les suites
+  sont dans le texte. Les pastilles disent de combien chaque famille y gagne (▲) ou y perd (▼), « ? » si cela dépend de
   l'issue ; le sablier annonce une suite. Un crédit annonce son prix et son échéance ; le compte à rebours
   s'affiche sous le Trésor, et l'écran « Votre civilisation » liste les dettes et promesses.
 - **La cité, ce sont ses quartiers.** À zéro quartier, elle tombe. Quatre réserves se dépensent : Vivres,
   Armée, Savoir, Trésor.
-- **Une ère** : un présage (la merveille à bâtir, la crise qui vient, ce qui en protège), deux saisons où l'on
-  choisit sa route (une famille, la frontière ou l'inconnu), le chantier de la merveille, la crise, puis le bilan,
-  la croissance, le procès de la famille la plus lésée et une découverte. Cinq ères.
+- **Une ère** : un présage (une phrase, l'objectif, la menace, la rivale), des saisons où l'on choisit sa route
+  (une famille, la frontière ou l'inconnu), le chantier de la merveille, la crise, puis le bilan, la croissance,
+  le procès de la famille la plus lésée et une découverte. Cinq ères, **chacune avec sa forme**, comme les actes
+  d'un jeu :
+  - I **L'Errance** : trois saisons courtes ; la tribu chasse (+2 Vivres par saison) mais ne porte pas tout ;
+    la crise tombe d'un bloc.
+  - II **La Contagion** : chaque saison s'ouvre sur une colonie à fonder ; la crise se répand, une carte par saison.
+  - III **Le Conseil** : un vote ouvre chaque saison ; la famille la moins fidèle trahit dès qu'elle vous en veut ;
+    la paix civile vaut un quartier.
+  - IV **La Course** : quatre saisons éclair ; la rivale avance à chaque saison ; bâtir avant elle, ou subir une
+    crise plus dure.
+  - V **Le Jugement** : une seule saison, plus aucun revenu ; vos actes sont jugés avant la dernière crise.
 - **Le grand dessein** : toucher les étoiles, soumettre la vallée ou être chantés pour toujours. Cinq
   merveilles à bâtir, pendant que la rivale bâtit les siennes. Chaque merveille attire aussi les crises.
 - **Après la partie** : on grave les derniers mots de la civilisation. Ils lèguent quelque chose à la suivante,
   qui trouvera ses ruines sur la colline. La chronique garde toutes les civilisations ; certaines parties
-  débloquent des origines, des merveilles, des découvertes et un mode plus dur.
+  débloquent des origines (Gens du Fleuve, Héritiers, avec leurs règles et leurs cartes), des merveilles, des
+  découvertes et un mode plus dur. La première partie ne demande qu'un choix : le dessein (un conseil est
+  présélectionné) ; l'origine arrive à la partie suivante.
 - La partie est sauvegardée à chaque décision.
 
 ## Commandes
@@ -51,6 +63,13 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
 | `npm run sweep -- '[{"crisisK":1.2}]' 60` | balayage de réglages d'équilibrage |
 | `npm run shots` | captures de chaque écran, mobile et bureau, dans `shots/` |
 | `npm run perf -- 2` | images par seconde sur un profil mobile (CPU ralenti ×2) |
+| `npm run dominance` | cherche les options dominées dans des états de jeu réels (le test l'exige à zéro) |
+| `npm run repeats` | répliques relues dans une partie et d'une partie à l'autre |
+| `npm run structure` | similarité de structure entre les ères et entre les parties |
+| `npm run blind` | énoncé du test à l'aveugle : dix ères décrites par leur seule mécanique |
+| `npx tsx scripts/verify.ts` | rejoue dans l'interface quatre situations délicates (révolte annoncée, palissade, disette, nom de la cité) |
+| `npx tsx scripts/eras.ts` | captures des cinq formes d'ère |
+| `npx tsx scripts/illus.ts tout` | planche de toutes les illustrations de cartes |
 | `npm run single` | le jeu en un seul fichier HTML, dans `dist-single/` |
 | `npx tsx scripts/play.ts new <dossier>` | jouer en mode texte, une décision par commande (voir l’en-tête du script) |
 
@@ -92,6 +111,10 @@ card({
   `{date}`, et des clauses `{?mem:x|si oui|sinon}`, `{?loy:ourk>=2|…|…}` (voir `src/core/text.ts`).
 - `$('V2 A-3 S1 T4')` écrit un paquet de ressources (Vivres, Armée, Savoir, Trésor).
 - `scale: true` fait grandir coûts et gains avec les ères.
+- Texte et réplique peuvent avoir des variantes séparées par `‖` (« A‖B‖C ») : le jeu prend la suivante à chaque
+  retour, et deux parties de suite ne lisent pas les mêmes.
+- L'illustration se choisit seule (genre de la carte, famille, route, crise) ; pour un événement, c'est
+  `art.motif` qui décide de la scène (voir `MOTIF_SCENE` dans `src/ui/illus.ts`).
 
 3. Lancer `npm test` (références, longueurs, gabarits non résolus, parties sans blocage), puis `npm run sim`
    pour vérifier que l'équilibre tient et `npm run sim -- --transcript lecteur 7` pour relire une partie.
@@ -102,7 +125,7 @@ card({
 src/core/     moteur pur et testable : état, ères, familles et souvenirs, procès, crises, méta-progression
 src/data/     tout le contenu : familles, routes, rencontres, crises, découvertes, événements, desseins
 src/scene/    la cité visible : Canvas 2D, lumière par ère, quartiers, familles, merveilles, rivale, ruines
-src/ui/       interface (DOM/CSS), illustrations SVG génératives, sauvegarde, rejeu de la partie
+src/ui/       interface (DOM/CSS), illustrations SVG dessinées par le code (illus.ts, portrait.ts), sauvegarde, rejeu
 src/sim/      bots, mesures, transcriptions, campagnes, balayages
 src/proto/    les prototypes de boucle comparés avant la V2
 scripts/      captures, mesure de performance, version en un seul fichier
@@ -121,7 +144,8 @@ scripts/      captures, mesure de performance, version en un seul fichier
   demi-résolution, cité redessinée à la demande, éléments vivants à chaque image). Tous les effets sont actifs
   au départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde. `prefers-reduced-motion` est
   respecté (et réglable).
-- **Aucun fichier d'image ni de son** : illustrations en SVG généré, décor dessiné par code, son en WebAudio.
+- **Aucun fichier d'image ni de son** : chaque carte a une scène SVG dessinée par le code (portraits en
+  situation, lieux, crises, événements, découvertes), décor dessiné par code, son en WebAudio.
   Seules deux polices (Cinzel, Source Sans 3, licence OFL) sont embarquées.
 - **Déterminisme** : une graine et la liste des choix suffisent à rejouer une partie (c'est ainsi que la fin
   montre dix mille ans en quelques secondes).
