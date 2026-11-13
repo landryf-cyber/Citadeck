@@ -19,6 +19,12 @@ export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growt
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
+/** fourchettes des gains : larges d'abord, plus fines avec la Science et les merveilles, exactes contre du Savoir */
+export const GAIN_WIDE: [number, number][] = [[1, 2], [3, 5], [6, 9], [10, 15], [16, 99]];
+export const GAIN_NARROW: [number, number][] = [[1, 1], [2, 2], [3, 4], [5, 6], [7, 9], [10, 12], [13, 15], [16, 20], [21, 99]];
+export function gainText([lo, hi]: [number, number], sep = '–'): string {
+  return lo === hi ? `${lo}` : hi >= 99 ? `${lo}${sep === '–' ? '+' : ' et plus'}` : `${lo}${sep}${hi}`;
+}
 const scaleN = (n: number, era: number) => (n === 0 ? 0 : Math.sign(n) * Math.max(1, Math.round(Math.abs(n) * ERA_SCALE[era])));
 const scaleBag = (b: Bag | undefined, era: number): Bag | undefined => {
   if (!b) return b;
@@ -170,8 +176,8 @@ export interface OptionView {
   families: FamilyId[];
   /** sens de l'effet certain sur chaque famille (+1 / −1, ±2 pour un effet appuyé) ; absent : effet incertain */
   famDir?: Partial<Record<FamilyId, number>>;
-  /** ressources gagnées à coup sûr, en fourchette fixe (indice dans GAIN_RANGES) ; le montant exact se découvre au choix */
-  gains?: Partial<Record<Res, number>>;
+  /** ressources gagnées à coup sûr, en fourchette [min, max] (max 99 : « et plus ») ; exacte si min = max */
+  gains?: Partial<Record<Res, [number, number]>>;
   /** ce qu'une option à seuil consomme si la réserve suffit */
   spend?: Bag;
   /** l'acte aura une suite (sablier) */
@@ -810,13 +816,14 @@ export class Engine {
       const q = s.quartiers + (o.effect.quartiers ?? 0);
       if (rebels.length) v.risk = [v.risk, `Au bilan, ${rebels.map((f) => this.c.families[f].house[s.era]).join(' et ')} se révolteront${q - rebels.length - riot.length <= 0 ? ' : la cité tombera' : ` : ${rebels.length > 1 ? `${rebels.length} quartiers brûleront` : 'un quartier brûlera'}`}`].filter(Boolean).join(' · ');
     }
-    // ce qui rentre, en fourchette chiffrée et fixe (la même à toutes les ères), pas le montant exact
-    const gl: Partial<Record<Res, number>> = {};
+    // ce qui rentre, en fourchette : large, plus fine avec la Science et les merveilles, exacte si l'on a payé pour voir
+    const gl: Partial<Record<Res, [number, number]>> = {};
+    const sight = s.peek === s.turn ? 2 : this.insight(s).level;
     for (const r of RES) {
       const g = o.effect.gain?.[r] ?? 0;
       if (g > 0) {
         const a = Math.max(1, Math.round(g * TUNING.gain));
-        gl[r] = a <= 2 ? 1 : a <= 5 ? 2 : a <= 9 ? 3 : a <= 15 ? 4 : 5;
+        gl[r] = sight === 2 ? [a, a] : (sight === 1 ? GAIN_NARROW : GAIN_WIDE).find(([lo, hi]) => a >= lo && a <= hi)!;
       }
     }
     if (Object.keys(gl).length) v.gains = gl;
@@ -1447,13 +1454,45 @@ export class Engine {
   }
 
   /**
+   * Voir clair : la Science (découvertes, savants qui vous aiment), les merveilles et un Savoir abondant
+   * resserrent les fourchettes de gains ; à 5 points, les chiffres sont exacts.
+   */
+  insight(s: GameState): { level: 0 | 1 | 2; points: number } {
+    const points = this.tagCount(s, 'Science') + Math.floor(s.jalons.filter(Boolean).length / 2) + (s.res.savoir >= 10 ? 1 : 0);
+    return { level: points >= 5 ? 2 : points >= 2 ? 1 : 0, points };
+  }
+
+  /** Le prix pour voir les chiffres exacts de la carte en cours (en Savoir). */
+  peekCost(s: GameState): number {
+    return Math.max(1, Math.round(ERA_SCALE[s.era]));
+  }
+
+  /** Peut-on payer pour voir les chiffres exacts ? (des gains en fourchette sur la carte, et le Savoir pour payer) */
+  canPeek(s: GameState): { offer: boolean; afford: boolean } {
+    if (s.phase === 'fin' || s.phase === 'presage' || s.peek === s.turn || this.insight(s).level === 2) return { offer: false, afford: false };
+    const v = this.view(s);
+    const offer = !!v?.options.some((o) => o.gains && Object.values(o.gains).some((g) => g && g[0] !== g[1]));
+    return { offer, afford: offer && s.res.savoir >= this.peekCost(s) };
+  }
+
+  /** Payer pour voir : les gains de la carte en cours s'affichent au chiffre près. */
+  peek(s: GameState): boolean {
+    const c = this.canPeek(s);
+    if (!c.afford) return false;
+    s.res.savoir -= this.peekCost(s);
+    s.peek = s.turn;
+    return true;
+  }
+
+  /**
    * Prêt pour la crise ? Pour chaque carte de la crise, existe-t-il dès maintenant une réponse qui tient (seuil atteint,
    * coût payable) sans sacrifier une famille ni un quartier ? Un indicateur simple pour le présage.
    */
-  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag } {
+  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag; answer?: string } {
     let covered = 0;
     let total = 0;
     const missing: Bag = {};
+    let answer: string | undefined;
     for (const id of this.crisisOf(s).cards) {
       const c = this.c.cards[id];
       if (!c || c.qui) continue;
@@ -1470,6 +1509,7 @@ export class Engine {
         // ce qui manque pour la réponse la plus proche (coût et seuil), sans sacrifice
         let best: Bag | null = null;
         let bestN = Infinity;
+        let bestLabel: string | undefined;
         for (const o of this.options(s, { card: id })) {
           if (!this.check(s, o.req) || (o.effect.quartiers ?? 0) < 0) continue;
           const need: Bag = {};
@@ -1480,13 +1520,14 @@ export class Engine {
             const d = (need[r] ?? 0) - s.res[r];
             if (d > 0) { short[r] = d; n += d; }
           }
-          if (n > 0 && n < bestN) { best = short; bestN = n; }
+          if (n > 0 && n < bestN) { best = short; bestN = n; bestLabel = o.label; }
         }
         if (best) for (const r of RES) if (best[r]) missing[r] = Math.max(missing[r] ?? 0, best[r]!);
+        if (bestLabel && !answer) answer = fill(bestLabel, s, this.c, this.ruinExtras(s));
       }
     }
     const level = covered >= total ? 'pret' : covered * 2 >= total ? 'presque' : 'non';
-    return { covered, total, level, missing };
+    return { covered, total, level, missing, answer };
   }
 
   /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */

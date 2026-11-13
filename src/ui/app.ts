@@ -2,7 +2,7 @@
  * L'interface V2 : un écran titre, la fondation, puis la partie (HUD, carte, retours),
  * les présages, les bilans d'ère, la chute ou la victoire, le testament et la chronique.
  */
-import { ERA_SCALE, GAIN_RANGES, TUNING, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
+import { ERA_SCALE, gainText, TUNING, type Engine, type Ev, type OptionView, type View, type PresageInfo, type FamilyInfo } from '../core/engine';
 import { chronicleLines, epitaph, nextSetup, recordRun, testaments, UNLOCKS, type Testament, type Unlock } from '../core/meta';
 import { FAMILIES, RES, RES_LABEL, type ChronicleEntry, type FamilyId, type GameState, type MetaState, type Res } from '../core/types';
 import { civName, ERA_NAMES, ERA_SUBTITLES, capitalize, fill } from '../core/text';
@@ -176,13 +176,24 @@ export class App {
       snap.threat = undefined;
       if (o === 'heritiers' && !snap.ruins.length) snap.ruins = ['cercle', 'tour', 'dome'];
       this.scene.setSnapshot(snap);
+      // une légende sur la scène, pour qu'on remarque ce qui change (sur grand écran, où la scène se voit)
+      const sc = document.querySelector('.screen.setup');
+      if (sc && !first) {
+        let cap = sc.querySelector('.scene-cap') as HTMLElement | null;
+        if (!cap) sc.appendChild((cap = el('div', 'scene-cap')));
+        const what = o === 'fleuve' ? 'le fleuve, qui déborde chaque printemps' : o === 'heritiers' ? 'les ruines de vos ancêtres, sur la colline' : 'le grand feu de la tribu';
+        cap.innerHTML = `<i>Aperçu</i> ${esc(this.e.c.origins.find((x) => x.id === o)?.name ?? '')} : ${esc(what)}`;
+        cap.classList.remove('flash');
+        void cap.offsetWidth;
+        cap.classList.add('flash');
+      }
     };
     preview(origin);
     this.openScreen('soft setup', (inner) => {
       const render = () => {
         inner.innerHTML = `<div class="over">Votre civilisation</div><h2 class="big">${esc(name)}</h2>
           <div class="label">Que voulez-vous devenir ?</div>`;
-        const hook = (d: (typeof this.e.c.desseins)[number]) => esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name));
+        const hook = (d: (typeof this.e.c.desseins)[number]) => esc(d.pitch.replace('{rival}', 'la cité voisine').replace('{cite}', name));
         const need = (d: (typeof this.e.c.desseins)[number]) => `<span class="need r-${d.res}">${RES_ICON[d.res]}<b>${RES_LABEL[d.res]}</b> et ${esc(d.need)}</span>`;
         // parties suivantes : les desseins, déjà connus, tiennent sur une ligne ; l'origine a la place
         if (!first) {
@@ -221,7 +232,8 @@ export class App {
         if (first) inner.appendChild(tiles);
         // l'origine, les Héritiers et l'Âge de fer n'apparaissent qu'après une première partie terminée
         if (!first) {
-          inner.appendChild(el('div', 'label', 'Qui êtes-vous ?'));
+          inner.appendChild(el('div', 'label', `Qui êtes-vous ?${this.meta.runs === 1 ? ' <i class="rec">Nouveau</i>' : ''}`));
+          const r0 = nextSetup(this.meta, { dessein, origin: 'heritiers' }).ruins?.[0];
           const ot = el('div', 'tiles origins');
           for (const o of this.e.c.origins) {
             const unlocked = o.id === 'feu' || this.meta.unlocked.includes(o.id);
@@ -229,7 +241,7 @@ export class App {
             const tr = this.e.originTraits(o);
             const emblem = `<svg class="emblem" viewBox="78 26 144 144" aria-hidden="true">${motif(o.id === 'fleuve' ? 'wave' : o.id === 'heritiers' ? 'arch' : 'flame', new Rng(7), 'hsl(36 90% 80%)', 'hsla(30,90%,60%,.35)', 'hsla(36,70%,78%,.4)')}</svg>`;
             const t = el('button', `tile origin${o.id === origin ? ' sel' : ''}`, unlocked
-              ? `${emblem}<div><b>${esc(o.name)}</b><span>${esc(o.style)}</span><span class="tags" title="${esc([...tr.ups.map((x) => '+ ' + x), ...tr.downs.map((x) => '− ' + x)].join('\n'))}"><i class="good">${esc(tr.atout)}</i><i class="bad">${esc(tr.handicap)}</i></span></div>`
+              ? `${emblem}<div>${o.badge ? `<em class="badge">${esc(o.badge)}</em>` : ''}<b>${esc(o.name)}</b><span>${esc(o.style)}</span>${o.id === 'heritiers' && r0 ? `<span class="inherit">Héritage de ${esc(r0.name)}${r0.legacy?.label ? ` : ${esc(r0.legacy.label.charAt(0).toLowerCase() + r0.legacy.label.slice(1))}` : ''}</span>` : ''}<span class="tags" title="${esc([...tr.ups.map((x) => '+ ' + x), ...tr.downs.map((x) => '− ' + x)].join('\n'))}"><i class="good">${esc(tr.atout)}</i><i class="bad">${esc(tr.handicap)}</i></span></div>`
               : `${emblem}<div><em>${ICON.lock} Pas encore</em><b>${esc(o.name)}</b><span>${esc(u?.how ?? '')}</span></div>`);
             if (!unlocked) t.disabled = true;
             t.addEventListener('mouseenter', () => unlocked && preview(o.id));
@@ -259,6 +271,7 @@ export class App {
         inner.appendChild(go);
       };
       render();
+      requestAnimationFrame(() => preview(origin));
     }, (k) => {
       if (k === 'Enter') this.start(seed, { dessein, origin, iron, name });
       if (k === 'Escape') this.title();
@@ -468,6 +481,25 @@ export class App {
     const opts = el('div', 'opts');
     v.options.forEach((o, i) => opts.appendChild(this.optButton(o, i, v)));
     card.appendChild(opts);
+    // voir les chiffres exacts, contre un peu de Savoir (la Science et les merveilles resserrent les fourchettes)
+    const pk = this.e.canPeek(s);
+    if (pk.offer) {
+      const cost = this.e.peekCost(s);
+      const b = el('button', 'peek', `${RES_ICON.savoir}<span>Voir les chiffres exacts</span><b>${cost} Savoir</b>`);
+      b.title = 'Les fourchettes se resserrent avec la Science (découvertes, savants qui vous aiment) et les merveilles.';
+      if (!pk.afford) b.disabled = true;
+      b.addEventListener('click', () => {
+        if (!this.e.peek(s)) return;
+        store.saveGame(s);
+        this.audio.ui();
+        const v2 = this.e.view(s)!;
+        opts.innerHTML = '';
+        v2.options.forEach((o, i) => opts.appendChild(this.optButton(o, i, v2)));
+        b.remove();
+        this.renderHud();
+      });
+      card.appendChild(b);
+    }
     stage.innerHTML = '';
     stage.appendChild(card);
     this.audio.cardIn();
@@ -501,7 +533,7 @@ export class App {
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
     // ce qui rentre : le genre et l'ampleur (+ un peu, ++ bien, +++ beaucoup), pas le montant (le texte le dit)
-    const gains = RES.filter((r) => o.gains?.[r]).map((r) => `<span class="chip gain r-${r}" title="Rapporte ${GAIN_RANGES[o.gains![r]!]} ${RES_LABEL[r]}">+${GAIN_RANGES[o.gains![r]!].replace(' à ', '–').replace(' et plus', '+')}${RES_ICON[r]}</span>`).join('');
+    const gains = RES.filter((r) => o.gains?.[r]).map((r) => { const g = o.gains![r]!; return `<span class="chip gain r-${r}${g[0] === g[1] ? ' exact' : ''}" title="Rapporte ${gainText(g, ' à ')} ${RES_LABEL[r]}">+${gainText(g)}${RES_ICON[r]}</span>`; }).join('');
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
       const dir = o.famDir?.[f] ?? 0;
@@ -671,9 +703,9 @@ export class App {
         const main = p.jalon ? `Bâtir ${esc(jName)}, puis tenir face ${esc(toCrisis)}.` : `Tenir face ${esc(toCrisis)}.`;
         const words = (b: Partial<Record<Res, number>>) => RES.filter((r) => b[r]).map((r) => `<span class="w r-${r}">${RES_ICON[r]}${b[r]} ${RES_LABEL[r]}</span>`).join(', ');
         const miss = words(ready.missing);
-        const readyTxt = ready.level === 'pret' ? 'Vous êtes prêt à l’affronter' : `${ready.level === 'presque' ? 'Presque prêt' : 'Pas encore prêt'}${miss ? ` : il vous manque ${miss}` : ''}`;
-        const rivalTxt = p.rival.count >= 5 ? `${esc(capitalize(p.rival.name))} ont achevé leur dessein : ils vous réclament tribut.`
-          : `${esc(capitalize(p.rival.name))} ${p.rival.count ? `ont bâti <b>${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}</b>` : 'n’ont encore <b>aucune merveille</b>'}. À cinq, la vallée leur paie tribut.`;
+        const readyTxt = ready.level === 'pret' ? 'Vous êtes prêt à l’affronter' : `${ready.level === 'presque' ? 'Presque prêt' : 'Pas encore prêt'}${miss ? ` : il vous manque ${miss}${ready.answer ? ` pour « ${esc(ready.answer)} »` : ''}` : ''}`;
+        const rivalTxt = p.rival.count >= 5 ? `${esc(capitalize(p.rival.name))}, la cité rivale, ont achevé leurs cinq merveilles : vous leur payez tribut.`
+          : `${esc(capitalize(p.rival.name))}, la cité rivale, ont bâti <b>${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''} sur 5</b>. S’ils achèvent les cinq, vous leur paierez tribut.`;
         const missed = this.e.dessein(s).jalons.filter((_, k) => k < s.era && !s.jalons[k]).map((j) => j.name);
         const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
         const notes = [
@@ -686,7 +718,7 @@ export class App {
             <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b>, qui coûte ${words(p.jalon.cost)}${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">et ${p.tag.need} de ${esc(p.tag.tag)} (vous : ${p.tag.total})</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
             <div class="bl"><i class="k">Menace</i><span><b>${esc(p.crisis.name)}</b>, en fin d’ère<br><em class="ready ${ready.level}">${readyTxt}</em></span></div>
             <div class="bl"><i class="k">Rivale</i><span>${rivalTxt}</span></div>
-            ${p.legacy && p.legacy.label ? `<div class="bl"><i class="k">Héritage</i><span>Grâce à ${esc(p.legacy.from)} : ${esc(p.legacy.label.charAt(0).toLowerCase() + p.legacy.label.slice(1))}${p.legacy.heirs ? ' (compté double)' : ''}</span></div>` : ''}
+            ${p.legacy && p.legacy.label ? `<div class="bl"><i class="k">Héritage</i><span>Grâce à ${esc(p.legacy.from)}, votre ancienne cité : ${esc(p.legacy.label.charAt(0).toLowerCase() + p.legacy.label.slice(1))}${p.legacy.heirs ? ' (compté double)' : ''}</span></div>` : ''}
             ${notes.length ? `<div class="bl note"><i class="k">À noter</i><span>${notes.join(' · ')}</span></div>` : ''}
           </div>`;
         const more = el('button', 'more-btn', details ? 'Masquer les détails' : 'Détails : seuils, coûts, règles');

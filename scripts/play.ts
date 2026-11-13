@@ -6,13 +6,14 @@
  *   npx tsx scripts/play.ts new <dossier> [etoiles|empire|posterite] [origine] [graine]
  *   npx tsx scripts/play.ts <dossier> <numéro d'option>
  *   npx tsx scripts/play.ts <dossier> voir           (réafficher la carte en cours)
+ *   npx tsx scripts/play.ts <dossier> chiffres       (payer du Savoir pour voir les gains exacts)
  *   npx tsx scripts/play.ts <dossier> famille <ourk|sel|brume|troc>
  *   à la fin : npx tsx scripts/play.ts <dossier> testament <numéro>
  * Le dossier garde la partie (game.json) et la méta (meta.json) : les parties suivantes héritent des ruines.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { content } from '../src/data';
-import { Engine, GAIN_RANGES, type Ev } from '../src/core/engine';
+import { Engine, gainText, type Ev } from '../src/core/engine';
 import { epitaph, newMeta, nextSetup, recordRun, testaments, loadMeta } from '../src/core/meta';
 import { FAMILIES, RES, RES_LABEL, type Bag, type FamilyId, type GameState, type MetaState } from '../src/core/types';
 import { capitalize, civName, ERA_NAMES } from '../src/core/text';
@@ -87,7 +88,7 @@ function card(s: GameState): void {
       o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
       o.spend ? `dépense ${bag(o.spend)} si la réserve suffit` : '',
-      o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${GAIN_RANGES[o.gains![r]!]} ${RES_LABEL[r]}`).join(', ')}` : '',
+      o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${gainText(o.gains![r]!, ' à ')} ${RES_LABEL[r]}`).join(', ')}` : '',
       o.families.length ? `concerne ${o.families.map((f) => { const d = o.famDir?.[f] ?? 0; return `${capitalize(e.c.families[f].house[s.era])} ${d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}` : '? (selon l’issue)'}`; }).join(', ')}` : '',
       o.later ? 'aura une suite (sablier)' : '',
       o.warn ? `attention : ${o.warn}` : '',
@@ -97,6 +98,8 @@ function card(s: GameState): void {
     ].filter(Boolean);
     P(`  ${i + 1}. ${o.label}  [${bits.join(' · ')}]${o.enabled ? '' : '  (impossible)'}`);
   });
+  const pk = e.canPeek(s);
+  if (pk.offer) P(`  (commande « chiffres » : voir les gains exacts pour ${e.peekCost(s)} Savoir${pk.afford ? '' : ', Savoir insuffisant'})`);
 }
 
 function feedback(s: GameState, ev: Ev[]): void {
@@ -167,6 +170,9 @@ if (a0 === 'new') {
 } else if (!s) {
   P('Aucune partie en cours. Lancez « new ».');
 } else if (a1 === 'voir') {
+  card(s);
+} else if (a1 === 'chiffres') {
+  P(e.peek(s) ? `(−${e.peekCost(s)} Savoir : les chiffres exacts)` : 'Impossible de voir les chiffres exacts ici.');
   card(s);
 } else if (a1 === 'famille') {
   const fi = e.familyInfo(s, a2 as FamilyId);

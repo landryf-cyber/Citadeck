@@ -213,6 +213,8 @@ export interface OriginDef {
   text: string;
   /** une phrase qui dit le style de jeu */
   style: string;
+  /** un conseil mesuré (« le plus sûr ») */
+  badge?: string;
   /** loyautés de départ */
   loy?: Partial<Record<FamilyId, number>>;
   res: Resources;
@@ -378,6 +380,8 @@ export interface GameState {
   spent: string[];
   sched: { card: string; at: number; from?: string; pay?: number }[];
   turn: number;
+  /** tour où le joueur a payé pour voir les chiffres exacts de la carte en cours */
+  peek?: number;
   /** tour où l'ère en cours a commencé (dates) */
   eraStart: number;
   history: HistoryEntry[];

@@ -134,6 +134,7 @@ async function main(): Promise<void> {
     await page.click('text=Nouvelle civilisation').catch(() => page.click('text=Fonder une civilisation'));
     await page.waitForTimeout(900);
     await shot(page, vp.name, '23b-fondation-origines');
+    await page.mouse.move(4, 4);
     await page.hover('.tile.origin >> nth=1').catch(() => undefined);
     await page.waitForTimeout(900);
     await shot(page, vp.name, '23c-origine-survol');

@@ -139,14 +139,14 @@ export function testaments(e: Engine, s: GameState): Testament[] {
       `Faites confiance à {H:${ally}}. Pas aveuglément. Mais faites-leur confiance.`,
       `{F:${ally}} a tenu la porte jusqu’à la fin. Ses descendants la tiendront pour vous.`,
     ]);
-    out.push({ text: t(line), legacy: { label: `${H0(ally)}, les ${FAMILY_ROLE[ally]}, vous aiment déjà (+1)`, loy: { [ally]: 1 } } });
+    out.push({ text: t(line), legacy: { label: `${H0(ally)}, les ${FAMILY_ROLE[ally]}, vous aiment déjà`, loy: { [ally]: 1 } } });
   } else if (enemy) {
     const rivalOf = e.c.rivalries[enemy];
     const line = pick(s, 1, [
       `Méfiez-vous de {H:${enemy}}. Ils n’oublient rien. Ils n’ont jamais rien oublié.`,
       `Ne laissez jamais {H:${enemy}} sans nouvelles. Ni sans surveillance.`,
     ]);
-    out.push({ text: t(line), legacy: { label: `${H0(rivalOf)}, les ${FAMILY_ROLE[rivalOf]}, vous aiment déjà (+1)`, loy: { [rivalOf]: 1 } } });
+    out.push({ text: t(line), legacy: { label: `${H0(rivalOf)}, les ${FAMILY_ROLE[rivalOf]}, vous aiment déjà`, loy: { [rivalOf]: 1 } } });
   }
 
   // 2. la leçon de la chute (ou du triomphe)
