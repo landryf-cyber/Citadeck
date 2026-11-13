@@ -62,7 +62,7 @@ export const moreEventCards = [
     text: '{F:troc} organise un banquet en votre honneur : douze plats, trois poètes, un dromadaire farci. La facture arrivera avec le dessert.',
     options: [
       { label: 'Payer le banquet', cost: $('T4'), effect: { loy: { troc: 1, ourk: 1 } }, reply: 'Le banquet dure trois jours. On y compose votre éloge en vers. Les vers sont mauvais, mais nombreux.' },
-      { label: 'Un banquet frugal', cost: $('V2'), effect: { loy: { sel: 1, troc: -1 } }, reply: 'Pain, olives, eau. {F:sel} approuve. Les poètes écrivent sur la faim, avec talent.' },
+      { label: 'Un banquet frugal', cost: $('V1'), effect: { gain: $('S1'), loy: { sel: 1, troc: -1 } }, reply: 'Pain, olives, eau. {F:sel} approuve. Les poètes écrivent sur la faim, avec talent.' },
       { label: 'Pas de banquet', effect: { gain: $('T2'), loy: { troc: -1 } }, reply: 'Vous dînez seul. Le dromadaire farci part chez {rival}, qui en parle encore.' },
     ],
   }),

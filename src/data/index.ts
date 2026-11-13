@@ -18,11 +18,12 @@ import { variantCards, variantRecalls } from './variants';
 import { betrayalCards } from './betrayals';
 import { moreEventCards } from './events2';
 import { originCards } from './origins';
+import { formCards, forms } from './forms';
 
 const all = [
   ...engineCards, ...ourkCards, ...selCards, ...brumeCards, ...trocCards,
   ...encounterCards, ...crisisCards, ...discoveryCards, ...eventCards, ...rivalCards,
-  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards, ...variantCards, ...betrayalCards, ...moreEventCards, ...originCards,
+  ...moreEvents, ...moreEncounters, ...moreRival, ...echoFamilyCards, ...echoEvents, ...crisisAltCards, ...familyAltCards, ...variantCards, ...betrayalCards, ...moreEventCards, ...originCards, ...formCards,
 ];
 
 // hors cartes de famille, de crise et d'échos, une décision ne déplace une loyauté que d'un cran :
@@ -113,6 +114,7 @@ export const content: Content = {
   rivalries,
   desseins,
   origins,
+  forms,
   routes: routes.map((r) => ({ ...r, encounters: [...r.encounters, ...(extraEnc[r.id] ?? [])] })),
   crises,
   crisisAlts,

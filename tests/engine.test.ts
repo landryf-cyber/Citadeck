@@ -5,6 +5,7 @@ import { PROFILES, chooseIndex } from '../src/sim/bots';
 import { Rng } from '../src/core/rng';
 import { findDominated } from '../src/sim/dominance';
 import { measureRepeats } from '../src/sim/repeats';
+import { measureStructure } from '../src/sim/structure';
 
 const e = new Engine(content);
 
@@ -306,4 +307,12 @@ describe('voir clair', () => {
     // une fois la carte jouée, l'aperçu ne vaut plus
     expect(s.peek === s.turn).toBe(false);
   });
+});
+
+describe('formes des ères', () => {
+  it('chaque ère a sa forme : deux ères d’une partie se ressemblent peu, une même ère se reconnaît d’une partie à l’autre', () => {
+    const r = measureStructure(16);
+    expect(r.betweenEras).toBeLessThan(0.6);
+    expect(r.sameEraAcrossGames).toBeGreaterThan(r.betweenEras + 0.15);
+  }, 120000);
 });

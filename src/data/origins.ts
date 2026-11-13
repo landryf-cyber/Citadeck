@@ -18,23 +18,23 @@ export const originCards = [
   card({
     id: 'or_feu_sacre', kind: 'evenement', eras: [0], echo: true, cond: { mem: 'origine_feu' }, art: { motif: 'flame', hue: 25 },
     title: 'Le Feu qui ne doit pas mourir',
-    text: 'Le feu de la tribu vacille : la pluie, le vent, et {F:ourk} qui s’est assis dessus par distraction. Tout le monde regarde le foyer, puis vous.',
+    text: 'Le feu de la tribu vacille : la pluie, le vent, et {F:ourk} qui s’est assis dessus par distraction. Tout le monde regarde le foyer, puis vous.‖Une nuit d’orage, le grand feu de la tribu se met à fumer plus qu’il ne brûle. Les anciens disent qu’il n’a jamais faibli depuis la fondation. Ils le disent en vous regardant.‖Le feu de la tribu baisse. Personne n’a rajouté de bois : chaque famille pensait que c’était le tour d’une autre. Il reste des braises, et beaucoup de reproches.',
     options: [
       { label: 'Veiller toute la nuit', cost: $('V2'), effect: { loy: { sel: 1, troc: 1 }, mem: ['feu_veille'] },
         reply: 'Toute la tribu veille autour des braises. On se raconte des histoires ; au matin, le feu brûle et chacun connaît celles des autres.' },
       { label: 'Laisser {F:brume} le rallumer', effect: { gain: $('S2'), loy: { brume: 1, sel: -1 } },
         reply: '{F:brume} frotte deux bâtons, puis trois, puis se fâche. Le feu repart. {F:sel} affirme que c’est le ciel qui a cédé.' },
       { label: 'Un feu par famille', cost: $('T2'), effect: { gain: $('A2'), loy: { ourk: 1, brume: 1 } },
-        reply: 'Quatre feux au lieu d’un. Plus de chaleur, moins de disputes, et quatre façons de faire griller la viande.' },
+        reply: 'Quatre feux au lieu d’un. Plus de chaleur, moins de disputes, et quatre façons de faire griller la viande.‖Chaque famille a son feu. On se rend visite d’un feu à l’autre, on compare les flammes, on se découvre des talents de cuisinier.' },
     ],
   }),
   card({
     id: 'or_feu_veillee', kind: 'evenement', scale: true, eras: [1], echo: true, cond: { mem: 'origine_feu' }, art: { motif: 'flame', hue: 35 },
     title: 'La Veillée des ancêtres',
-    text: 'Une fois l’an, on rallume le premier feu et l’on raconte la fondation. Chaque famille veut que le récit commence par la sienne.{?mem:feu_veille| Les anciens se souviennent de la nuit où personne n’a dormi.|}',
+    text: 'Une fois l’an, on rallume le premier feu et l’on raconte la fondation. Chaque famille veut que le récit commence par la sienne.{?mem:feu_veille| Les anciens se souviennent de la nuit où personne n’a dormi.|}‖C’est la nuit des ancêtres : on rallume le premier feu et un conteur raconte la fondation. Chaque famille a payé le conteur pour qu’il commence par elle.{?mem:feu_veille| On rappelle aussi la nuit de veille, quand tout le monde a gardé le feu.|}‖La veillée des ancêtres approche. Le récit de la fondation change un peu chaque année, et chaque famille voudrait qu’il change en sa faveur.{?mem:feu_veille| Les enfants réclament l’histoire de la grande veille.|}',
     options: [
       { label: 'Commencer par Ourk', effect: { gain: $('A3'), loy: { ourk: 1, brume: -1 } }, reply: 'Le récit commence par un mammouth, finit par un mammouth, et le milieu est surtout du mammouth.' },
-      { label: 'Commencer par Sel', effect: { gain: $('V3'), loy: { sel: 1, troc: -1 } }, reply: 'Le récit commence par une prophétie. Personne ne se souvient laquelle, mais tout le monde hoche la tête.' },
+      { label: 'Commencer par Sel', effect: { gain: $('V3'), loy: { sel: 1, troc: -1 } }, reply: 'Le récit commence par une prophétie. Personne ne se souvient laquelle, mais tout le monde hoche la tête.‖Le récit s’ouvre sur un présage, une étoile et une chèvre. La chèvre a un rôle important ; on ne sait plus lequel.' },
       { label: 'Commencer par vous', cost: $('T2'), effect: { gain: $('S3'), loy: { ourk: -1, sel: -1 } }, reply: 'Dans le récit, vous allumez le feu seul, d’un regard. Les familles applaudissent poliment, puis racontent la vraie version entre elles.' },
     ],
   }),

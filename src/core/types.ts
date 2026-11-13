@@ -117,7 +117,8 @@ export interface Option {
 
 export type CardKind =
   | 'famille' | 'evenement' | 'intrigue' | 'crise' | 'rivale' | 'institution' | 'rencontre' | 'ruines'
-  | 'tutoriel' | 'carrefour' | 'jalon' | 'decouverte' | 'croissance' | 'presage' | 'proces' | 'hommage' | 'revenant' | 'trahison';
+  | 'tutoriel' | 'carrefour' | 'jalon' | 'decouverte' | 'croissance' | 'presage' | 'proces' | 'hommage' | 'revenant' | 'trahison'
+  | 'regle' | 'conseil';
 
 export type Form = 'binaire' | 'qui' | 'pari' | 'dosage' | 'route' | 'seuil' | 'choix';
 
@@ -205,6 +206,25 @@ export interface DesseinDef {
   tag: Tag;
   ending: 'science' | 'military' | 'culture';
   jalons: [Jalon, Jalon, Jalon, Jalon, Jalon];
+}
+
+/** La forme d'une ère : sa règle, son rythme, son objectif et la façon dont la menace arrive (comme les actes d'un jeu). */
+export interface EraForm {
+  id: 'errance' | 'contagion' | 'conseil' | 'course' | 'jugement';
+  name: string;
+  /** le rythme, en clair (« trois saisons courtes ») */
+  rhythm: string;
+  seasons: number;
+  /** cartes par saison (hors carte de règle) */
+  cards: number;
+  /** la règle propre à l'ère, une phrase */
+  rule: string;
+  /** l'objectif propre à l'ère, une phrase */
+  objective: string;
+  /** comment la menace arrive, une phrase */
+  threat: string;
+  /** la phrase principale du présage : {j} la merveille, {c} la crise (avec « à » contracté), {rival} la rivale */
+  mission: string;
 }
 
 export interface OriginDef {
@@ -395,6 +415,8 @@ export interface GameState {
   ruins: RuinInfo[];
   /** compteur pour la croissance visuelle */
   growth: number;
+  /** colonies fondées (ère II) : des quartiers qui se nourrissent eux-mêmes */
+  colonies?: number;
   /** arcs ouverts / dénoués (mesures, chronique) */
   arcs: { open: string[]; done: string[] };
   /** contenus débloqués disponibles dans cette partie (méta-progression) */
@@ -405,6 +427,8 @@ export interface GameState {
   iron: boolean;
   /** cartes vues à la partie précédente (tirées en dernier) */
   avoid?: string[];
+  /** nombre de parties déjà jouées (fait tourner les variantes de texte) */
+  run?: number;
 }
 
 /** Ce qu'une civilisation morte laisse aux suivantes. */

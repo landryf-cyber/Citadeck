@@ -325,5 +325,6 @@ export function nextSetup(meta: MetaState, choice: { dessein: string; origin?: s
     unlocked: meta.unlocked,
     iron: !!choice.iron && meta.unlocked.includes('fer'),
     avoid: meta.lastSeen ?? [],
+    run: meta.runs,
   };
 }

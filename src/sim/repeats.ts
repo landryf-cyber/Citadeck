@@ -61,8 +61,7 @@ export function measureRepeats(games = 20, profile = 'pressé'): RepeatReport {
     }
     all.push(new Set(read));
     const t = testaments(e, s)[0];
-    recordRun(meta, e, s, t);
-    meta = { ...meta };
+    meta = recordRun(meta, e, s, t).meta;
   }
   let prev = 0;
   let prevTotal = 0;

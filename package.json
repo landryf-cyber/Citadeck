@@ -16,7 +16,8 @@
     "perf": "tsx scripts/perf.ts",
     "single": "tsx scripts/single-file.ts",
     "dominance": "tsx src/sim/dominance.ts",
-    "repeats": "tsx src/sim/repeats.ts"
+    "repeats": "tsx src/sim/repeats.ts",
+    "structure": "tsx src/sim/structure.ts"
   },
   "repository": {
     "type": "git",

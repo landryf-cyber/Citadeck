@@ -1,4 +1,4 @@
-import type { CardDef, CrisisDef, DesseinDef, FamilyDef, FamilyId, OriginDef, RivalDef, RouteDef } from './types';
+import type { CardDef, CrisisDef, DesseinDef, EraForm, FamilyDef, FamilyId, OriginDef, RivalDef, RouteDef } from './types';
 
 export interface Moods { hostile: string[]; cold: string[]; warm: string[]; devoted: string[] }
 
@@ -14,6 +14,8 @@ export interface Content {
   rivalries: Record<FamilyId, FamilyId>;
   desseins: DesseinDef[];
   origins: OriginDef[];
+  /** la forme de chaque ère */
+  forms: EraForm[];
   routes: RouteDef[];
   crises: CrisisDef[];
   /** crises alternatives par ère (la graine choisit) */

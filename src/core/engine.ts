@@ -8,14 +8,14 @@ import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLE
 import {
   FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
-  type Jalon, type OriginDef, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
+  type EraForm, type Jalon, type OriginDef, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.5, gain: 1.12, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
@@ -108,9 +108,11 @@ function inaug(j: Jalon): string {
   return base.split('‖').map((b) => `${b} ${j.gift}`).join('‖');
 }
 
-export function variant(text: string, key: string, seed: number, prior: number): string {
+export function variant(text: string, key: string, seed: number, prior: number, run?: number): string {
   if (!text.includes('‖')) return text;
   const parts = text.split('‖');
+  // d'une partie à l'autre, on avance dans les variantes : deux parties de suite ne lisent pas les mêmes textes
+  if (run !== undefined) return parts[(hashString(key) + run * Math.max(1, Math.floor(parts.length / 2)) + prior) % parts.length];
   return parts[(hashString(`${key}#${seed}`) + prior) % parts.length];
 }
 
@@ -132,11 +134,16 @@ export interface Setup {
   iron?: boolean;
   /** cartes vues à la partie précédente : tirées en dernier */
   avoid?: string[];
+  /** nombre de parties déjà jouées (fait tourner les variantes de texte) */
+  run?: number;
 }
 
 export type Ev =
   | { type: 'res'; before: Resources; after: Resources }
   | { type: 'quartiers'; delta: number; cause: string; shielded?: boolean; paid?: Bag; by?: string }
+  | { type: 'rot'; amount: number; cap: number; hunt: number }
+  | { type: 'raceStep'; stage: number; of: number; won: boolean; lost: boolean }
+  | { type: 'peace' }
   | { type: 'mend'; family: FamilyId }
   | { type: 'disette'; missing: number }
   | { type: 'loy'; family: FamilyId; delta: number; value: number }
@@ -207,7 +214,7 @@ export interface View {
 }
 
 const clampLoy = (v: number) => Math.max(-3, Math.min(3, v));
-const ONE_SHOT = new Set(['evenement', 'rencontre', 'rivale', 'decouverte', 'hommage']);
+const ONE_SHOT = new Set(['evenement', 'rencontre', 'rivale', 'decouverte', 'hommage', 'ruines', 'revenant']);
 
 export class Engine {
   constructor(public readonly c: Content) {}
@@ -261,6 +268,7 @@ export class Engine {
       jalonAlt: [],
       iron: !!setup.iron,
       avoid: [...(setup.avoid ?? [])],
+      run: setup.run ?? 0,
     };
     this.applyLegacy(s);
     this.buildPool(s, rng);
@@ -347,6 +355,11 @@ export class Engine {
     const c = this.c.cards[id];
     if (!c) throw new Error(`Carte inconnue : ${id}`);
     return c;
+  }
+
+  /** La forme de l'ère en cours (règle, rythme, objectif, menace). */
+  form(s: GameState, era = s.era): EraForm {
+    return this.c.forms[era] ?? this.c.forms[0];
   }
 
   dessein(s: GameState) {
@@ -550,7 +563,7 @@ export class Engine {
     // une seule option jouable : la plus abordable des autres devient possible à crédit (chez les Troc, ou la rivale)
     const pending = s.sched.some((x) => /^creance/.test(x.card));
     // pas de crédit pour payer une dette : ce serait une dette sans fin
-    if (playable.length === 1 && !pending && !/^creance/.test(card.id) && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage'].includes(card.kind)) {
+    if (playable.length === 1 && !pending && !/^creance/.test(card.id) && !['jalon', 'croissance', 'decouverte', 'proces', 'carrefour', 'presage', 'regle', 'conseil'].includes(card.kind)) {
       const blocked = opts.filter((o) => o.cost && !this.affordable(s, this.costOf(s, o.cost)) && this.check(s, o.req));
       // seuls les Troc prêtent : hostiles, absents, ou visés par la carte, ils ne prêtent pas, et il n'y a pas de crédit
       const canLend = s.fam.troc.state === 'presente' && card.family !== 'troc' && s.fam.troc.loy >= -1;
@@ -611,6 +624,17 @@ export class Engine {
     }
     if (card.kind === 'proces') return this.trialOptions(s, p);
     if (card.qui && p.qui) return p.qui.map((f) => (card.scale ? scaleOption(card.qui!.option(f), s.era) : card.qui!.option(f)));
+    if (card.id === 'conseil') {
+      // une voix par famille présente ; on ne froisse pas une rivale qui n'est plus là
+      return card.options.filter((o) => {
+        const f = (Object.keys(o.effect.loy ?? {}) as FamilyId[]).find((x) => (o.effect.loy![x] ?? 0) > 0);
+        return f && s.fam[f].state === 'presente';
+      }).map((o) => {
+        const loy = { ...(o.effect.loy ?? {}) };
+        for (const f of Object.keys(loy) as FamilyId[]) if (s.fam[f].state !== 'presente') delete loy[f];
+        return { ...o, effect: { ...o.effect, loy } };
+      });
+    }
     if (card.id === 'disette') {
       const d = Math.max(1, this.upkeepOf(s) - s.res.vivres);
       const g = { vivres: Math.ceil(d / TUNING.gain) };
@@ -752,7 +776,7 @@ export class Engine {
       card,
       kind: card.kind,
       title: fill(title, s, this.c, extra),
-      text: fill(variant(text, card.id, s.seed, s.history.filter((h) => h.card === card.id).length), s, this.c, extra),
+      text: fill(variant(text, card.id, s.seed, s.history.filter((h) => h.card === card.id).length, s.run), s, this.c, extra),
       speaker: card.speaker ? fill(card.speaker, s, this.c, extra) : fam ? this.c.families[fam].head[s.era] : undefined,
       family: fam ?? (card.kind === 'proces' ? p.plaintiff : undefined),
       header,
@@ -914,7 +938,7 @@ export class Engine {
 
   /** Intensité des crises : vos merveilles attirent les prédateurs. */
   crisisK(s: GameState): number {
-    return TUNING.crisisK * (s.iron ? TUNING.iron : 1) * (1 + TUNING.envy * s.jalons.filter(Boolean).length);
+    return TUNING.crisisK * (s.iron ? TUNING.iron : 1) * (1 + TUNING.envy * s.jalons.filter(Boolean).length) * (s.mem.includes(`course_perdue_${s.era}`) ? 1.25 : 1);
   }
 
   /** Humeur et souvenir de la famille, en tête de sa carte. */
@@ -939,7 +963,9 @@ export class Engine {
 
   /** Ce que la cité mange en fin d'ère : ses quartiers, et l'entretien de ses merveilles. */
   upkeepOf(s: GameState): number {
-    return Math.ceil(s.quartiers * TUNING.upkeep) + Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep);
+    // les colonies se nourrissent elles-mêmes
+    const fed = Math.max(0, s.quartiers - Math.min(s.colonies ?? 0, s.quartiers - 1));
+    return Math.ceil(fed * TUNING.upkeep) + Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep);
   }
 
   /** Ce que le présage annonce au début d'une ère : le jalon, la crise, l'envie, l'héritage. */
@@ -1053,6 +1079,7 @@ export class Engine {
     }
     // un événement, une rencontre, une lettre ou une découverte ne se jouent qu'une fois : pas de redite
     if ((card.oneShot || ONE_SHOT.has(card.kind)) && !s.spent.includes(card.id)) s.spent.push(card.id);
+    if (card.id === 'colonie' && (o.effect.quartiers ?? 0) > 0) s.colonies = (s.colonies ?? 0) + 1;
     if (reply && ev.some((x) => x.type === 'quartiers' && x.shielded)) {
       const se = ev.find((x) => x.type === 'quartiers' && x.shielded) as { by?: string; paid?: Bag };
       const shName = se.by ?? 'Une merveille';
@@ -1074,7 +1101,7 @@ export class Engine {
     const v = this.view(s);
     // une réplique qui revient dans la partie (sur cette carte ou une autre) passe à sa variante suivante
     const rk = reply && reply.includes('‖') ? hashString(reply) : undefined;
-    if (reply && rk !== undefined) reply = variant(reply, String(rk), s.seed, s.history.filter((h) => h.rk === rk).length);
+    if (reply && rk !== undefined) reply = variant(reply, String(rk), s.seed, s.history.filter((h) => h.rk === rk).length, s.run);
     s.history.push({
       turn: s.turn,
       era: s.era,
@@ -1308,23 +1335,38 @@ export class Engine {
 
   private startSaison(s: GameState, routeId: string, rng: Rng, ev: Ev[]): void {
     const r = this.c.routes.find((x) => x.id === routeId)!;
+    const fm = this.form(s);
+    // l'Errance : la tribu chasse et cueille à chaque saison, mais ne porte pas tout ; au-delà, les vivres pourrissent
+    if (fm.id === 'errance') {
+      const cap = Math.max(6, this.upkeepOf(s) + 2);
+      const v = s.res.vivres + 2;
+      s.res.vivres = Math.min(cap, v);
+      ev.push({ type: 'rot', amount: Math.max(0, v - cap), cap, hunt: 2 });
+    }
     const pile: string[] = [];
     let enc = r.encounters.filter((id) => !s.spent.includes(id) && this.check(s, this.c.cards[id]?.cond) && (this.c.cards[id].eras?.includes(s.era) ?? true));
     if (routeId === 'inconnu' && s.ruins.length && !s.spent.includes(this.c.ruinsCard) && s.era >= 1) enc = [this.c.ruinsCard];
-    if (enc.length) pile.push(...this.freshFirst(s, enc, 1, rng));
+    let fc: string | undefined;
     if (r.family) {
       s.visits[r.family] = s.era;
-      const fc = s.pool.find((id) => this.c.cards[id]?.family === r.family && this.c.cards[id].kind === 'famille');
-      if (fc) {
-        pile.push(fc);
-        s.pool = s.pool.filter((x) => x !== fc);
-      }
+      fc = s.pool.find((id) => this.c.cards[id]?.family === r.family && this.c.cards[id].kind === 'famille');
     }
-    while (pile.length < TUNING.cards && s.pool.length) pile.push(s.pool.shift()!);
-    // une merveille manquée revient sur la table à la seconde saison : la rattraper, plus cher, ou garder ses forces
-    if (s.saison === 1 && this.missedJalon(s) >= 0) pile.push('rattrapage');
+    // saisons longues : le lieu, puis la famille ; saisons courtes : la famille (ou le lieu), puis une carte du jour
+    if (fm.cards >= 3 || !fc) if (enc.length) pile.push(...this.freshFirst(s, enc, 1, rng));
+    if (fc) {
+      pile.push(fc);
+      s.pool = s.pool.filter((x) => x !== fc);
+    }
+    while (pile.length < fm.cards && s.pool.length) pile.push(s.pool.shift()!);
+    // la règle de l'ère ouvre la saison : une colonie à fonder, ou le Conseil
+    if (fm.id === 'contagion') pile.unshift('colonie');
+    if (fm.id === 'conseil' && this.present(s).length > 1) pile.unshift('conseil');
+    // une merveille manquée revient sur la table à la dernière saison : la rattraper, plus cher, ou garder ses forces
+    if (fm.seasons > 1 && s.saison === fm.seasons - 1 && this.missedJalon(s) >= 0) pile.push('rattrapage');
     s.pile = pile;
     ev.push({ type: 'saison', saison: s.saison, route: routeId });
+    // le Jugement : plus aucun revenu
+    if (fm.id === 'jugement') return;
     // revenu des découvertes et merveilles, à chaque saison
     const inc: Bag = {};
     for (const p of this.passives(s)) if (p.type === 'income') inc[p.res] = (inc[p.res] ?? 0) + p.amount;
@@ -1365,18 +1407,43 @@ export class Engine {
           s.prompt = this.makePrompt(s, id, rng);
           return;
         }
-        if (s.saison === 0) {
-          // le chantier ouvre dès la fin de la première saison : bâtir tôt, ou garder ses forces pour la seconde
-          if (!s.jalons[s.era] && !s.mem.includes(`chantier_tot_${s.era}`)) {
-            s.mem.push(`chantier_tot_${s.era}`);
-            // seulement si la merveille est déjà à portée : sinon, rendez-vous avant la crise
-            const early: Prompt = { card: 'jalon', early: true };
-            if (this.options(s, early).some((o) => o.effect.jalon && this.canPay(s, o) && this.check(s, o.req))) {
-              s.prompt = early;
-              return;
-            }
+        const fm = this.form(s);
+        const last = s.saison >= fm.seasons - 1;
+        // la Contagion : la crise se répand, une carte à la fin de chaque saison
+        if (fm.id === 'contagion' && !s.mem.includes(`contagion_${s.era}_${s.saison}`)) {
+          s.mem.push(`contagion_${s.era}_${s.saison}`);
+          const cid = this.crisisOf(s).cards[s.saison];
+          if (cid && this.c.cards[cid]) {
+            s.prompt = this.makePrompt(s, cid, rng);
+            return;
           }
-          s.saison = 1;
+        }
+        // le chantier ouvre dès la fin de la première saison (à chaque saison pendant la Course)
+        const course = fm.id === 'course';
+        const key = course ? `chantier_tot_${s.era}_${s.saison}` : `chantier_tot_${s.era}`;
+        if ((course || (s.saison === 0 && !last)) && !s.jalons[s.era] && !s.mem.includes(key)) {
+          s.mem.push(key);
+          // seulement si la merveille est déjà à portée : sinon, rendez-vous avant la crise
+          const early: Prompt = { card: 'jalon', early: true };
+          if (this.options(s, early).some((o) => o.effect.jalon && this.canPay(s, o) && this.check(s, o.req))) {
+            s.prompt = early;
+            return;
+          }
+        }
+        // la Course : la rivale avance d'une étape par saison ; bâtir avant sa dernière étape, c'est gagner
+        if (course && !s.mem.includes(`course_${s.era}_${s.saison}`)) {
+          s.mem.push(`course_${s.era}_${s.saison}`);
+          const decided = s.mem.includes(`course_gagnee_${s.era}`) || s.mem.includes(`course_perdue_${s.era}`);
+          if (!decided) {
+            const won = !!s.jalons[s.era];
+            const lost = !won && s.saison + 1 >= fm.seasons;
+            if (won) s.mem.push(`course_gagnee_${s.era}`);
+            if (lost) s.mem.push(`course_perdue_${s.era}`);
+            ev.push({ type: 'raceStep', stage: s.saison + 1, of: fm.seasons, won, lost });
+          }
+        }
+        if (!last) {
+          s.saison++;
           s.prompt = { card: 'carrefour', routes: this.routesFor(s, rng) };
           return;
         }
@@ -1390,9 +1457,12 @@ export class Engine {
         // la crise
         s.phase = 'crise';
         const cr = this.crisisOf(s);
-        const pile = cr.cards.slice();
-        // une famille qui vous hait choisit ce moment pour trahir
-        const traitor = this.present(s).filter((f) => s.fam[f].loy <= -2).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+        const fm = this.form(s);
+        // la Contagion a déjà joué une carte par saison : il reste la dernière
+        const pile = fm.id === 'contagion' ? cr.cards.slice(fm.seasons) : cr.cards.slice();
+        // une famille qui vous hait choisit ce moment pour trahir (au Conseil, dès qu'elle vous en veut)
+        const lim = fm.id === 'conseil' ? -1 : -2;
+        const traitor = this.present(s).filter((f) => s.fam[f].loy <= lim).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
         if (traitor) {
           // la deuxième et la troisième trahison ne refont pas le même coup
           const base = this.c.betrayal[traitor];
@@ -1402,13 +1472,24 @@ export class Engine {
           const start = n === 0 && s.avoid?.includes(base) && order.length > 1 ? 1 : 0;
           pile.splice(1, 0, order[Math.min(order.length - 1, start + n)]);
         }
+        // le Jugement : vos actes passent en jugement avant la crise
+        if (fm.id === 'jugement') pile.unshift('@jugement');
         s.pile = pile;
         ev.push({ type: 'crisis', era: s.era, name: cr.name });
         continue;
       }
       if (s.phase === 'crise') {
         if (s.pile.length) {
-          s.prompt = this.makePrompt(s, s.pile.shift()!, rng);
+          const id = s.pile.shift()!;
+          if (id.startsWith('@')) {
+            const p = this.stepPrompt(s, id.slice(1), rng);
+            if (p) {
+              s.prompt = p;
+              return;
+            }
+            continue;
+          }
+          s.prompt = this.makePrompt(s, id, rng);
           return;
         }
         // les greniers ne suffiront pas : on le dit avant le bilan, et on peut encore acheter du grain
@@ -1624,17 +1705,20 @@ export class Engine {
         ev.push({ type: 'income', bag: { [r]: 3 } });
       }
     }
+    // après la dernière crise, l'histoire s'arrête : ni usure, ni repas
+    const final = s.era >= ERAS - 1;
     // les vétérans rentrent chez eux, les comptables se servent
-    const da = Math.floor(s.res.armee * TUNING.armyDecay);
-    const dt = Math.floor(s.res.tresor * TUNING.treasureDecay);
+    const da = final ? 0 : Math.floor(s.res.armee * TUNING.armyDecay);
+    const dt = final ? 0 : Math.floor(s.res.tresor * TUNING.treasureDecay);
     if (da || dt) {
       s.res.armee -= da;
       s.res.tresor -= dt;
       ev.push({ type: 'decay', armee: da, tresor: dt });
     }
     // la cité mange
-    const upkeep = this.upkeepOf(s);
-    if (s.res.vivres >= upkeep) {
+    const upkeep = final ? 0 : this.upkeepOf(s);
+    if (final) { /* la dernière ère ne se termine pas par un repas */ }
+    else if (s.res.vivres >= upkeep) {
       s.res.vivres -= upkeep;
       ev.push({ type: 'upkeep', amount: upkeep });
     }
@@ -1654,10 +1738,16 @@ export class Engine {
         }
       }
     }
+    // le Conseil : aucune famille hostile au bilan, la paix civile vaut un quartier (après le repas)
+    if (this.form(s).id === 'conseil' && this.present(s).every((f) => s.fam[f].loy >= -1)) {
+      ev.push({ type: 'peace' });
+      this.changeQuartiers(s, 1, 'la paix civile', 'paix', ev);
+    }
     // une rivale qui a déjà triomphé réclame un tribut à chaque ère : applaudir une fois ne suffit pas
     const tribute = s.rivalJalons >= 5 && s.spent.includes('triomphe');
     // la rivale avance son propre dessein, sauf si on l'en a empêchée
-    if (s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && s.fam && this.c.rivals.length) {
+    // la Course gagnée : la rivale n'achève pas sa merveille cette ère
+    if (s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.fam && this.c.rivals.length) {
       s.rivalJalons = Math.min(5, s.rivalJalons + 1);
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
@@ -1673,11 +1763,12 @@ export class Engine {
     if (step === 'croissance') {
       return s.res.vivres >= this.growthCost(s) ? { card: 'croissance' } : null;
     }
-    if (step === 'proces') {
+    if (step === 'proces' || step === 'jugement') {
       const fams = this.present(s);
       // la famille la plus lésée : loyauté basse et un grief précis dans le journal
       // un procès seulement pour une rancune grave
-      const angry = fams.filter((f) => s.fam[f].loy <= -2 && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+      const lim = -2;
+      const angry = fams.filter((f) => s.fam[f].loy <= lim && this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
       if (angry) {
         const others = fams.filter((f) => f !== angry).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
         return { card: 'proces', plaintiff: angry, quote: this.worstAct(s, angry), qui: others };
