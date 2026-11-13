@@ -46,7 +46,16 @@ function hud(s: GameState): void {
 
 function presage(s: GameState): void {
   const p = e.presageInfo(s);
-  P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date}) — ${p.subtitle}`);
+  P(`=== PRÉSAGE — Ère ${p.era + 1} : ${p.name} (${p.date})`);
+  // ce que l'écran montre d'emblée : une phrase, trois lignes, prêt ou pas
+  const n = p.crisis.name;
+  const toCrisis = n.startsWith('Le ') ? `au ${n.slice(3)}` : n.startsWith('La ') ? `à la ${n.slice(3)}` : n.startsWith('Les ') ? `aux ${n.slice(4)}` : n.startsWith('L’') ? `à l’${n.slice(2)}` : `à ${n}`;
+  P(p.jalon ? `Bâtir ${p.jalon.name.charAt(0).toLowerCase() + p.jalon.name.slice(1)}, puis tenir face ${toCrisis}.` : `Tenir face ${toCrisis}.`);
+  const ready = e.crisisReadiness(s);
+  P(`  Objectif : ${p.jalon ? `${p.jalon.name} (${bag(p.jalon.cost)})${p.tag && p.tag.total < p.tag.need ? ` — ${p.tag.tag} ${p.tag.total}/${p.tag.need}` : ''}` : 'la merveille de l’ère est debout'}`);
+  P(`  Menace : ${p.crisis.name} — ${ready.level === 'pret' ? 'Prêt' : ready.level === 'presque' ? 'Presque prêt' : 'Pas prêt'}`);
+  P(`  Rivale : ${capitalize(p.rival.name)} · ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''} sur 5`);
+  P('--- détails (repliés à l’écran) ---');
   P(`Vous avez : ${s.quartiers} ${s.quartiers > 1 ? 'quartiers' : 'quartier'}, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
   if (p.legacy) P(`L’héritage de ${p.legacy.from} : stèle « ${p.legacy.testament ?? '—'} » ; ${p.legacy.label ?? ''}. ${p.legacy.memory ?? ''}`);
   if (p.jalon) P(`Dessein « ${p.dessein} » : cette ère, bâtir ${p.jalon.name} (${bag(p.jalon.cost)}${p.jalon.req ? `, exige ${p.jalon.req}` : ''}). ${p.jalon.text} ${p.jalon.gift}`);

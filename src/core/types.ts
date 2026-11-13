@@ -5,6 +5,9 @@
 
 export type Res = 'vivres' | 'armee' | 'savoir' | 'tresor';
 export const RES: readonly Res[] = ['vivres', 'armee', 'savoir', 'tresor'];
+/** ce que fait chaque famille, pour qui ne connaît pas encore leurs noms */
+export const FAMILY_ROLE: Record<FamilyId, string> = { ourk: 'guerriers', sel: 'prêtres', brume: 'savants', troc: 'marchands' };
+
 export const RES_LABEL: Record<Res, string> = { vivres: 'Vivres', armee: 'Armée', savoir: 'Savoir', tresor: 'Trésor' };
 export type Resources = Record<Res, number>;
 export type Bag = Partial<Record<Res, number>>;
@@ -194,7 +197,11 @@ export interface Jalon {
 export interface DesseinDef {
   id: string;
   name: string;
+  /** l'accroche, une phrase */
   pitch: string;
+  /** la ressource et les alliés qu'il faudra, en clair */
+  res: Res;
+  need: string;
   tag: Tag;
   ending: 'science' | 'military' | 'culture';
   jalons: [Jalon, Jalon, Jalon, Jalon, Jalon];

@@ -40,7 +40,7 @@ export const rivalries: Record<FamilyId, FamilyId> = { ourk: 'brume', brume: 'ou
 export const desseins: DesseinDef[] = [
   {
     id: 'etoiles', name: 'Toucher les étoiles', tag: 'Science', ending: 'science',
-    pitch: 'Partir. Un jour, tous. Il faudra du Savoir, et des savants qui vous aiment.',
+    pitch: 'Partir un jour vers les étoiles, tous ensemble.', res: 'savoir', need: 'des savants qui vous aiment',
     jalons: [
       { name: 'Le Cercle de pierres', text: 'Des pierres dressées qui annoncent les saisons.', cost: $('S5'), gift: 'Il rapporte 1 Savoir par saison.', passive: { type: 'income', res: 'savoir', amount: 1 }, shape: 'cercle', built: 'Les pierres sont dressées. Au solstice, le soleil se lève pile entre les deux plus grosses. {F:brume} prétend l’avoir prévu ; {F:sel} prétend l’avoir demandé.‖Les pierres tiennent debout toutes seules, ce qui étonne tout le monde. {F:ourk} essaie d’en pousser une. Elle ne bouge pas. Lui, si.' },
       { name: 'La Tour des astronomes', text: 'Une tour pour regarder plus haut que les autres.', cost: $('S8 V3'), req: { tags: { Science: 1 } }, gift: 'Les découvertes coûtent 2 Savoir de moins.', passive: { type: 'discount', res: 'savoir', amount: 2 }, shape: 'tour', built: 'La tour dépasse enfin le temple. {F:sel} parle d’orgueil ; {F:brume} parle de vue. Ils montent quand même ensemble, pour voir qui a raison.‖Du haut de la tour, on voit les étoiles, la vallée, et le linge des voisins. Les astronomes notent surtout les étoiles.' },
@@ -52,7 +52,7 @@ export const desseins: DesseinDef[] = [
   },
   {
     id: 'empire', name: 'Soumettre la vallée', tag: 'Guerre', ending: 'military',
-    pitch: 'La vallée sera à vous, et {rival} avec. Il faudra de l’Armée, et des guerriers fidèles.',
+    pitch: 'La vallée sera à vous, et {rival} avec.', res: 'armee', need: 'des guerriers fidèles',
     jalons: [
       { name: 'La Palissade', text: 'Des pieux, des guetteurs, une porte qui ne grince pas.', cost: $('A5'), gift: 'Chaque ère, la première perte de quartier subie se rachète {s:4} Armée, si vous les avez.', passive: { type: 'shield', amount: 4, res: 'armee' }, shape: 'palissade', built: 'La palissade fait le tour du camp. {F:ourk} la parcourt trois fois, en touchant chaque pieu. Il en manque un : il le plante lui-même, avec la tête.‖Des pieux, des guetteurs, une porte. {F:ourk} teste la porte en se jetant dessus. La porte tient. {F:ourk} aussi, presque.' },
       { name: 'La Légion', text: 'Six mille hommes qui marchent au même pas.', cost: $('A7 T3'), req: { tags: { Guerre: 1 } }, gift: 'Elle rapporte 1 Armée par saison.', passive: { type: 'income', res: 'armee', amount: 1 }, shape: 'aigle', built: 'Six mille hommes défilent au même pas. Le sol tremble. Au loin, {rival} décident que la marche à pied, c’est surfait.‖La légion prête serment, en rangs, sous les enseignes. On a cousu votre profil sur les boucliers : de loin, l’ennemi croit voir mille fois le même homme.' },
@@ -64,7 +64,7 @@ export const desseins: DesseinDef[] = [
   },
   {
     id: 'posterite', name: 'Être chantés pour toujours', tag: 'Culture', ending: 'culture',
-    pitch: 'Qu’on chante {cite} quand plus personne ne se souviendra de {rival}. Il faudra du Trésor, et une culture.',
+    pitch: 'Qu’on chante {cite} quand plus personne ne se souviendra de {rival}.', res: 'tresor', need: 'des familles dévouées',
     jalons: [
       { name: 'Les Peintures de la grotte', text: 'Des mains, des bisons, et vous, plus grand que nature.', cost: $('T5'), gift: 'On pardonne à qui l’on a peint : à chaque fin d’ère, les familles hostiles remontent d’un cran.', passive: { type: 'mend' }, shape: 'grotte', built: 'Des mains, des bisons, et vous, immense, au milieu. Les enfants viennent toucher la paroi. Dans dix mille ans, on la visitera avec des billets.‖À la lueur des torches, les bisons semblent courir. Les enfants crient. Les anciens aussi, mais en faisant semblant de ne pas avoir peur.' },
       { name: 'Le Théâtre', text: 'Des gradins de pierre où l’on rit de vous, ce qui vous rend populaire.', cost: $('T8 V2'), req: { tags: { Culture: 2 } }, gift: 'Il rapporte 1 Trésor par saison.', passive: { type: 'income', res: 'tresor', amount: 1 }, shape: 'theatre', built: 'La première pièce se moque de vous pendant trois heures. Le public rit, vous aussi, par politique. La deuxième pièce se moque du public.‖Le rideau se lève sur une tragédie : un roi trop bon, trahi par sa famille. Les quatre familles applaudissent en se regardant de travers.' },

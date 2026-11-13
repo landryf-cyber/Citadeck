@@ -6,7 +6,7 @@ import { Rng, hashString } from '../core/rng';
 import type { Content } from './content';
 import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLES, ERA_SCALE } from './text';
 import {
-  FAMILIES, RES, RES_LABEL, TAGS,
+  FAMILIES, FAMILY_ROLE, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
   type Jalon, type OriginDef, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
@@ -1427,13 +1427,13 @@ export class Engine {
   originTraits(o: OriginDef): { atout: string; handicap: string; ups: string[]; downs: string[] } {
     const up: string[] = [];
     const down: string[] = [];
-    if (o.mem?.includes('heritiers')) { up.push('Héritage doublé'); down.push('Rancunes doublées'); }
+    if (o.mem?.includes('heritiers')) { up.push('Bonus des ruines doublé'); down.push('Vieilles rancunes doublées'); }
     // une règle propre (le limon du fleuve) passe avant les chiffres de départ
-    for (const id of o.deck ?? []) for (const p of this.c.cards[id]?.passive ?? []) if (p.type === 'income') up.push(`+${p.amount} ${p.amount > 1 ? RES_LABEL[p.res] : RES_LABEL[p.res].replace(/s$/, '')} par saison`);
+    for (const id of o.deck ?? []) for (const p of this.c.cards[id]?.passive ?? []) if (p.type === 'income') up.push(`+${p.amount} ${RES_LABEL[p.res]} par saison`);
     const loys = FAMILIES.map((f) => o.loy?.[f] ?? 0);
     if (loys.every((x) => x > 0)) up.push(`Familles amicales`);
-    if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} amicaux`);
-    for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} méfiants`);
+    if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(FAMILY_ROLE[f])} amicaux`);
+    for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(FAMILY_ROLE[f])} méfiants`);
     if (o.quartiers > 3) up.push(`${o.quartiers} quartiers au départ`);
     if (o.quartiers < 3) down.push(`${o.quartiers} quartiers seulement`);
     const ref: Resources = { vivres: 6, armee: 4, savoir: 3, tresor: 4 };
@@ -1450,9 +1450,10 @@ export class Engine {
    * Prêt pour la crise ? Pour chaque carte de la crise, existe-t-il dès maintenant une réponse qui tient (seuil atteint,
    * coût payable) sans sacrifier une famille ni un quartier ? Un indicateur simple pour le présage.
    */
-  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non' } {
+  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag } {
     let covered = 0;
     let total = 0;
+    const missing: Bag = {};
     for (const id of this.crisisOf(s).cards) {
       const c = this.c.cards[id];
       if (!c || c.qui) continue;
@@ -1465,9 +1466,27 @@ export class Engine {
         return true;
       });
       if (ok) covered++;
+      else {
+        // ce qui manque pour la réponse la plus proche (coût et seuil), sans sacrifice
+        let best: Bag | null = null;
+        let bestN = Infinity;
+        for (const o of this.options(s, { card: id })) {
+          if (!this.check(s, o.req) || (o.effect.quartiers ?? 0) < 0) continue;
+          const need: Bag = {};
+          for (const r of RES) need[r] = (this.costOf(s, o.cost)[r] ?? 0) + (o.effect.if?.res?.[r] ?? 0);
+          const short: Bag = {};
+          let n = 0;
+          for (const r of RES) {
+            const d = (need[r] ?? 0) - s.res[r];
+            if (d > 0) { short[r] = d; n += d; }
+          }
+          if (n > 0 && n < bestN) { best = short; bestN = n; }
+        }
+        if (best) for (const r of RES) if (best[r]) missing[r] = Math.max(missing[r] ?? 0, best[r]!);
+      }
     }
     const level = covered >= total ? 'pret' : covered * 2 >= total ? 'presque' : 'non';
-    return { covered, total, level };
+    return { covered, total, level, missing };
   }
 
   /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */
