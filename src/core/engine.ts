@@ -1780,6 +1780,14 @@ export class Engine {
       }
       const fond = fams.filter((f) => s.fam[f].loy >= 1 && this.bestAct(s, f) >= 0 && !s.spent.includes(`hommage_${f}`)).sort((a, b) => s.fam[b].loy - s.fam[a].loy)[0];
       if (fond) return { card: `hommage_${fond}`, quote: this.bestAct(s, fond) };
+      // le Jugement a toujours lieu : à défaut, la famille la moins comblée vient demander des comptes
+      if (step === 'jugement') {
+        const least = fams.filter((f) => this.worstAct(s, f) >= 0).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
+        if (least) {
+          const others = fams.filter((f) => f !== least).sort((a, b) => s.fam[b].loy - s.fam[a].loy).slice(0, 2);
+          return { card: 'proces', plaintiff: least, quote: this.worstAct(s, least), qui: others };
+        }
+      }
       return null;
     }
     if (step === 'jalon') return { card: 'jalon' };

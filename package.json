@@ -17,7 +17,8 @@
     "single": "tsx scripts/single-file.ts",
     "dominance": "tsx src/sim/dominance.ts",
     "repeats": "tsx src/sim/repeats.ts",
-    "structure": "tsx src/sim/structure.ts"
+    "structure": "tsx src/sim/structure.ts",
+    "blind": "tsx src/sim/blind.ts"
   },
   "repository": {
     "type": "git",
