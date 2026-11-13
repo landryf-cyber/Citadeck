@@ -10,7 +10,8 @@ import type { Scene } from '../scene/scene';
 import { LOOKS, rgb } from '../scene/palette';
 import { drawElem, type DrawEnv, type Elem } from '../scene/city';
 import type { AudioEngine } from '../audio';
-import { cardArt, medallion, type ArtSpec } from './art';
+import { cardArt, medallion, motif, type ArtSpec } from './art';
+import { Rng } from '../core/rng';
 import { bagChips, el, esc, ICON, rich, RES_ICON, ROMAN, wait } from './dom';
 import { replaySnapshots, snapshot } from './snapshot';
 import { store, type Settings } from './store';
@@ -151,54 +152,79 @@ export class App {
   private setup(): void {
     const seed = (Date.now() % 1_000_000_007) ^ Math.floor(Math.random() * 1e6);
     const name = civName(seed);
-    let dessein = 'etoiles';
+    const first = this.meta.runs === 0;
+    // première partie : une seule décision, le dessein, avec un choix conseillé déjà sélectionné
+    let dessein = first ? 'posterite' : 'etoiles';
     let origin = 'feu';
     let iron = false;
-    const first = this.meta.runs === 0;
-    this.openScreen('veil setup', (inner) => {
+    const open = new Set<string>();
+    const preview = (o: string) => {
+      const ruins = nextSetup(this.meta, { dessein, origin: o }).ruins ?? [];
+      const demo = this.e.newGame(seed, { dessein, origin: o, ruins: o === 'heritiers' ? ruins : [] });
+      const snap = snapshot(this.e, demo);
+      snap.threat = undefined;
+      if (o === 'heritiers' && !snap.ruins.length) snap.ruins = ['cercle', 'tour', 'dome'];
+      this.scene.setSnapshot(snap);
+    };
+    preview(origin);
+    this.openScreen('soft setup', (inner) => {
       const render = () => {
         inner.innerHTML = `<div class="over">Une nouvelle civilisation</div><h2 class="big">${esc(name)}</h2>
-          <p class="sub">${first ? 'Un feu, quatre familles. Choisissez ce que vous voulez devenir.' : 'Sur les ruines des précédentes, une autre tentative.'}</p>
-          <div class="label">Le grand dessein</div>`;
+          <div class="label">${first ? 'Que voulez-vous devenir ?' : 'Votre grand dessein'}</div>`;
         const tiles = el('div', 'tiles');
         for (const d of this.e.c.desseins) {
           const reqs = d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ');
-          const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux, merveilles' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux, merveilles' : 'découvertes de Culture, familles dévouées, merveilles';
-          const t = el('button', `tile${d.id === dessein ? ' sel' : ''}`, `<em>${esc(d.tag)} · 5 merveilles</em><b>${esc(d.name)}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span><span class="req-line">Victoire : 4 merveilles ; triomphe : les 5. Elles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>`);
-          t.addEventListener('click', () => {
-            dessein = d.id;
+          const src = d.tag === 'Science' ? 'découvertes de Science, Brume amicaux' : d.tag === 'Guerre' ? 'découvertes de Guerre, Ourk amicaux' : 'découvertes de Culture, familles dévouées';
+          const rec = first && d.id === 'posterite';
+          const t = el('button', `tile dessein${d.id === dessein ? ' sel' : ''}`, `<b>${esc(d.name)}${rec ? ' <i class="rec">Conseillé pour commencer</i>' : ''}</b><span>${esc(d.pitch.replace('{rival}', 'la rivale').replace('{cite}', name))}</span>
+            <span class="more" role="button" tabindex="0">${open.has(d.id) ? 'Masquer les détails' : 'Détails'}</span>
+            ${open.has(d.id) ? `<span class="req-line">Une merveille par ère. Quatre à la fin des temps : la victoire ; les cinq : le triomphe. Elles exigent ${reqs} de ${esc(d.tag)} (${src}).</span>` : ''}`);
+          t.addEventListener('click', (ev) => {
+            if ((ev.target as HTMLElement).classList.contains('more')) {
+              if (open.has(d.id)) open.delete(d.id);
+              else open.add(d.id);
+            } else dessein = d.id;
             this.audio.ui();
             render();
           });
           tiles.appendChild(t);
         }
         inner.appendChild(tiles);
-        inner.appendChild(el('div', 'label', 'L’origine'));
-        const ot = el('div', 'tiles');
-        for (const o of this.e.c.origins) {
-          const open = o.id === 'feu' || this.meta.unlocked.includes(o.id);
-          const u = UNLOCKS.find((x) => x.id === o.id);
-          const t = el('button', `tile${o.id === origin ? ' sel' : ''}`, open
-            ? `<b>${esc(o.name)}</b><span>${esc(o.text)}</span>`
-            : `<em>${ICON.lock} Verrouillée</em><b>${esc(o.name)}</b><span>${esc(u?.how ?? '')}</span>`);
-          if (!open) t.disabled = true;
-          t.addEventListener('click', () => {
-            origin = o.id;
-            this.audio.ui();
-            render();
-          });
-          ot.appendChild(t);
+        // l'origine, les Héritiers et l'Âge de fer n'apparaissent qu'après une première partie terminée
+        if (!first) {
+          inner.appendChild(el('div', 'label', 'Qui êtes-vous ?'));
+          const ot = el('div', 'tiles origins');
+          for (const o of this.e.c.origins) {
+            const unlocked = o.id === 'feu' || this.meta.unlocked.includes(o.id);
+            const u = UNLOCKS.find((x) => x.id === o.id);
+            const tr = this.e.originTraits(o);
+            const emblem = `<svg class="emblem" viewBox="78 26 144 144" aria-hidden="true">${motif(o.id === 'fleuve' ? 'wave' : o.id === 'heritiers' ? 'arch' : 'flame', new Rng(7), 'hsl(36 90% 80%)', 'hsla(30,90%,60%,.35)', 'hsla(36,70%,78%,.4)')}</svg>`;
+            const t = el('button', `tile origin${o.id === origin ? ' sel' : ''}`, unlocked
+              ? `${emblem}<div><b>${esc(o.name)}</b><span>${esc(o.style)}</span><span class="tags" title="${esc([...tr.ups.map((x) => '+ ' + x), ...tr.downs.map((x) => '− ' + x)].join('\n'))}"><i class="good">${esc(tr.atout)}</i><i class="bad">${esc(tr.handicap)}</i></span></div>`
+              : `${emblem}<div><em>${ICON.lock} Pas encore</em><b>${esc(o.name)}</b><span>${esc(u?.how ?? '')}</span></div>`);
+            if (!unlocked) t.disabled = true;
+            t.addEventListener('mouseenter', () => unlocked && preview(o.id));
+            t.addEventListener('focus', () => unlocked && preview(o.id));
+            t.addEventListener('mouseleave', () => preview(origin));
+            t.addEventListener('click', () => {
+              origin = o.id;
+              this.audio.ui();
+              preview(origin);
+              render();
+            });
+            ot.appendChild(t);
+          }
+          inner.appendChild(ot);
+          if (this.meta.unlocked.includes('fer')) {
+            const tg = el('button', `toggle${iron ? ' on' : ''}`, `<span><b>L’Âge de fer</b><br><small style="color:var(--dim)">Un défi : les crises sont 20 % plus dures.</small></span><i></i>`);
+            tg.addEventListener('click', () => {
+              iron = !iron;
+              render();
+            });
+            inner.appendChild(tg);
+          }
         }
-        inner.appendChild(ot);
-        if (this.meta.unlocked.includes('fer')) {
-          const tg = el('button', `toggle${iron ? ' on' : ''}`, `<span><b>L’Âge de fer</b><br><small style="color:var(--dim)">Crises 20 % plus dures.</small></span><i></i>`);
-          tg.addEventListener('click', () => {
-            iron = !iron;
-            render();
-          });
-          inner.appendChild(tg);
-        }
-        const go = el('div', 'btns');
+        const go = el('div', 'btns stick');
         go.appendChild(this.button(`Fonder ${name}`, () => this.start(seed, { dessein, origin, iron, name })));
         go.appendChild(this.button('Retour', () => this.title(), 'ghost'));
         inner.appendChild(go);
@@ -603,44 +629,68 @@ export class App {
       store.saveGame(s);
       void this.feedback(ev, this.e.view(s)!);
     };
+    let details = false;
     this.openScreen('soft presage', (inner) => {
-      inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2><p class="sub">${esc(p.subtitle)}</p>
-        <div class="presage-res"><span class="chip">${ICON.house}<b>${s.quartiers}</b>&nbsp;${s.quartiers > 1 ? 'quartiers' : 'quartier'}</span>${bagChips(s.res)}</div>`;
-      if (p.legacy) {
-        inner.appendChild(el('div', 'panel legacy', `<h3>L’héritage de ${esc(p.legacy.from)}</h3>
-          ${p.legacy.testament ? `<p>Sur leur stèle : <q>« ${esc(p.legacy.testament)} »</q></p>` : ''}
-          ${p.legacy.label ? `<p class="note">${esc(p.legacy.label)}${p.legacy.heirs ? ' (compté double : vous êtes leurs héritiers)' : ''}.</p>` : ''}
-          ${p.legacy.memory ? `<p class="note">${esc(p.legacy.memory)}</p>` : ''}`));
-      }
-      const stars = `<span class="stars">${[0, 1, 2, 3, 4].map((i) => `<i class="${s.jalons[i] ? 'on' : ''}"></i>`).join('')}</span>`;
-      const jal = p.jalon
-        ? `<p>Cette ère, on peut bâtir <b>${esc(p.jalon.name)}</b> : ${esc(p.jalon.text)}</p><div class="row">${bagChips(p.jalon.cost)}${p.jalon.req ? `<span class="note">· exige ${esc(p.jalon.req)}</span>` : ''}</div><p class="note">${esc(p.jalon.gift)}</p>
-          ${p.tag ? `<p class="${p.tag.total >= p.tag.need ? 'note' : 'warnline'}">${esc(p.tag.tag)} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${esc(p.tag.parts.join(', '))})` : ''}. On en gagne avec ${esc(p.tag.how)}.</p>` : ''}
-          ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}${p.alt.req ? `<span class="note">· exige ${esc(p.alt.req)}</span>` : ''}</div><p class="note">${esc(p.alt.gift)}</p>` : ''}`
-        : '<p class="note">Le jalon de cette ère est déjà debout.</p>';
-      const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
-      // une merveille manquée n'est pas perdue : elle se rattrape au bilan, plus cher
-      const missed = this.e.dessein(s).jalons.filter((_, i) => i < s.era && !s.jalons[i]).map((j) => j.name);
-      const miss = missed.length ? `<p class="warnline">Manquée${missed.length > 1 ? 's' : ''} : ${esc(missed.join(', '))}. À la seconde saison, vous pourrez ${missed.length > 1 ? 'en rattraper une' : 'la rattraper'}, plus cher.</p>` : '';
-      const rule = s.era === 0 ? '<p class="note">Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau juste avant la crise. Quatre merveilles à la fin des temps : la victoire. Les cinq : le triomphe.</p>' : '';
-      inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${miss}${rule}${nxt}`));
-      const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
-      const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
-      const fams = p.needs.families.length ? `<p class="note">Ce qui aide aussi : ${esc(p.needs.families.join(', '))}.</p>` : '';
-      inner.appendChild(el('div', 'panel crisis', `<h3>La crise de l’ère · ${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${ifBuilt}${fams}
-        ${p.envy ? `<p class="warnline">Vos ${p.built} merveille${p.built > 1 ? 's' : ''} attire${p.built > 1 ? 'nt' : ''} les regards : la crise sera ${p.envy} % plus dure.</p>` : ''}`));
-      const rv = this.e.rival(s);
-      inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((i) => `<i class="${i < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
-        <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur grand dessein : à chaque fin d’ère, ils réclament un tribut.` : `${esc(p.rival.leader)} ${p.rival.count ? `a déjà ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''}` : 'n’a encore rien bâti'}. À la fin de l’ère : ${esc(p.rival.next)}, si personne ne l’en empêche. À cinq, ils triomphent, et la vallée leur paie tribut.`} Relations : ${p.rival.rel <= -2 ? 'la guerre froide' : p.rival.rel === -1 ? 'tendues' : p.rival.rel === 0 ? 'polies' : p.rival.rel === 1 ? 'cordiales' : 'chaleureuses, presque suspectes'}.</p>`));
-      // prévenir avant de punir : une famille qu'on ne visitera pas cette ère se sentira délaissée au bilan
-      const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
-      if (lonely.length) inner.appendChild(el('p', 'warnline', `${esc(capitalize(lonely.join(' et ')))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`));
-      inner.appendChild(el('p', 'note', `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''}${s.res.vivres < p.upkeep ? ` ; vous en avez ${s.res.vivres}` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
-      (inner.lastChild as HTMLElement).style.cssText = 'color:var(--dim);font-size:13px;text-align:center;margin:0';
-      const btns = el('div', 'btns');
-      btns.appendChild(this.button('En route', go));
-      inner.appendChild(btns);
-      if (s.tutorial && s.era === 0) inner.appendChild(el('p', 'hint', 'Le <b>présage</b> annonce l’ère : la merveille à bâtir, la crise qui vient, ce qui en protège. Tout le reste, il faudra le lire sur les cartes.'));
+      const render = () => {
+        const rv = this.e.rival(s);
+        const ready = this.e.crisisReadiness(s);
+        const jName = p.jalon ? p.jalon.name.charAt(0).toLowerCase() + p.jalon.name.slice(1) : '';
+        // « à » + article : au Grand Hiver, à la Horde, à l'Éveil
+        const n = p.crisis.name;
+        const toCrisis = n.startsWith('Le ') ? `au ${n.slice(3)}` : n.startsWith('La ') ? `à la ${n.slice(3)}` : n.startsWith('Les ') ? `aux ${n.slice(4)}` : n.startsWith('L’') ? `à l’${n.slice(2)}` : `à ${n}`;
+        // un message principal : l'objectif de l'ère, en une phrase
+        const main = p.jalon ? `Bâtir ${esc(jName)}, puis tenir face ${esc(toCrisis)}.` : `Tenir face ${esc(toCrisis)}.`;
+        const readyTxt = ready.level === 'pret' ? 'Prêt' : ready.level === 'presque' ? 'Presque prêt' : 'Pas prêt';
+        const missed = this.e.dessein(s).jalons.filter((_, k) => k < s.era && !s.jalons[k]).map((j) => j.name);
+        const lonely = this.e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => this.e.c.families[f].house[s.era]);
+        const notes = [
+          ...(missed.length ? [`${esc(missed.join(', '))} : à rattraper à la seconde saison`] : []),
+          ...(lonely.length ? [`${esc(capitalize(lonely.join(' et ')))} attendent votre visite cette ère`] : []),
+        ];
+        inner.innerHTML = `<div class="over">Ère ${ROMAN[p.era]} · ${esc(p.date)}</div><h2 class="big">${esc(p.name)}</h2>
+          <p class="mission">${main}</p>
+          <div class="brief">
+            <div class="bl"><i class="k">Objectif</i><span>${p.jalon ? `<b>${esc(p.jalon.name)}</b> ${bagChips(p.jalon.cost)}${p.tag && p.tag.total < p.tag.need ? ` <em class="warn">${esc(p.tag.tag)} ${p.tag.total}/${p.tag.need}</em>` : ''}` : 'La merveille de l’ère est debout.'}</span></div>
+            <div class="bl"><i class="k">Menace</i><span><b>${esc(p.crisis.name)}</b> <em class="ready ${ready.level}">${readyTxt}</em></span></div>
+            <div class="bl"><i class="k">Rivale</i><span>${esc(capitalize(p.rival.name))} <b>${p.rival.count}/5</b>${p.rival.count >= 5 ? ' : ils réclament tribut' : ''}</span></div>
+            ${p.legacy && p.legacy.label ? `<div class="bl"><i class="k">Héritage</i><span>${esc(p.legacy.label)}${p.legacy.heirs ? ' (compté double)' : ''}</span></div>` : ''}
+            ${notes.length ? `<div class="bl note"><i class="k">À noter</i><span>${notes.join(' · ')}</span></div>` : ''}
+          </div>`;
+        const more = el('button', 'more-btn', details ? 'Masquer les détails' : 'Détails : seuils, coûts, règles');
+        more.addEventListener('click', () => {
+          details = !details;
+          render();
+        });
+        inner.appendChild(more);
+        if (details) {
+          if (p.legacy) {
+            inner.appendChild(el('div', 'panel legacy', `<h3>L’héritage de ${esc(p.legacy.from)}</h3>
+              ${p.legacy.testament ? `<p>Sur leur stèle : <q>« ${esc(p.legacy.testament)} »</q></p>` : ''}
+              ${p.legacy.label ? `<p class="note">${esc(p.legacy.label)}${p.legacy.heirs ? ' (compté double : vous êtes leurs héritiers)' : ''}.</p>` : ''}
+              ${p.legacy.memory ? `<p class="note">${esc(p.legacy.memory)}</p>` : ''}`));
+          }
+          const stars = `<span class="stars">${[0, 1, 2, 3, 4].map((k) => `<i class="${s.jalons[k] ? 'on' : ''}"></i>`).join('')}</span>`;
+          const jal = p.jalon
+            ? `<p><b>${esc(p.jalon.name)}</b> : ${esc(p.jalon.text)}</p><div class="row">${bagChips(p.jalon.cost)}${p.jalon.req ? `<span class="note">· exige ${esc(p.jalon.req)}</span>` : ''}</div><p class="note">${esc(p.jalon.gift)}</p>
+              ${p.tag ? `<p class="note">${esc(p.tag.tag)} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${esc(p.tag.parts.join(', '))})` : ''}. On en gagne avec ${esc(p.tag.how)}.</p>` : ''}
+              ${p.alt ? `<p>Ou bien <b>${esc(p.alt.name)}</b> : ${esc(p.alt.text)}</p><div class="row">${bagChips(p.alt.cost)}</div>` : ''}`
+            : '';
+          const rule = '<p class="note">Le chantier ouvre à la fin de la première saison si vous en avez les moyens, et de nouveau avant la crise. Quatre merveilles à la fin des temps : la victoire ; les cinq : le triomphe.</p>';
+          const nxt = p.nextJalon ? `<p class="note">À l’ère suivante : ${esc(p.nextJalon.name)}${p.nextJalon.req ? `, qui exigera ${esc(p.nextJalon.req.replace(/ \(vous : \d+\)/, ''))}` : ''}.</p>` : '';
+          inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${rule}${nxt}`));
+          const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
+          const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
+          inner.appendChild(el('div', 'panel crisis', `<h3>${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${ifBuilt}
+            <p class="note">Réponses qui tiennent déjà : ${ready.covered} sur ${ready.total}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}</p>`));
+          inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
+            <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur dessein : ils réclament un tribut à chaque ère.` : `${esc(p.rival.leader)} bâtit ${esc(p.rival.next)}, à achever en fin d’ère si personne ne l’en empêche. À cinq merveilles, la vallée leur paie tribut.`}</p>`));
+          inner.appendChild(el('p', 'note', `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
+        }
+        const btns = el('div', 'btns stick');
+        btns.appendChild(this.button('En route', go));
+        inner.appendChild(btns);
+      };
+      render();
     }, (k) => {
       if (k === 'Enter' || k === ' ') go();
     });

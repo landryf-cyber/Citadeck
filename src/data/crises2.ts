@@ -118,8 +118,8 @@ export const crisisAltCards = [
     title: 'La Relance',
     text: 'Pour relancer l’économie, {F:brume} propose de la planifier, {F:troc} de la libérer, et {F:sel} de prier pour elle. {Rival} proposent de vous prêter de l’argent. Gentiment.',
     options: [
-      { label: 'Imprimer de la monnaie', effect: { gain: $('T7'), loy: { brume: -1, troc: 1 } }, reply: 'Les pièces sortent par charrettes. Elles valent moins qu’hier, mais il y en a plus. {F:brume} refait le calcul et pâlit.' },
-      { label: 'Se serrer la ceinture', effect: { gain: $('T3'), loy: { ourk: -1, sel: -1, brume: -1, troc: -1 } }, reply: 'Tout le monde se serre la ceinture. Les fabricants de ceintures, eux, font fortune.' },
+      { label: 'Imprimer de la monnaie', effect: { gain: $('T7 V-3'), loy: { brume: -1, troc: 1 } }, reply: 'Les pièces sortent par charrettes. Elles valent moins qu’hier, et le pain coûte le double. {F:brume} refait le calcul et pâlit.' },
+      { label: 'Se serrer la ceinture', effect: { gain: $('T3 V2'), loy: { ourk: -1, sel: -1 } }, reply: 'Tout le monde se serre la ceinture, et l’on rationne le grain. Les fabricants de ceintures, eux, font fortune.' },
       { label: 'Emprunter à {rival}', effect: { gain: $('T9'), rival: 1, rivalJalon: 1 }, reply: '{Reine} vous prête, à un taux affectueux. Avec les intérêts, {elle} s’offre une merveille de plus.' },
     ],
   }),

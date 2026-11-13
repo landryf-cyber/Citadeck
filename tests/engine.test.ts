@@ -193,6 +193,7 @@ describe('pas de redite', () => {
   it('la palissade pare une perte subie, pas un sacrifice choisi', () => {
     const s = e.newGame(14, { dessein: 'empire' });
     s.jalons = [true, false, false, false, false];
+    s.res.armee = 8;
     const q = s.quartiers;
     const ev: never[] = [];
     const card = content.cards.ourk_1;

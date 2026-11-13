@@ -22,6 +22,10 @@ export interface CivSnapshot {
   ruins: string[];
   /** réserves normalisées 0..1 */
   res: { vivres: number; armee: number; savoir: number; tresor: number };
+  /** le décor de l'origine : un fleuve, des ruines… */
+  backdrop?: 'feu' | 'fleuve' | 'ruines';
+  /** la menace de l'ère, visible à l'horizon (horde, hiver, peste…) */
+  threat?: string;
 }
 
 export type ElemKind = 'dwelling' | 'sig' | 'wonder' | 'wall' | 'field' | 'stall' | 'granary' | 'heart' | 'rival' | 'relic';
@@ -95,6 +99,13 @@ function slotsFor(seed: number): Slots {
 }
 
 const FAM_SIG = ['Guerre', 'Foi', 'Science', 'Commerce'];
+
+/** Où la rivale bâtit sa prochaine merveille (fraction de la largeur), ou null si elle a fini. */
+export function rivalBuildX(s: CivSnapshot): number | null {
+  if (s.rival.count >= 5) return null;
+  const slots = slotsFor(s.seed);
+  return slots.rivalSide ? 0.62 + s.rival.count * 0.075 : 0.38 - s.rival.count * 0.075;
+}
 
 export function layoutCity(s: CivSnapshot): Elem[] {
   const slots = slotsFor(s.seed);

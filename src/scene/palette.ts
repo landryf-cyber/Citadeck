@@ -89,6 +89,19 @@ export const LOOKS: EraLook[] = [
   },
 ];
 
+/** L'origine teinte la première ère : le feu de camp, le fleuve qui déborde, les ruines au crépuscule. */
+export const BACKDROP_LOOKS: Record<'feu' | 'fleuve' | 'ruines', EraLook> = {
+  feu: { ...LOOKS[0], skyLow: hex('#52200e'), halo: 0.56, fogAmount: 0.62, smoke: 0.38, rays: 0.4 },
+  fleuve: {
+    ...LOOKS[0], skyMid: hex('#0a1626'), skyLow: hex('#1e4250'), fog: hex('#5aa6b8'), far: hex('#10222e'),
+    crop: hex('#7fa45a'), light: hex('#ffb066'), halo: 0.36, fogAmount: 0.6,
+  },
+  ruines: {
+    ...LOOKS[0], skyMid: hex('#140c26'), skyLow: hex('#3e1a40'), fog: hex('#a874c8'), far: hex('#1e1534'),
+    accent: hex('#e0c0ff'), light: hex('#ff9a66'), halo: 0.34, fogAmount: 0.55,
+  },
+};
+
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }

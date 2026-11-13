@@ -17,8 +17,16 @@ export function snapshot(e: Engine, s: GameState): CivSnapshot {
     rival: { count: s.rivalJalons, hue: e.rival(s).hue },
     ruins: s.ruins.map((r) => r.shape ?? 'cercle'),
     res: { vivres: n(s.res.vivres), armee: n(s.res.armee), savoir: n(s.res.savoir), tresor: n(s.res.tresor) },
+    backdrop: s.origin === 'fleuve' ? 'fleuve' : s.origin === 'heritiers' ? 'ruines' : 'feu',
+    threat: s.phase === 'fin' || s.phase === 'finere' ? undefined : THREAT[e.crisisOf(s).cards[0]],
   };
 }
+
+/** La menace de chaque crise, telle que la scène la montre. */
+const THREAT: Record<string, string> = {
+  x0_eclaireurs: 'horde', x0b_neige: 'hiver', x1_port: 'peste', x1b_fumee: 'incendie', x2_rumeur: 'revolte',
+  x2b_papes: 'schisme', x3_mobilisation: 'guerre', x3b_panique: 'krach', x4_signal: 'filtre', x4b_eveil: 'eveil',
+};
 
 /**
  * Rejoue la partie depuis sa graine (le moteur est déterministe) pour retrouver la cité

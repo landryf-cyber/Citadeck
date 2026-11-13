@@ -386,3 +386,36 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .stat .debt { position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #ff9a84; white-space: nowrap; background: rgba(12, 8, 12, 0.92); border-radius: 5px; padding: 0 4px; box-shadow: inset 0 0 0 1px rgba(255, 120, 90, 0.4); z-index: 6; }
 /* la réponse au choix précédent : lisible sur n'importe quel ciel */
 .after .reply { background: rgba(10, 8, 14, 0.62); border-radius: 12px; padding: 7px 12px; backdrop-filter: blur(3px); }
+
+/* fondation : une décision à la fois, le bouton toujours visible */
+.screen.setup .inner { gap: 10px; padding-bottom: 4px; }
+.screen.setup .big { font-size: clamp(30px, 8vw, 46px); margin: 0; }
+.tile .rec { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #ffd59a; margin-left: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(255, 200, 120, 0.12); vertical-align: middle; }
+.tile .more { align-self: flex-start; font-size: 12px; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; margin-top: 2px; }
+.tile.origin { flex-direction: row; align-items: center; gap: 12px; }
+.tile.origin .emblem { width: 60px; height: 60px; flex: none; border-radius: 12px; background: radial-gradient(circle at 50% 60%, rgba(255, 170, 90, 0.16), rgba(255, 170, 90, 0) 70%); }
+.tile.origin .emblem * { vector-effect: non-scaling-stroke; }
+.tile.origin.sel .emblem { background: radial-gradient(circle at 50% 60%, rgba(255, 180, 100, 0.32), rgba(255, 170, 90, 0) 72%); }
+@media (min-width: 900px) {
+  .screen.soft.setup { background: linear-gradient(90deg, rgba(5, 4, 9, 0.2) 0%, rgba(5, 4, 9, 0.84) 30%, rgba(5, 4, 9, 0.84) 70%, rgba(5, 4, 9, 0.2) 100%); }
+}
+.tile.origin > div { display: flex; flex-direction: column; gap: 4px; }
+.tile .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.tile .tags i { font-style: normal; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.tile .tags i.good { color: #c8efb4; background: rgba(110, 190, 90, 0.16); box-shadow: inset 0 0 0 1px rgba(150, 220, 120, 0.3); }
+.tile .tags i.bad { color: #ffc0a8; background: rgba(220, 90, 60, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 130, 100, 0.3); }
+.btns.stick { position: sticky; bottom: calc(-1 * max(18px, env(safe-area-inset-bottom))); z-index: 3; width: 100%; padding: 14px 0 max(18px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(5, 4, 9, 0) 0%, rgba(5, 4, 9, 0.92) 38%); }
+
+/* présage : un message, trois lignes, le détail à la demande */
+.presage .mission { font-family: 'Cinzel', serif; font-size: clamp(18px, 4.6vw, 22px); line-height: 1.3; text-align: center; color: #fff3dc; margin: 2px 0 4px; text-wrap: balance; }
+.brief { width: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 14px; background: rgba(14, 11, 19, 0.82); box-shadow: inset 0 0 0 1px var(--line); }
+.brief .bl { display: flex; align-items: baseline; gap: 10px; font-size: 15px; line-height: 1.35; }
+.brief .bl .k { font-style: normal; flex: none; width: 74px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.brief .bl span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.brief .bl.note span { color: #ffc0a8; font-size: 13.5px; }
+.brief .ready { font-style: normal; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+.brief .ready.pret { color: #c8efb4; background: rgba(110, 190, 90, 0.18); }
+.brief .ready.presque { color: #ffe08a; background: rgba(230, 180, 60, 0.16); }
+.brief .ready.non { color: #ffb0a0; background: rgba(220, 80, 60, 0.18); }
+.brief .warn { font-style: normal; font-size: 12px; font-weight: 800; color: #ffb0a0; }
+.more-btn { background: none; color: var(--faint); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }

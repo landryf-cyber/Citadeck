@@ -204,6 +204,10 @@ export interface OriginDef {
   id: string;
   name: string;
   text: string;
+  /** une phrase qui dit le style de jeu */
+  style: string;
+  /** loyautés de départ */
+  loy?: Partial<Record<FamilyId, number>>;
   res: Resources;
   quartiers: number;
   families: FamilyId[];

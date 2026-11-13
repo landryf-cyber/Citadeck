@@ -4,8 +4,8 @@
  * la cité (pleine résolution, rafraîchie à la demande) et les éléments vivants (chaque image).
  */
 import { Rng, hashString } from '../core/rng';
-import { layoutCity, drawElem, type CivSnapshot, type DrawEnv, type Elem } from './city';
-import { LOOKS, mixLook, mix, rgb, ease, clamp01, lerp, type EraLook, type RGB } from './palette';
+import { layoutCity, drawElem, rivalBuildX, type CivSnapshot, type DrawEnv, type Elem } from './city';
+import { LOOKS, BACKDROP_LOOKS, mixLook, mix, rgb, ease, clamp01, lerp, type EraLook, type RGB } from './palette';
 
 export type QualitySetting = 'auto' | 'high' | 'low';
 type Tier = 0 | 1 | 2; // 0 bas, 1 moyen, 2 haut
@@ -76,6 +76,9 @@ export class Scene {
   private margin = 18;
 
   private snap: CivSnapshot | null = null;
+  /** teinte de l'origine sur la première ère (fondu quand on change d'origine) */
+  private tintAmt = 0;
+  private tintKind: 'feu' | 'fleuve' | 'ruines' = 'feu';
   private anims = new Map<string, Anim>();
   private sorted: Anim[] = [];
   private emitters: Emitter[] = [];
@@ -253,6 +256,12 @@ export class Scene {
       }
     }
     this.snap = snap;
+    if (instant && !this.trans) {
+      const b = snap.era === 0 ? snap.backdrop : undefined;
+      if (b) this.tintKind = b;
+      this.tintAmt = b ? 1 : 0;
+      this.look = b ? BACKDROP_LOOKS[b] : LOOKS[snap.era];
+    }
     this.sorted = Array.from(this.anims.values()).sort((a, b) => a.elem.layer - b.elem.layer || a.elem.x - b.elem.x);
     this.cityDirtyUntil = this.t + 1.6 + stagger;
     if (instant) this.cityDirtyUntil = this.t + 0.2;
@@ -333,9 +342,17 @@ export class Scene {
 
   private update(dt: number): void {
     // transition d'ère
+    const want = this.snap?.era === 0 ? this.snap.backdrop ?? null : null;
+    if (want && this.tintAmt < 0.02) this.tintKind = want;
+    const target = want && want === this.tintKind ? 1 : 0;
+    if (this.tintAmt !== target) {
+      this.tintAmt = target > this.tintAmt ? Math.min(target, this.tintAmt + dt * 1.6) : Math.max(target, this.tintAmt - dt * 1.6);
+      if (!this.trans) this.look = this.tintAmt > 0 ? mixLook(LOOKS[this.era], BACKDROP_LOOKS[this.tintKind], ease.inOutCubic(this.tintAmt)) : LOOKS[this.era];
+    }
     if (this.trans) {
       const p = clamp01((this.t - this.trans.t0) / this.trans.dur);
-      this.look = mixLook(LOOKS[this.trans.from], LOOKS[this.trans.to], ease.inOutCubic(p));
+      const from = this.trans.from === 0 && this.tintAmt > 0 ? mixLook(LOOKS[0], BACKDROP_LOOKS[this.tintKind], this.tintAmt) : LOOKS[this.trans.from];
+      this.look = mixLook(from, LOOKS[this.trans.to], ease.inOutCubic(p));
       if (p > 0.45) this.particleEra = this.trans.to;
       this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.3);
       if (p >= 1) {
@@ -919,6 +936,211 @@ export class Scene {
     return s;
   }
 
+  /**
+   * Ce que la scène montre au lieu de l'écrire : le fleuve de l'origine, le chantier de la rivale (une grue qui
+   * clignote sur la crête), la menace de l'ère à l'horizon (plus forte en pleine crise).
+   */
+  private drawSigns(ctx: CanvasRenderingContext2D): void {
+    const snap = this.snap;
+    if (!snap) return;
+    const { W, u } = this;
+    const t = this.reducedMotion ? 0 : this.t;
+    const l = this.look;
+    const lv = Math.max(0.35, this.lightLevel);
+    // le fleuve, devant la cité
+    if (snap.backdrop === 'fleuve') {
+      const y0 = this.layerBase(2) + u * 0.35;
+      const h = u * 2.6;
+      const water: RGB = [60, 110, 150];
+      const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
+      g.addColorStop(0, rgb(mix(water, l.light, 0.35 * lv), 0.85));
+      g.addColorStop(0.5, rgb(mix(water, l.far, 0.5), 0.9));
+      g.addColorStop(1, rgb(mix(water, l.near, 0.7), 0.95));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(-20, y0);
+      for (let x = -20; x <= W + 20; x += 14) ctx.lineTo(x, y0 + Math.sin(x * 0.021 + t * 0.8) * u * 0.12);
+      ctx.lineTo(W + 20, y0 + h);
+      ctx.lineTo(-20, y0 + h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalCompositeOperation = 'lighter';
+      // la rive éclairée, puis les reflets qui filent avec le courant
+      ctx.strokeStyle = rgb(l.light, 0.35 * lv);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let x = -20; x <= W + 20; x += 14) ctx.lineTo(x, y0 + Math.sin(x * 0.021 + t * 0.8) * u * 0.12);
+      ctx.stroke();
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 26; i++) {
+        const x = ((i * 137 + t * 16 * (0.6 + (i % 3) * 0.3)) % (W + 60)) - 30;
+        const y = y0 + h * (0.12 + ((i * 53) % 80) / 100);
+        ctx.strokeStyle = rgb(mix(l.light, [200, 230, 255], 0.4), (0.3 + 0.15 * Math.sin(t * 2 + i)) * lv);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + u * (0.6 + (i % 4) * 0.3), y);
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // le chantier de la rivale : une grue à sa couleur, et un feu qui clignote
+    const rx = rivalBuildX(snap);
+    if (rx !== null) {
+      const x = rx * W;
+      const y = this.layerBase(-2);
+      const hue = snap.rival.hue;
+      const col = `hsla(${hue}, 45%, ${18 + 10 * lv}%, 0.9)`;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = Math.max(1, u * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y - u * 3.2);
+      ctx.moveTo(x - u * 0.8, y - u * 3.0);
+      ctx.lineTo(x + u * 2.2, y - u * 3.0);
+      ctx.moveTo(x + u * 1.6, y - u * 3.0);
+      ctx.lineTo(x + u * 1.6, y - u * 1.6 - Math.sin(t * 0.6) * u * 0.3);
+      ctx.stroke();
+      ctx.fillStyle = col;
+      ctx.fillRect(x - u * 0.7, y - u * 1.0, u * 1.4, u * 1.0);
+      const blink = 0.5 + 0.5 * Math.sin(t * 3);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `hsla(${hue}, 90%, 65%, ${(0.35 + 0.55 * blink).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(x + u * 2.2, y - u * 3.0, u * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // la menace de l'ère
+    const k = 0.65 + 0.35 * this.crisisSmooth;
+    const hz = this.horizon;
+    ctx.save();
+    switch (snap.threat) {
+      case 'horde': {
+        // des cavaliers sur la crête, et leur poussière
+        const x0 = (rx !== null && rx > 0.5 ? 0.12 : 0.78) * W + Math.sin(t * 0.15) * u * 2;
+        const y = this.layerBase(-1.5) + u * 0.2;
+        // la poussière, claire, pour que les silhouettes se découpent dessus
+        const dust = this.sprite([215, 165, 110], true);
+        ctx.globalAlpha = Math.min(1, 1.2 * k);
+        ctx.drawImage(dust, x0 - u * 6, y - u * 5, u * 12, u * 6.2);
+        ctx.globalAlpha = 0.95 * k;
+        ctx.fillStyle = rgb(mix(l.near, [0, 0, 0], 0.4));
+        const s = 1.6;
+        for (let i = 0; i < 9; i++) {
+          const x = x0 - u * 3.6 + i * u * 0.85 + Math.sin(t * 4 + i) * u * 0.08;
+          const b = Math.abs(Math.sin(t * 6 + i * 1.7)) * u * 0.14;
+          const yy = y - (i % 2) * u * 0.25;
+          ctx.fillRect(x, yy - u * 0.55 * s - b, u * 0.55 * s, u * 0.3 * s);
+          ctx.fillRect(x + u * 0.3 * s, yy - u * 0.9 * s - b, u * 0.16 * s, u * 0.38 * s);
+          ctx.fillRect(x + u * 0.36 * s, yy - u * 1.25 * s - b, u * 0.04 * s, u * 0.5 * s);
+        }
+        break;
+      }
+      case 'hiver':
+        ctx.fillStyle = `rgba(235,240,255,${(0.8 * k).toFixed(2)})`;
+        for (let i = 0; i < 120; i++) {
+          const x = ((i * 73 + t * 9 * ((i % 3) + 1) + Math.sin(t + i) * 6) % W);
+          const y = ((i * 131 + t * 26 * (0.5 + (i % 4) * 0.2)) % (hz + u * 4));
+          const sz = 1.4 + (i % 3) * 0.8;
+          ctx.fillRect(x, y, sz, sz);
+        }
+        break;
+      case 'peste': {
+        const g = ctx.createRadialGradient(W / 2, hz, u, W / 2, hz, W * 0.6);
+        g.addColorStop(0, `rgba(120,170,60,${(0.16 * k).toFixed(3)})`);
+        g.addColorStop(1, 'rgba(120,170,60,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, hz - W * 0.4, W, W * 0.8);
+        ctx.fillStyle = `rgba(160,210,90,${(0.4 * k).toFixed(2)})`;
+        for (let i = 0; i < 24; i++) ctx.fillRect((i * 97 + t * 5) % W, hz - u * 2 - ((i * 37 + t * 4) % (u * 6)), 2, 2);
+        break;
+      }
+      case 'incendie':
+      case 'guerre': {
+        // fumées sur l'horizon, et des lueurs (canons en guerre)
+        const smoke = this.sprite([38, 32, 32], true);
+        const n = snap.threat === 'guerre' ? 4 : 2;
+        for (let i = 0; i < n; i++) {
+          const x = (snap.threat === 'guerre' ? 0.1 + i * 0.27 : 0.42 + i * 0.12) * W;
+          for (let j = 0; j < 5; j++) {
+            const rise = ((t * 0.4 + j * 0.2 + i * 0.13) % 1);
+            ctx.globalAlpha = Math.min(1, 1.1 * k * (1 - rise));
+            const r = u * (1.5 + rise * 3.2);
+            // deux passes : une fumée épaisse, qui se lit même sur un ciel clair
+            for (let pass = 0; pass < 2; pass++) ctx.drawImage(smoke, x - r + rise * u * 2, hz - u * 5 - rise * u * 10 - r, r * 2, r * 2);
+          }
+          if (snap.threat === 'guerre') {
+            const f = Math.max(0, Math.sin(t * 2.3 + i * 1.9));
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = f * f * 0.7 * k;
+            ctx.drawImage(this.sprite([255, 200, 120], true), x - u, this.layerBase(-2) - u * 1.5, u * 2, u * 2);
+            ctx.globalCompositeOperation = 'source-over';
+          }
+        }
+        break;
+      }
+      case 'revolte':
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 10; i++) {
+          const x = (0.15 + i * 0.075) * W + Math.sin(t * 0.7 + i) * u * 0.8;
+          ctx.globalAlpha = (0.5 + 0.5 * Math.sin(t * 11 + i * 3)) * 0.8 * k;
+          ctx.drawImage(this.sprite([255, 140, 50], true), x - u * 0.5, this.layerBase(1) - u * 1.6, u, u);
+        }
+        break;
+      case 'schisme':
+        ctx.globalCompositeOperation = 'lighter';
+        [[0.3, [255, 210, 120]], [0.7, [190, 140, 255]]].forEach(([fx, c], i) => {
+          ctx.globalAlpha = (0.45 + 0.35 * Math.sin(t * 1.6 + i * Math.PI)) * k;
+          ctx.drawImage(this.sprite(c as RGB, true), (fx as number) * W - u * 1.5, hz - u * 7, u * 3, u * 3);
+        });
+        break;
+      case 'krach':
+        ctx.fillStyle = `rgba(255,215,110,${(0.55 * k).toFixed(2)})`;
+        for (let i = 0; i < 26; i++) {
+          const x = (i * 89) % W;
+          const y = ((i * 61 + t * 40) % (hz + u * 3));
+          ctx.beginPath();
+          ctx.ellipse(x, y, 2.2, 1 + Math.abs(Math.sin(t * 5 + i)) * 1.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case 'filtre': {
+        // le signal : une étoile étrange, qui pulse et répond
+        const x = W * 0.72;
+        const y = hz * 0.22;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.9 * k;
+        ctx.drawImage(this.sprite([200, 230, 255], true), x - u * 1.2, y - u * 1.2, u * 2.4, u * 2.4);
+        ctx.strokeStyle = 'rgba(190,225,255,1)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const p = (t * 0.35 + i / 3) % 1;
+          ctx.globalAlpha = (1 - p) * 0.5 * k;
+          ctx.beginPath();
+          ctx.arc(x, y, u * (0.6 + p * 5), 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        break;
+      }
+      case 'eveil':
+        ctx.strokeStyle = `rgba(110,230,255,${(0.12 * k).toFixed(3)})`;
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 9; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, hz - i * u * 2.2);
+          ctx.lineTo(W, hz - i * u * 2.2);
+          ctx.stroke();
+        }
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 3; i++) {
+          ctx.globalAlpha = (0.4 + 0.6 * Math.max(0, Math.sin(t * 1.3 + i * 2.1))) * k;
+          ctx.drawImage(this.sprite([120, 235, 255], true), (0.25 + i * 0.25) * W - u * 0.6, hz - u * (9 + i * 2) - u * 0.6, u * 1.2, u * 1.2);
+        }
+        break;
+    }
+    ctx.restore();
+  }
+
   private renderLive(ctx: CanvasRenderingContext2D): void {
     const l = this.look;
     const lv = this.lightLevel;
@@ -955,6 +1177,8 @@ export class Scene {
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
+
+    this.drawSigns(ctx);
 
     // émetteurs spéciaux
     ctx.globalCompositeOperation = 'lighter';

@@ -8,10 +8,10 @@ import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLE
 import {
   FAMILIES, RES, RES_LABEL, TAGS,
   type Bag, type CardDef, type Cond, type Effect, type FamilyId, type GameState, type Option,
-  type Jalon, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
+  type Jalon, type OriginDef, type Passive, type Prompt, type Res, type Resources, type RuinInfo, type Tag,
 } from './types';
 
-export const SAVE_VERSION = 25;
+export const SAVE_VERSION = 26;
 export const ERAS = 5;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
@@ -213,7 +213,7 @@ export class Engine {
     const origin = this.c.origins.find((o) => o.id === setup.origin) ?? this.c.origins[0];
     const rival = rng.pick(this.c.rivals);
     const fam = {} as GameState['fam'];
-    for (const f of FAMILIES) fam[f] = { loy: 0, state: origin.families.includes(f) ? 'presente' : 'eteinte', seen: -1 };
+    for (const f of FAMILIES) fam[f] = { loy: origin.loy?.[f] ?? 0, state: origin.families.includes(f) ? 'presente' : 'eteinte', seen: -1 };
     const s: GameState = {
       version: SAVE_VERSION,
       seed,
@@ -1418,6 +1418,56 @@ export class Engine {
       }
       return;
     }
+  }
+
+  /**
+   * L'atout et le handicap d'une origine, calculés à partir de ses données (jamais écrits à la main : ils ne
+   * peuvent pas diverger du jeu). Référence : quatre réserves pour 17 en tout, trois quartiers, des familles neutres.
+   */
+  originTraits(o: OriginDef): { atout: string; handicap: string; ups: string[]; downs: string[] } {
+    const up: string[] = [];
+    const down: string[] = [];
+    if (o.mem?.includes('heritiers')) { up.push('Héritage doublé'); down.push('Rancunes doublées'); }
+    // une règle propre (le limon du fleuve) passe avant les chiffres de départ
+    for (const id of o.deck ?? []) for (const p of this.c.cards[id]?.passive ?? []) if (p.type === 'income') up.push(`+${p.amount} ${p.amount > 1 ? RES_LABEL[p.res] : RES_LABEL[p.res].replace(/s$/, '')} par saison`);
+    const loys = FAMILIES.map((f) => o.loy?.[f] ?? 0);
+    if (loys.every((x) => x > 0)) up.push(`Familles amicales`);
+    if (!loys.every((x) => x > 0)) for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) > 0) up.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} amicaux`);
+    for (const f of FAMILIES) if ((o.loy?.[f] ?? 0) < 0) down.push(`${capitalize(this.c.families[f].house[0].replace(/^les /, ''))} méfiants`);
+    if (o.quartiers > 3) up.push(`${o.quartiers} quartiers au départ`);
+    if (o.quartiers < 3) down.push(`${o.quartiers} quartiers seulement`);
+    const ref: Resources = { vivres: 6, armee: 4, savoir: 3, tresor: 4 };
+    for (const r of RES) {
+      if (o.res[r] <= 1) down.push(`${RES_LABEL[r]} faible (${o.res[r]})`);
+      else if (o.res[r] >= ref[r] + 3) up.push(`${RES_LABEL[r]} abondant (${o.res[r]})`);
+    }
+    const total = RES.reduce((a, r) => a + o.res[r], 0);
+    if (total <= 15 && !down.some((d) => d.includes('faible'))) down.push('Réserves maigres');
+    return { atout: up[0] ?? 'Équilibre', handicap: down[0] ?? 'Aucun', ups: up, downs: down };
+  }
+
+  /**
+   * Prêt pour la crise ? Pour chaque carte de la crise, existe-t-il dès maintenant une réponse qui tient (seuil atteint,
+   * coût payable) sans sacrifier une famille ni un quartier ? Un indicateur simple pour le présage.
+   */
+  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non' } {
+    let covered = 0;
+    let total = 0;
+    for (const id of this.crisisOf(s).cards) {
+      const c = this.c.cards[id];
+      if (!c || c.qui) continue;
+      total++;
+      const ok = this.options(s, { card: id }).some((o) => {
+        if (!this.canPay(s, o) || !this.check(s, o.req)) return false;
+        if ((o.effect.quartiers ?? 0) < 0) return false;
+        if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -3)) return false;
+        if (o.effect.if?.res && !this.check(s, o.effect.if)) return false;
+        return true;
+      });
+      if (ok) covered++;
+    }
+    const level = covered >= total ? 'pret' : covered * 2 >= total ? 'presque' : 'non';
+    return { covered, total, level };
   }
 
   /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */

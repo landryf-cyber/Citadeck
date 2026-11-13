@@ -1,3 +1,4 @@
+import { snapshot } from './ui/snapshot';
 import '@fontsource/cinzel/latin-600.css';
 import '@fontsource/cinzel/latin-700.css';
 import '@fontsource/source-sans-3/latin-400.css';
@@ -52,7 +53,7 @@ function main(): void {
   const start = () => app.boot();
   if (document.fonts?.ready) void document.fonts.ready.then(start);
   else start();
-  (window as unknown as { __citadeck: unknown }).__citadeck = { app, scene, engine, audio };
+  (window as unknown as { __citadeck: unknown }).__citadeck = { app, scene, engine, audio, snapshot };
 }
 
 main();
