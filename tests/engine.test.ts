@@ -4,6 +4,7 @@ import { Engine } from '../src/core/engine';
 import { PROFILES, chooseIndex } from '../src/sim/bots';
 import { Rng } from '../src/core/rng';
 import { findDominated } from '../src/sim/dominance';
+import { measureRepeats } from '../src/sim/repeats';
 
 const e = new Engine(content);
 
@@ -254,5 +255,11 @@ describe('pas de redite', () => {
 
   it('aucune option n’est dominée dans tous les états de jeu rencontrés', () => {
     expect(findDominated(25)).toEqual([]);
+  }, 120000);
+
+  it('aucune réplique ne revient mot pour mot dans une partie, et rarement d’une partie à l’autre', () => {
+    const r = measureRepeats(12, 'lecteur');
+    expect(r.withinGame).toBe(0);
+    expect(r.fromPrevious).toBeLessThanOrEqual(0.06);
   }, 120000);
 });

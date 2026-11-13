@@ -15,7 +15,8 @@
     "shots": "tsx scripts/shots.ts",
     "perf": "tsx scripts/perf.ts",
     "single": "tsx scripts/single-file.ts",
-    "dominance": "tsx src/sim/dominance.ts"
+    "dominance": "tsx src/sim/dominance.ts",
+    "repeats": "tsx src/sim/repeats.ts"
   },
   "repository": {
     "type": "git",

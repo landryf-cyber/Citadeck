@@ -173,3 +173,10 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     survie) et « distrait » (bruit 25, un sur cinq, 61 %). Cibles : un joueur attentif survit presque toujours, un
     joueur distrait une fois sur deux ou trois, le gourmand meurt plus tôt que le prudent. Gains à 1,12 ; se cacher du
     Grand Filtre sauve la cité au prix de la confiance des familles.
+54. **Seuil des répétitions** : zéro réplique ou texte de carte relu mot pour mot dans une même partie ; au plus 5 % des
+    textes d'une partie déjà lus à la précédente (6 % toléré par le test) ; aucun texte dans plus de la moitié des
+    parties. Mesuré par `npm run repeats` sur des parties enchaînées (chronique et anti-redite comprises).
+55. **Variantes « A‖B‖C »** : la n-ième fois qu'un texte revient (sur la même carte ou une autre), on lit la variante
+    suivante ; la graine décale le départ. Écrites en priorité là où la mesure montrait les répétitions : lettres et
+    tributs de la rivale, créances, saisies, croissance, disette, merveilles remises ou oubliées, inaugurations des 18
+    merveilles, hommages.

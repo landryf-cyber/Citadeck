@@ -92,8 +92,8 @@ export const selCards = [
     title: 'La Bénédiction',
     text: '{F:sel} vous bénit en public. {objet}, {quand} : vous aviez dit {citation}. « Le ciel s’en souvient. Il vous offre quelque chose. Gratuitement. Cette fois. »',
     options: [
-      { label: 'Des greniers bénis', effect: { gain: $('V5') }, reply: 'Les greniers sont bénis. Les rats aussi, par erreur.' },
-      { label: 'Un miracle', effect: { quartiers: 1 }, reply: 'Un quartier a poussé pendant la nuit. Personne n’ose demander comment.' },
+      { label: 'Des greniers bénis', effect: { gain: $('V5') }, reply: 'Les greniers sont bénis. Les rats aussi, par erreur.‖Les greniers débordent de grain béni. Il a le même goût, mais on le mâche avec respect.‖Bénédiction des greniers : trois jours de prières, une semaine de récoltes. Le ciel a un bon rendement.' },
+      { label: 'Un miracle', effect: { quartiers: 1 }, reply: 'Un quartier a poussé pendant la nuit. Personne n’ose demander comment.‖Au matin, une rue nouvelle, des maisons, une chapelle. {F:sel} parle de miracle ; les maçons, d’heures supplémentaires.‖Un quartier entier, bâti en une nuit par les fidèles. Les murs sont un peu de travers, mais ils sont pieux.' },
     ],
   }),
 ];

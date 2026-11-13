@@ -297,6 +297,8 @@ export interface HistoryEntry {
   alts?: number;
   res: Resources;
   quartiers: number;
+  /** empreinte du texte de réplique à variantes (pour ne pas relire la même) */
+  rk?: number;
 }
 
 export interface Prompt {

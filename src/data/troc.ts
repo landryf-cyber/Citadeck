@@ -91,8 +91,8 @@ export const trocCards = [
     title: 'Le Dividende',
     text: '{F:troc} vous verse un dividende. {objet}, {quand} : vous aviez dit {citation}. « Nous n’oublions pas nos amis. Un excellent placement, rétrospectivement. »',
     options: [
-      { label: 'En espèces', effect: { gain: $('T7') }, reply: 'En espèces. {F:troc} a gardé la commission.' },
-      { label: 'En vivres', effect: { gain: $('V6') }, reply: 'En vivres. Avec la date de péremption de {F:troc}.' },
+      { label: 'En espèces', effect: { gain: $('T7') }, reply: 'En espèces. {F:troc} a gardé la commission.‖Un coffre de pièces, compté devant vous, deux fois. La deuxième fois, il en manque.‖Le dividende arrive en sacs, avec un reçu, une facture pour le reçu, et un sourire.' },
+      { label: 'En vivres', effect: { gain: $('V6') }, reply: 'En vivres. Avec la date de péremption de {F:troc}.‖Des charrettes de vivres, tamponnées « qualité Troc ». Le tampon est neuf ; les vivres, moins.‖Le dividende en nature : grain, huile, fromage. Le fromage voyage seul, à distance respectueuse.' },
     ],
   }),
 ];

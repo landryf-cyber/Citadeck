@@ -2,7 +2,7 @@
  * Citadeck V2 — moteur de jeu, pur et déterministe (graine).
  * Le joueur répond à des « invites » (prompt) ; chaque invite est une carte à 1..4 options.
  */
-import { Rng } from '../core/rng';
+import { Rng, hashString } from '../core/rng';
 import type { Content } from './content';
 import { eraDate, fill, civName, capitalize, setCrisisK, ERA_NAMES, ERA_SUBTITLES, ERA_SCALE } from './text';
 import {
@@ -90,6 +90,22 @@ export interface FamilyInfo {
   favor?: { label: string; date: string };
   rivalOf: FamilyId;
   neglected: boolean;
+}
+
+/**
+ * Variantes de texte : « A‖B‖C ». La n-ième fois qu'un texte revient dans la partie, on lit la variante suivante ;
+ * la graine décale le point de départ, pour que deux parties ne commencent pas par la même.
+ */
+/** Le texte d'inauguration d'une merveille (chaque variante suivie de ce qu'elle apporte). */
+function inaug(j: Jalon): string {
+  const base = j.built ?? `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}.`;
+  return base.split('‖').map((b) => `${b} ${j.gift}`).join('‖');
+}
+
+export function variant(text: string, key: string, seed: number, prior: number): string {
+  if (!text.includes('‖')) return text;
+  const parts = text.split('‖');
+  return parts[(hashString(`${key}#${seed}`) + prior) % parts.length];
 }
 
 /** Ce qui finit par emporter même une civilisation victorieuse. */
@@ -547,8 +563,7 @@ export class Engine {
     const covered = !!sh && !s.shieldUsed && s.res[sh.res] >= scaleN(sh.amount, s.era);
     const hurts = (e: Effect | undefined, risky = false): boolean => !!e && (RES.some((r) => (e.gain?.[r] ?? 0) < 0 && s.res[r] > 0) || (Object.keys(e.loy ?? {}) as FamilyId[]).some((f) => (e.loy![f] ?? 0) < 0 && s.fam[f]?.state === 'presente' && s.fam[f].loy > -3) || ((e.quartiers ?? 0) < 0 && !(risky && covered)) || ((e.rival ?? 0) < 0 && s.rivalRel > -3) || (e.rivalJalon ?? 0) > 0 || hurts(e.bet?.lose, true));
     if (playable.length === 1 && story && s.res.tresor >= 1 && (only.cost || hurts(only.effect))) {
-      const replies = ['Vous ne tranchez pas. L’affaire traîne ; les avocats, eux, se font payer.', 'Vous laissez l’affaire en suspens. Elle se règle toute seule, de travers, et quelqu’un vous envoie la note.', 'Vous remettez la décision à plus tard. Plus tard arrive avec des frais de dossier.'];
-      return [...opts, { label: 'Ne pas trancher', effect: { gain: { tresor: -1 } }, reply: replies[(s.turn + s.era) % 3] }];
+      return [...opts, { label: 'Ne pas trancher', effect: { gain: { tresor: -1 } }, reply: 'Vous ne tranchez pas. L’affaire traîne ; les avocats, eux, se font payer.‖Vous laissez l’affaire en suspens. Elle se règle toute seule, de travers, et quelqu’un vous envoie la note.‖Vous remettez la décision à plus tard. Plus tard arrive avec des frais de dossier.‖Vous réfléchissez. Longtemps. Pendant ce temps, un conseiller facture ses heures.' }];
     }
     if (playable.length) return opts;
     if (card.kind === 'crise') {
@@ -580,16 +595,16 @@ export class Engine {
     if (card.id === 'disette') {
       const d = Math.max(1, this.upkeepOf(s) - s.res.vivres);
       const g = { vivres: Math.ceil(d / TUNING.gain) };
-      const opts: Option[] = [{ label: 'Acheter du grain, au prix fort', cost: { tresor: 2 * d }, effect: { gain: g, loy: { troc: 1 } }, reply: '{F:troc} livre le grain, pesé deux fois, facturé trois. Les greniers tiendront.' }];
-      if (s.fam.sel.state === 'presente') opts.push({ label: 'Réquisitionner chez {H:sel}', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles', effect: { gain: g, loy: { sel: -2 } }, reply: 'Les greniers du temple s’ouvrent, sous escorte. {F:sel} bénit chaque sac en vous regardant.' });
-      opts.push({ label: 'Serrer la ceinture', effect: {}, reply: 'On serrera la ceinture. Elle a encore des trous ; pas tous.' });
+      const opts: Option[] = [{ label: 'Acheter du grain, au prix fort', cost: { tresor: 2 * d }, effect: { gain: g, loy: { troc: 1 } }, reply: '{F:troc} livre le grain, pesé deux fois, facturé trois. Les greniers tiendront.‖Le grain arrive par charrettes, au prix des épices. Les greniers tiendront ; les coffres, moins.‖{F:troc} ouvre ses entrepôts « par amitié ». L’amitié est facturée à part.' }];
+      if (s.fam.sel.state === 'presente') opts.push({ label: 'Réquisitionner chez {H:sel}', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles', effect: { gain: g, loy: { sel: -2 } }, reply: 'Les greniers du temple s’ouvrent, sous escorte. {F:sel} bénit chaque sac en vous regardant.‖On vide les réserves du temple. {F:sel} compte les sacs à voix haute, pour que le ciel entende.‖Les soldats emportent le grain sacré. {F:sel} prie pour eux, et contre vous, dans la même prière.' });
+      opts.push({ label: 'Serrer la ceinture', effect: {}, reply: 'On serrera la ceinture. Elle a encore des trous ; pas tous.‖On rationnera. Les cuisiniers inventent la soupe de cailloux, puis la soupe de soupe.‖Personne n’achètera de grain. On mangera moins, et on parlera beaucoup de ce qu’on mangera après.' });
       return opts;
     }
     if (card.kind === 'croissance') {
       const extra = this.passives(s).filter((x) => x.type === 'growth').reduce((a, x) => a + (x as { amount: number }).amount, 0);
       return [
-        { label: 'Fonder un quartier', cost: { vivres: this.growthCost(s) }, effect: { quartiers: 1 + extra }, reply: 'Un nouveau quartier sort de terre. Il a déjà ses habitudes, et un nom que personne n’a choisi.' },
-        { label: 'Garder les réserves', effect: {}, reply: 'Les greniers restent pleins. Les rats approuvent.' },
+        { label: 'Fonder un quartier', cost: { vivres: this.growthCost(s) }, effect: { quartiers: 1 + extra }, reply: 'Un nouveau quartier sort de terre. Il a déjà ses habitudes, et un nom que personne n’a choisi.‖Les maçons tracent des rues neuves. Trois jours plus tard, elles ont déjà des nids-de-poule, et des habitués.‖Un quartier de plus. Les familles se disputent le nom ; il s’appellera finalement « le Nouveau », jusqu’à ce qu’il soit vieux.‖Une nouvelle rangée de maisons, une fontaine, et une taverne avant même la fontaine.' },
+        { label: 'Garder les réserves', effect: {}, reply: 'Les greniers restent pleins. Les rats approuvent.‖On garde le grain pour l’hiver. L’hiver, lui, ne promet rien.‖Les réserves restent au grenier. Les intendants dorment mieux ; les maçons, moins.' },
       ];
     }
     if (card.kind === 'jalon' && p.missed !== undefined) {
@@ -599,26 +614,26 @@ export class Engine {
       const up = (b: Bag): Bag => { const o: Bag = {}; for (const r of Object.keys(b) as Res[]) o[r] = Math.ceil(b[r]! * k); return o; };
       const j = this.dessein(s).jalons[e];
       const alt = this.jalonAltOf(s, e);
-      const opts: Option[] = [{ label: `Bâtir ${j.name}, enfin`, cost: up(j.cost), req: j.req, effect: { jalon: true, jalonEra: e }, reply: `${j.built ?? `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}.`} ${j.gift}` }];
-      if (alt) opts.push({ label: `Bâtir ${alt.name}, enfin`, cost: up(alt.cost), req: alt.req, effect: { jalon: 'alt', jalonEra: e }, reply: `${alt.built ?? `Le chantier est achevé : ${alt.name.charAt(0).toLowerCase()}${alt.name.slice(1)}.`} ${alt.gift}` });
-      opts.push({ label: 'Laisser les plans au coffre', effect: {}, reply: ['', 'Les plans redescendent dans la cave du temple. Un scribe écrit dessus : « un jour ».', 'Les plans regagnent la bibliothèque du monastère, entre deux grimoires. On les recopie, par habitude.', 'Les plans repartent aux archives, tamponnés « ajourné ». Le tampon est neuf ; le projet, non.', 'Les plans retournent dans un serveur, dossier « plus tard », sous-dossier « vraiment plus tard ».'][s.era] || 'Les plans retournent au coffre.' });
+      const opts: Option[] = [{ label: `Bâtir ${j.name}, enfin`, cost: up(j.cost), req: j.req, effect: { jalon: true, jalonEra: e }, reply: inaug(j) }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}, enfin`, cost: up(alt.cost), req: alt.req, effect: { jalon: 'alt', jalonEra: e }, reply: inaug(alt) });
+      opts.push({ label: 'Laisser les plans au coffre', effect: {}, reply: ['Les plans retournent au coffre.', 'Les plans redescendent dans la cave du temple. Un scribe écrit dessus : « un jour ».‖Les plans retournent sous une amphore, au frais. On les ressortira pour une grande occasion.‖On replie les plans. L’architecte les emporte chez lui, au cas où vous changeriez d’avis.', 'Les plans regagnent la bibliothèque du monastère, entre deux grimoires. On les recopie, par habitude.‖Les plans retournent au trésor de la cathédrale, avec les reliques. Ils sont aussi bien gardés, et aussi peu utilisés.‖On roule les plans dans un étui de cuir. Un moine les enlumine, pour passer le temps.', 'Les plans repartent aux archives, tamponnés « ajourné ». Le tampon est neuf ; le projet, non.‖Les plans retournent dans un tiroir du ministère, sous une pile de rapports sur les tiroirs.‖On classe le projet. Un ingénieur garde une copie sous son lit, par tendresse.', 'Les plans retournent dans un serveur, dossier « plus tard », sous-dossier « vraiment plus tard ».‖Le projet est archivé. BRUME promet de vous le rappeler, à intervalles réguliers, sans que vous ayez rien demandé.‖Les plans sont compressés, chiffrés, sauvegardés trois fois. Le projet est désormais très bien protégé contre toute réalisation.'][s.era] });
       return opts;
     }
     if (card.kind === 'jalon') {
       const j = this.dessein(s).jalons[s.era];
       const alt = this.jalonAltOf(s, s.era);
-      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: `${j.built ?? `Le chantier est achevé : ${j.name.charAt(0).toLowerCase()}${j.name.slice(1)}.`} ${j.gift}` }];
-      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: `${alt.built ?? `Le chantier est achevé : ${alt.name.charAt(0).toLowerCase()}${alt.name.slice(1)}.`} ${alt.gift}` });
+      const opts: Option[] = [{ label: `Bâtir ${j.name}`, cost: j.cost, req: j.req, effect: { jalon: true }, reply: inaug(j) }];
+      if (alt) opts.push({ label: `Bâtir ${alt.name}`, cost: alt.cost, req: alt.req, effect: { jalon: 'alt' }, reply: inaug(alt) });
       if (p.early) {
-        opts.push({ label: 'Après la seconde saison', effect: {}, reply: ['Les bâtisseurs attendront la fin de la saison. Ils en profitent pour tailler une pierre de plus, par prudence.', 'Le chantier attendra une saison. Les architectes en profitent pour ajouter une colonne.', 'Le chantier attendra une saison. Les maçons bénissent les fondations, au cas où.', 'Le chantier attendra une saison. Les ingénieurs repeignent les plans, en plus grand.', 'Le chantier attendra une saison. Le compte à rebours repart à zéro, avec un bip.'][s.era] });
+        opts.push({ label: 'Après la seconde saison', effect: {}, reply: ['Les bâtisseurs attendront la fin de la saison. Ils en profitent pour tailler une pierre de plus, par prudence.‖On attendra une saison. Les bâtisseurs comptent leurs cordes, puis les recomptent.', 'Le chantier attendra une saison. Les architectes en profitent pour ajouter une colonne.‖Une saison de plus pour les plans. L’architecte y ajoute un fronton, puis une frise, puis s’arrête de justesse.', 'Le chantier attendra une saison. Les maçons bénissent les fondations, au cas où.‖Une saison de répit. Les tailleurs de pierre en profitent pour graver leur nom dans les fondations, en petit.', 'Le chantier attendra une saison. Les ingénieurs repeignent les plans, en plus grand.‖Une saison de plus. Les ingénieurs testent une machine pour aller plus vite ; elle va surtout plus fort.', 'Le chantier attendra une saison. Le compte à rebours repart à zéro, avec un bip.‖Une saison de plus. Les drones rangés en ligne attendent le signal, sans impatience, ce qui est inquiétant.'][s.era] });
         return opts;
       }
       opts.push({ label: 'Pas cette fois', effect: {}, reply: [
-        'Les plans retournent dans un coffre. Le coffre est plein de plans.',
-        'Les architectes rangent leurs maquettes. Ils les dépoussièrent chaque matin, en soupirant.',
-        'Le chantier attendra. Les tailleurs de pierre jouent aux dés sur les fondations.',
-        'On remet à plus tard. Les ingénieurs en profitent pour améliorer les plans. Ils coûtent déjà plus cher.',
-        'Le projet est mis en veille. Il clignote doucement dans un coin du serveur.',
+        'Les plans retournent dans un coffre. Le coffre est plein de plans.‖Les bâtisseurs remballent leurs cordes et leurs rondins. Ils laissent une pierre dressée, pour marquer l’endroit.‖Le chantier attendra. {F:ourk} s’assied sur la première pierre, et déclare qu’elle est très bien comme ça.',
+        'Les architectes rangent leurs maquettes. Ils les dépoussièrent chaque matin, en soupirant.‖Le chantier s’arrête aux fondations. Les enfants y jouent aux ruines, avec un temps d’avance.‖On ajourne. Le sculpteur garde la statue à moitié finie ; elle a un bras, et beaucoup d’opinions.',
+        'Le chantier attendra. Les tailleurs de pierre jouent aux dés sur les fondations.‖Les échafaudages restent debout, vides. Les pigeons s’y installent et refusent ensuite de partir.‖On remet à l’an prochain. Le maître d’œuvre écrit « bientôt » sur le portail, en latin, pour faire sérieux.',
+        'On remet à plus tard. Les ingénieurs en profitent pour améliorer les plans. Ils coûtent déjà plus cher.‖Le chantier est suspendu. Les grues restent en l’air, comme des points d’interrogation.‖Les travaux sont reportés. Une commission est créée pour étudier le report. Elle demande un budget.',
+        'Le projet est mis en veille. Il clignote doucement dans un coin du serveur.‖Le chantier est mis en pause. Les drones de construction tournent en rond au-dessus du terrain, poliment.‖Report. BRUME calcule que le retard coûtera 3 % de plus par an, et vous envoie le graphique.',
       ][s.era] });
       return opts;
     }
@@ -643,8 +658,8 @@ export class Engine {
       const broke = !this.affordable(s, this.costOf(s, { tresor: pay }));
       return [
         { ...opts[0], cost: { tresor: pay } },
-        { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.' },
-        ...(!broke ? [] : [{ label: 'Laisser saisir', effect: { seize: pay, ...(rival ? { rival: -1 } : { loy: { troc: -1 } }) }, reply: rival ? 'Les soldats de {rival} font l’inventaire de vos greniers, puis de vos casernes. Ils signent un reçu, en double.' : 'Les huissiers de {H:troc} vident les coffres, puis les greniers. Ils laissent les murs : les murs, ça ne se revend pas.' } as Option]),
+        { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.‖Vous réglez en blé et en bras. Les huissiers repartent chargés comme des mulets, et presque contents.‖La dette est payée en nature : trois charrettes de grain, une compagnie de corvée, et un cochon, pour le geste.' },
+        ...(!broke ? [] : [{ label: 'Laisser saisir', effect: { seize: pay, ...(rival ? { rival: -1 } : { loy: { troc: -1 } }) }, reply: rival ? 'Les soldats de {rival} font l’inventaire de vos greniers, puis de vos casernes. Ils signent un reçu, en double.‖Les soldats de {rival} se servent, poliment, dans l’ordre alphabétique. Ils remercient en partant.‖{Reine} envoie ses comptables, puis ses soldats pour porter ce que les comptables ont compté.' : 'Les huissiers de {H:troc} vident les coffres, puis les greniers. Ils laissent les murs : les murs, ça ne se revend pas.‖Les huissiers reviennent, connaissent déjà le chemin, et vont droit aux coffres.‖Saisie. Les huissiers de {H:troc} emportent tout ce qui se compte, et notent ce qui ne se compte pas, pour plus tard.' } as Option]),
         ...(cornered ? [] : [refuse]),
       ];
     }
@@ -718,7 +733,7 @@ export class Engine {
       card,
       kind: card.kind,
       title: fill(title, s, this.c, extra),
-      text: fill(text, s, this.c, extra),
+      text: fill(variant(text, card.id, s.seed, s.history.filter((h) => h.card === card.id).length), s, this.c, extra),
       speaker: card.speaker ? fill(card.speaker, s, this.c, extra) : fam ? this.c.families[fam].head[s.era] : undefined,
       family: fam ?? (card.kind === 'proces' ? p.plaintiff : undefined),
       header,
@@ -1027,6 +1042,9 @@ export class Engine {
     const loy: Partial<Record<FamilyId, number>> = {};
     for (const f of FAMILIES) if (s.fam[f].loy !== loyBefore[f]) loy[f] = s.fam[f].loy - loyBefore[f];
     const v = this.view(s);
+    // une réplique qui revient dans la partie (sur cette carte ou une autre) passe à sa variante suivante
+    const rk = reply && reply.includes('‖') ? hashString(reply) : undefined;
+    if (reply && rk !== undefined) reply = variant(reply, String(rk), s.seed, s.history.filter((h) => h.rk === rk).length);
     s.history.push({
       turn: s.turn,
       era: s.era,
@@ -1037,6 +1055,7 @@ export class Engine {
       label: view.label,
       alts,
       reply: reply ? fill(reply, s, this.c, this.ruinExtras(s)) : undefined,
+      ...(rk !== undefined ? { rk } : {}),
       loy,
       from: p.from,
       res: { ...s.res },

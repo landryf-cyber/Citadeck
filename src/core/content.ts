@@ -73,6 +73,7 @@ export function validateContent(c: Content): string[] {
 
 /** La plus longue variante d'un texte à clauses conditionnelles (ce que le joueur peut avoir à lire). */
 export function longestVariant(text: string): string {
+  if (text.includes('‖')) return text.split('‖').map(longestVariant).sort((a, b) => b.length - a.length)[0];
   let out = text;
   for (let guard = 0; guard < 10 && out.includes('{?'); guard++) {
     out = out.replace(/\{\?[^{}|]+\|((?:[^{}|]|\{[^?{}|][^{}|]*\})*)(?:\|((?:[^{}]|\{[^?{}][^{}]*\})*))?\}/g, (_m, a: string, b = '') => (a.length >= b.length ? a : b));

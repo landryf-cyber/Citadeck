@@ -104,8 +104,8 @@ export const brumeCards = [
     title: 'La Démonstration',
     text: '{F:brume} vous fait une démonstration. {objet}, {quand} : vous aviez dit {citation}. « À la décimale près, vous avez été utile. » {Il:brume} vous offre le fruit de ses recherches.',
     options: [
-      { label: 'Ses carnets', effect: { gain: $('S6') }, reply: 'Les carnets sont illisibles. C’est bon signe, dit {F:brume}.' },
-      { label: 'Son invention', effect: { gain: $('A3 T3') }, reply: 'L’invention n’a explosé qu’une fois. Pendant la démonstration.' },
+      { label: 'Ses carnets', effect: { gain: $('S6') }, reply: 'Les carnets sont illisibles. C’est bon signe, dit {F:brume}.‖Des carnets pleins de formules, de croquis, et d’une recette de soupe. La soupe est excellente.‖{F:brume} vous confie ses carnets. Certaines pages sont chiffrées, d’autres simplement tachées.' },
+      { label: 'Son invention', effect: { gain: $('A3 T3') }, reply: 'L’invention n’a explosé qu’une fois. Pendant la démonstration.‖L’invention fonctionne. Personne ne sait exactement à quoi, mais elle fonctionne très bien.‖Une machine à manivelle qui fait tout, lentement, et un peu de bruit. Surtout du bruit.' },
     ],
   }),
 ];

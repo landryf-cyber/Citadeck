@@ -147,8 +147,8 @@ export const ourkCards = [
     title: 'Le Banquet des {H:ourk}',
     text: '{F:ourk} lève sa coupe. {objet}, {quand} : vous aviez dit {citation}. « Ourk se souvient. Ourk boit à ça. » Il propose de vous offrir quelque chose. Quelque chose de lourd.',
     options: [
-      { label: 'Une garde d’honneur', effect: { gain: $('A5') }, reply: 'La garde d’honneur vous suit partout. Partout.' },
-      { label: 'Leurs trophées', effect: { gain: $('T4') }, reply: 'Des crânes dorés. Ils se vendent étonnamment bien.' },
+      { label: 'Une garde d’honneur', effect: { gain: $('A5') }, reply: 'La garde d’honneur vous suit partout. Partout.‖Une garde d’honneur, en armes et en sueur. Elle vous salue à chaque porte, et il y a beaucoup de portes.‖La garde d’honneur prend son service. Elle goûte aussi vos plats, par loyauté et par gourmandise.' },
+      { label: 'Leurs trophées', effect: { gain: $('T4') }, reply: 'Des crânes dorés. Ils se vendent étonnamment bien.‖Des trophées de chasse et de guerre. On les accroche partout, puis on en revend la moitié.‖Les trophées s’empilent au trésor. Certains grognent encore un peu.' },
     ],
   }),
 ];

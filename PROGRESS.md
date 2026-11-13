@@ -8,7 +8,7 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 - [x] crédit : coût qui croît avec la somme, saisie des réserves avant le quartier, seuls les Troc prêtent ; absent des causes de pertes
 - [x] profils humains (distrait 61 %, pressé 83 %) ; gourmand meurt plus tôt que prudent ; causes de pertes variées (E16)
 ### B. Écriture (point 3)
-- [ ] mesure des répliques répétées sur 20 parties (dans une partie, entre parties) ; variantes et textes composés jusqu'au seuil
+- [x] mesure des répliques répétées (`npm run repeats`, test) : 0 dans une partie, ~4 % de la partie précédente (E17)
 ### C. Clarté des écrans (point 4)
 - [ ] fondation : accroche + « détails », Fonder visible, première partie = dessein seul (recommandé présélectionné), origines après la première partie
 - [ ] origines : nom + style de jeu, atout/handicap générés des données, emblème, scène qui change au survol, « Qui êtes-vous ? » ; mesure de leur effet réel
