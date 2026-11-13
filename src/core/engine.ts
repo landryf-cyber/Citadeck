@@ -362,6 +362,12 @@ export class Engine {
     return Math.max(6, this.upkeepOf(s) + 2);
   }
 
+  /** Les cartes de crise qui seront vraiment jouées à cette ère (la Course n'en joue que deux). */
+  crisisCards(s: GameState): string[] {
+    const cr = this.crisisOf(s);
+    return this.form(s).id === 'course' ? [cr.cards[0], cr.cards[cr.cards.length - 1]] : cr.cards.slice();
+  }
+
   /** La forme de l'ère en cours (règle, rythme, objectif, menace). */
   form(s: GameState, era = s.era): EraForm {
     return this.c.forms[era] ?? this.c.forms[0];
@@ -447,7 +453,7 @@ export class Engine {
       walk(e.then);
       walk(e.else);
     };
-    for (const id of this.crisisOf(s).cards) {
+    for (const id of this.crisisCards(s)) {
       for (const o of this.card(id).options.map((x) => scaleOption(x, 0, k))) {
         take(o.cost);
         take(o.req?.res);
@@ -769,7 +775,8 @@ export class Engine {
     if (p.from) header = `Suite de · ${p.from}`;
     if (card.kind === 'crise') {
       const cr = this.crisisOf(s);
-      header = `Crise · ${cr.name} · ${cr.cards.indexOf(card.id) + 1}/${cr.cards.length}`;
+      const played = this.crisisCards(s);
+      header = `Crise · ${cr.name} · ${played.indexOf(card.id) + 1}/${played.length}`;
     }
     if (card.kind === 'trahison') header = 'Trahison';
     if (card.kind === 'rivale') header = `Rivale · ${capitalize(this.rival(s).name)}`;
@@ -1464,7 +1471,8 @@ export class Engine {
         const cr = this.crisisOf(s);
         const fm = this.form(s);
         // la Contagion a déjà joué une carte par saison : il reste la dernière
-        const pile = fm.id === 'contagion' ? cr.cards.slice(fm.seasons) : cr.cards.slice();
+        // la Course : une crise éclair, deux cartes (la première et la dernière)
+        const pile = fm.id === 'contagion' ? cr.cards.slice(fm.seasons) : this.crisisCards(s);
         // une famille qui vous hait choisit ce moment pour trahir (au Conseil, dès qu'elle vous en veut)
         const lim = fm.id === 'conseil' ? -1 : -2;
         const traitor = this.present(s).filter((f) => s.fam[f].loy <= lim).sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
@@ -1603,7 +1611,7 @@ export class Engine {
     const missing: Bag = {};
     let answer: string | undefined;
     let answerNeed: Bag | undefined;
-    for (const id of this.crisisOf(s).cards) {
+    for (const id of this.crisisCards(s)) {
       const c = this.c.cards[id];
       if (!c || c.qui) continue;
       total++;
@@ -1743,8 +1751,8 @@ export class Engine {
         }
       }
     }
-    // le Conseil : aucune famille hostile au bilan, la paix civile vaut un quartier (après le repas)
-    if (this.form(s).id === 'conseil' && this.present(s).every((f) => s.fam[f].loy >= -1)) {
+    // le Conseil : aucune famille fâchée au bilan, la paix civile vaut un quartier (après le repas)
+    if (this.form(s).id === 'conseil' && this.present(s).every((f) => s.fam[f].loy >= 0)) {
       ev.push({ type: 'peace' });
       this.changeQuartiers(s, 1, 'la paix civile', 'paix', ev);
     }

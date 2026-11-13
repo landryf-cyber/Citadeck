@@ -136,7 +136,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
     if (x.type === 'income') bil.push(`Une famille fervente apporte ${bag(x.bag, '+')}.`);
     if (x.type === 'mend') bil.push(`Les Peintures apaisent ${e.c.families[x.family].house[s.era]} : ils remontent d’un cran.`);
-    if (x.type === 'peace') bil.push('LA PAIX CIVILE : aucune famille hostile, un quartier de plus.');
+    if (x.type === 'peace') bil.push('LA PAIX CIVILE : aucune famille fâchée, un quartier de plus.');
     if (x.type === 'disette') bil.push(`DISETTE : il manquait ${x.missing} Vivres ; pas de quartier perdu, mais toutes les familles grognent (−1).`);
     if (x.type === 'decay') bil.push(`Usure : ${[x.armee ? `-${x.armee} Armée` : '', x.tresor ? `-${x.tresor} Trésor` : ''].filter(Boolean).join(', ')}.`);
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);

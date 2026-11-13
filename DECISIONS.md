@@ -208,3 +208,25 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     Points : chaque carte ou famille qui compte pour la Science, une merveille sur deux, un Savoir de 10 ou plus.
     Sinon, « Voir les chiffres exacts » coûte 1 à 3 Savoir (selon l'ère) pour la carte en cours. Les petites
     valeurs (1, 2) deviennent exactes dès la fourchette fine : c'est voulu, l'écart compte peu.
+63. **Une forme par ère (point 1)**, calée sur les crises qui existaient déjà, pour que règle, rythme, objectif et
+    menace se répondent :
+    - I **L'Errance** : 3 saisons de 2 cartes ; la tribu chasse (+2 Vivres par saison) mais ne porte pas plus que ce que
+      la cité mange, plus deux ; la crise tombe d'un bloc.
+    - II **La Contagion** : 2 saisons de 3 cartes, chacune ouverte par une colonie à fonder (un quartier qui se nourrit
+      lui-même, jamais à crédit) ; la crise se répand, une carte à la fin de chaque saison, la dernière avant le bilan.
+    - III **Le Conseil** : 2 saisons ouvertes par un vote (soutenir une famille froisse sa rivale) ; la famille la moins
+      fidèle trahit dès qu'elle vous en veut ; aucune famille fâchée au bilan : +1 quartier (paix civile).
+    - IV **La Course** : 4 saisons de 2 cartes ; le chantier ouvre à chaque saison ; la rivale avance d'une étape par
+      saison ; bâtir avant sa dernière étape lui fait manquer sa merveille ; perdre rend la crise (éclair, deux cartes)
+      un quart plus forte. Plus d'enjeu si la rivale a déjà ses cinq merveilles.
+    - V **Le Jugement** : une seule saison de 4 cartes, plus aucun revenu ; avant la crise, la famille la plus lésée vous
+      fait un procès (ou la plus fidèle vous rend hommage) ; après la crise, l'histoire s'arrête, sans dernier repas.
+64. **Le présage reste à trois lignes** : la forme apparaît sous le titre (nom, rythme), dans la phrase principale
+    (« Bâtir l'Arsenal avant les Orvandes. ») et en une ligne de règle ; le détail complet est replié.
+65. **Difficulté après les formes** : gains 1,0, consommation 1,65 par quartier. Les formes ajoutent des filets
+    (colonies, paix civile, pas de dernier repas) : la survie est indulgente (distrait 76 %, pressé 92 %), la victoire
+    exigeante (grandes victoires : distrait 8 %, pressé 28 %, lecteur 62 %). Les réglages globaux ne bougent presque
+    plus la survie du distrait ; ce sont ses choix au hasard qui le perdent.
+66. **Les variantes de texte tournent d'une partie à l'autre** (selon le nombre de parties jouées, plus la graine) : deux
+    parties de suite ne lisent pas les mêmes variantes. La carte des ruines ne se joue plus qu'une fois : la mesure,
+    enfin enchaînée comme chez un vrai joueur (avec ses ruines), la montrait jusqu'à trois fois par partie.

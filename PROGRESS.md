@@ -21,8 +21,8 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 ### F. Déploiement intermédiaire (A-E) — fait : version 12, même adresse
 - [x] page republiée (https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom, version 12) ; perf : ère V à 28-34 i/s au palier 1, CPU ralenti ×2 et sans GPU (la mesure v11 de l'ère V était fausse : son joueur naïf mourait à l'ère III)
 ### G. Structure des ères (point 1)
-- [ ] une forme par ère : règle, rythme, objectif, forme de la menace (Errance, Contagion, Conseil, Course, Jugement)
-- [ ] mesure de similarité de structure (entre ères, entre parties) ; test à l'aveugle par un juge
+- [x] une forme par ère : règle, rythme, objectif, forme de la menace (Errance, Contagion, Conseil, Course, Jugement) ; présage, pastilles, bilan (DECISIONS 63-66)
+- [x] mesure de similarité de structure (0,75 → 0,53 entre ères ; `npm run structure`, test) ; test à l'aveugle : 5 paires sûres contre 3 en v12 (E22)
 ### H. Illustrations (point 6)
 - [ ] essai de style sur 3 cartes (personnage, événement, lieu), puis généralisation
 ### I. Juges sévères jusqu'à l'arrêt ; README ; déploiement final

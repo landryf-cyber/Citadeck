@@ -45,7 +45,7 @@ function describe(e: Engine, s: GameState, p: (typeof PROFILES)[number], rng: Rn
     for (const x of ev) {
       if (x.type === 'rot') line.push(x.amount ? `des vivres gagnés à la saison, ${x.amount} pourrissent` : 'des vivres gagnés à la saison');
       if (x.type === 'raceStep') line.push(x.won ? 'la course contre la rivale est gagnée' : x.lost ? 'la course contre la rivale est perdue' : `la rivale avance d'une étape (${x.stage}/${x.of})`);
-      if (x.type === 'peace') line.push('une récompense : aucune famille hostile');
+      if (x.type === 'peace') line.push('une récompense : aucune famille fâchée');
       if (x.type === 'passive') line.push('des revenus de saison');
       if (x.type === 'upkeep' || x.type === 'famine') { flush(); line.push('bilan : la cité mange'); }
     }
