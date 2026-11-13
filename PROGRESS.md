@@ -18,7 +18,14 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 - [x] fourchettes larges, fines (2 points de Science/merveilles/Savoir), exactes (5 points) ; « Voir les chiffres exacts » contre 1 à 3 Savoir ; test (DECISIONS 62, E20)
 ### E. Vérifications (point 7)
 - [x] rejouées dans l'interface par `scripts/verify.ts` (captures dans shots/verify, 4/4 OK, aucune erreur console) ; jugées sur preuves
-### F. Déploiement intermédiaire (A-E), puis structure des ères (point 1) et illustrations (point 6), juges jusqu'à l'arrêt
+### F. Déploiement intermédiaire (A-E) — fait : version 12, même adresse
+- [x] page republiée (https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom, version 12) ; perf : ère V à 28-34 i/s au palier 1, CPU ralenti ×2 et sans GPU (la mesure v11 de l'ère V était fausse : son joueur naïf mourait à l'ère III)
+### G. Structure des ères (point 1)
+- [ ] une forme par ère : règle, rythme, objectif, forme de la menace (Errance, Contagion, Conseil, Course, Jugement)
+- [ ] mesure de similarité de structure (entre ères, entre parties) ; test à l'aveugle par un juge
+### H. Illustrations (point 6)
+- [ ] essai de style sur 3 cartes (personnage, événement, lieu), puis généralisation
+### I. Juges sévères jusqu'à l'arrêt ; README ; déploiement final
 
 
 Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
