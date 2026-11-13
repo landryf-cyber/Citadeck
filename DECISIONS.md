@@ -148,3 +148,11 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     dans une branche, et la dette rivale ignorée à sec ou à la dernière ère coûte un quartier ; le chantier annonce
     l'entretien de la merveille, le présage l'usure du bilan et la découverte ; la nouvelle cité ne reprend pas le
     nom de ses ruines.
+
+## Ronde 2
+48. **Le tag de retour reste local.** La session n'a le droit de pousser que sur sa branche (le serveur refuse le tag,
+    HTTP 403). Le tag `v11-avant-ronde-2` est créé localement sur `4c8dc9c`, commit présent sur la branche distante :
+    `git tag v11-avant-ronde-2 4c8dc9c` le recrée chez soi.
+49. **« Pour que je puisse tester dans la foulée » et « pas de version intermédiaire ».** Lecture retenue : après les
+    points 2, 3, 4, 5 et 7, la page hébergée est republiée (même adresse) pour qu'elle soit testable, sans message ni
+    attente ; le travail continue aussitôt sur les points 1 et 6.

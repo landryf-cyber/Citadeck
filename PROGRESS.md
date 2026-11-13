@@ -1,5 +1,26 @@
 # PROGRESS — Citadeck V2
 
+## RONDE 2 (en cours) — demandée après la version 11
+Point de retour : tag local `v11-avant-ronde-2` sur le commit `4c8dc9c` (la publication des tags est refusée à cette session : `git tag v11-avant-ronde-2 4c8dc9c` le recrée).
+Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 et 6. Arrêt : toutes les notes ≥ 8, ou deux tours de juges consécutifs sans amélioration.
+### A. Vrais choix, crédit, difficulté (point 2)
+- [ ] mesure de dominance sur des états échantillonnés (une option meilleure dans tous les états) → 0
+- [ ] crédit : coût qui croît avec la somme, saisie des réserves avant le quartier, plus première cause de pertes, plus d'abus
+- [ ] profils humains (distrait, pressé) pour régler la difficulté ; gourmand meurt plus tôt que prudent ; chaque défaite expliquée
+### B. Écriture (point 3)
+- [ ] mesure des répliques répétées sur 20 parties (dans une partie, entre parties) ; variantes et textes composés jusqu'au seuil
+### C. Clarté des écrans (point 4)
+- [ ] fondation : accroche + « détails », Fonder visible, première partie = dessein seul (recommandé présélectionné), origines après la première partie
+- [ ] origines : nom + style de jeu, atout/handicap générés des données, emblème, scène qui change au survol, « Qui êtes-vous ? » ; mesure de leur effet réel
+- [ ] briefing d'ère : un message, trois lignes (objectif, menace, rivale), détails repliés, « prêt / pas prêt », bouton toujours visible ; menace et chantier rival dans la scène
+- [ ] dévoilement progressif des notions ; agents « nouveau joueur » à 10 secondes, itérer
+### D. Fourchettes (point 5)
+- [ ] fourchettes qui se resserrent (Savoir, découvertes, merveilles) et « voir les chiffres » payant
+### E. Vérifications (point 7)
+- [ ] rejuger révoltes annoncées, palissade, bilan après disette, nom de la nouvelle cité
+### F. Déploiement intermédiaire (A-E), puis structure des ères (point 1) et illustrations (point 6), juges jusqu'à l'arrêt
+
+
 Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
 Documents : `DESIGN-V2.md` (diagnostic, concepts, choix, voix), `EXPERIENCES.md` (journal), `DECISIONS.md`, `README.md`.
 
