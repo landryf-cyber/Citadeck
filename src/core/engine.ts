@@ -73,6 +73,8 @@ export interface PresageInfo {
   /** ce dont la crise aura besoin, au plus ; et si l'on bâtit la merveille avant */
   needs: { bag: Bag; families: string[] };
   needsIfBuilt?: Bag;
+  /** pendant la Course : les seuils si la rivale gagne (crise un quart plus forte) */
+  needsIfRaceLost?: Bag;
   /** part de l'entretien due aux merveilles */
   wonderUpkeep: number;
   /** le mot-clé qu'exige la merveille de l'ère : combien, d'où */
@@ -150,7 +152,7 @@ export type Ev =
   | { type: 'res'; before: Resources; after: Resources }
   | { type: 'quartiers'; delta: number; cause: string; shielded?: boolean; paid?: Bag; by?: string }
   | { type: 'rot'; amount: number; cap: number; hunt: number }
-  | { type: 'raceStep'; stage: number; of: number; won: boolean; lost: boolean }
+  | { type: 'raceStep'; stage: number; of: number; won: boolean; lost: boolean; short?: Bag }
   | { type: 'peace' }
   | { type: 'spoil'; amount: number }
   | { type: 'bilan' }
@@ -613,7 +615,7 @@ export class Engine {
     }
     // la pauvreté ne doit pas supprimer le choix : sur une carte de récit, s'il ne reste qu'une issue, on peut ne pas trancher
     // face à une trahison, pas d'échappatoire : on tranche
-    const money = card.options.some((o) => o.effect.seize || o.effect.sched?.some((x) => /^creance/.test(x.card)));
+    const money = card.arc === 'dette' || card.options.some((o) => o.effect.seize || o.effect.sched?.some((x) => /^creance/.test(x.card)));
     const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut' && !money;
     // (seulement si cette seule issue coûte quelque chose : sinon, ne pas trancher ne servirait à rien)
     const only = playable[0];
@@ -906,6 +908,28 @@ export class Engine {
       }
     }
     if (Object.keys(gl).length) v.gains = gl;
+    // un pari dit ce qu'il rapporte s'il réussit, et ce qu'il coûte s'il rate (tour 5 des juges)
+    if (o.effect.bet) {
+      const side = (e: Effect | undefined, win: boolean): string => {
+        if (!e) return 'rien de plus';
+        const parts: string[] = [];
+        for (const r of RES) {
+          const g = e.gain?.[r] ?? 0;
+          if (g > 0 && win) {
+            const a = Math.max(1, Math.round(g * TUNING.gain));
+            const [lo, hi] = sight === 2 ? [a, a] : (sight === 1 ? GAIN_NARROW : GAIN_WIDE).find(([x, y]) => a >= x && a <= y)!;
+            parts.push(`+${lo === hi ? lo : hi >= 99 ? `${lo} et plus` : `${lo} à ${hi}`} ${RES_LABEL[r]}`);
+          }
+          if (g < 0) parts.push(`−${-g} ${RES_LABEL[r]}`);
+        }
+        if (e.quartiers) parts.push(`${e.quartiers > 0 ? '+' : '−'}${Math.abs(e.quartiers)} quartier${Math.abs(e.quartiers) > 1 ? 's' : ''}`);
+        if ((e.rivalJalon ?? 0) < 0) parts.push(`${capitalize(this.rival(s).name)} perdent une merveille`);
+        const fam = Object.entries(e.loy ?? {}).filter(([, d]) => d).map(([f, d]) => `${capitalize(this.c.families[f as FamilyId].house[s.era])} ${d! > 0 ? '▲' : '▼'}`);
+        parts.push(...fam);
+        return parts.length ? parts.join(', ') : 'rien de plus';
+      };
+      v.detail = [v.detail, `Réussi : ${side(o.effect.bet.win, true)} · Raté : ${side(o.effect.bet.lose, false)}`].filter(Boolean).join(' · ');
+    }
     // une option à seuil consomme des réserves quand elle réussit : on le montre, ce n'est pas « gratuit »
     if (o.effect.if?.res && o.effect.then?.gain) {
       const sp: Bag = {};
@@ -931,6 +955,15 @@ export class Engine {
       const fam = Object.fromEntries(FAMILIES.map((f) => [f, { ...s.fam[f], loy: Math.max(-3, Math.min(3, s.fam[f].loy + (v.famDir?.[f] ?? 0))) }])) as GameState['fam'];
       const after = this.tagCount({ ...s, fam }, tag);
       if (now >= need && after < need) v.risk = [v.risk, `${jal!.name} exige ${need} ${tag} : vous passeriez à ${after}`].filter(Boolean).join(' · ');
+    }
+    // la merveille de l'ère hors de prix : une option qui ferait passer une réserve sous son coût le dit (tour 5 des juges)
+    if (!s.jalons[s.era] && s.phase === 'saison' && card.kind !== 'jalon') {
+      const j = this.dessein(s).jalons[s.era];
+      const jc = this.costOf(s, j.cost);
+      const spend = this.costOf(s, o.cost);
+      const loss = this.certainLoss(o);
+      const short = RES.filter((r) => (jc[r] ?? 0) > 0 && s.res[r] >= jc[r]! && s.res[r] - (spend[r] ?? 0) - (loss[r] ?? 0) < jc[r]!);
+      if (short.length) v.risk = [v.risk, `${j.name} coûte ${short.map((r) => `${jc[r]} ${RES_LABEL[r]}`).join(' et ')} : il vous en resterait ${short.map((r) => s.res[r] - (spend[r] ?? 0) - (loss[r] ?? 0)).join(' et ')}`].filter(Boolean).join(' · ');
     }
     // une famille fervente qui cesserait de l'être : sa part au bilan disparaît, on le dit
     const cooled = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && s.fam[f].loy >= 3 && (v.famDir?.[f] ?? 0) < 0);
@@ -1058,6 +1091,7 @@ export class Engine {
       upkeep: s.era >= ERAS - 1 ? 0 : this.upkeepOf(s),
       needs: this.crisisNeeds(s),
       needsIfBuilt: s.jalons[s.era] ? undefined : this.crisisNeeds({ ...s, jalons: s.jalons.map((b, i) => b || i === s.era) }).bag,
+      needsIfRaceLost: this.form(s).id === 'course' && !s.mem.includes(`course_perdue_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.rivalJalons < 5 ? this.crisisNeeds({ ...s, mem: [...s.mem, `course_perdue_${s.era}`] }).bag : undefined,
       wonderUpkeep: Math.round(s.jalons.filter(Boolean).length * TUNING.wonderUpkeep),
       nextJalon: s.era < 4 ? { name: d.jalons[s.era + 1].name, req: this.condLabel(s, d.jalons[s.era + 1].req) } : undefined,
       tag: j.req?.tags && !s.jalons[s.era] ? (() => {
@@ -1238,9 +1272,12 @@ export class Engine {
     }
     for (const m of e.mem ?? []) if (!s.mem.includes(m)) s.mem.push(m);
     for (const m of e.unmem ?? []) s.mem = s.mem.filter((x) => x !== m);
+    if (e.unsched?.length) s.sched = s.sched.filter((x) => !e.unsched!.includes(x.card));
     for (const sc of e.sched ?? []) {
       const v = this.view(s);
-      s.sched.push({ card: sc.card, at: s.turn + 1 + sc.in, from: v?.title ?? card.title, ...(sc.pay ? { pay: sc.pay } : {}) });
+      // à la dernière ère, une dette refusée ne peut plus attendre : elle revient tout de suite (sinon refuser serait gratuit)
+      const wait = s.era >= ERAS - 1 && /^creance/.test(sc.card) ? 0 : sc.in;
+      s.sched.push({ card: sc.card, at: s.turn + 1 + wait, from: v?.title ?? card.title, ...(sc.pay ? { pay: sc.pay } : {}) });
       ev.push({ type: 'sched', card: sc.card });
     }
     for (const id of e.addCard ?? []) {
@@ -1488,6 +1525,7 @@ export class Engine {
         }
         // le chantier ouvre dès la fin de la première saison (à chaque saison pendant la Course)
         const course = fm.id === 'course';
+        let raceShort: Bag | undefined;
         const key = course ? `chantier_tot_${s.era}_${s.saison}` : `chantier_tot_${s.era}`;
         // pendant la Course, le chantier ouvre à la fin des deuxième et troisième saisons (pas dès la première)
         if ((course ? s.saison >= 1 && s.saison <= RACE_END - 1 : s.saison === 0 && !last) && !s.jalons[s.era] && !s.mem.includes(key)) {
@@ -1497,6 +1535,12 @@ export class Engine {
           if (this.options(s, early).some((o) => o.effect.jalon && this.canPay(s, o) && this.check(s, o.req))) {
             s.prompt = early;
             return;
+          }
+          // pendant la Course, un chantier fermé faute de moyens se dit (avec ce qui manque)
+          if (course) {
+            const j = this.dessein(s).jalons[s.era];
+            const cost = this.costOf(s, j.cost);
+            raceShort = Object.fromEntries(RES.filter((r) => (cost[r] ?? 0) > s.res[r]).map((r) => [r, cost[r]! - s.res[r]])) as Bag;
           }
         }
         // la Course : la rivale avance d'une étape par saison ; bâtir avant sa dernière étape, c'est gagner
@@ -1508,7 +1552,7 @@ export class Engine {
             const lost = !won && s.saison + 1 >= RACE_END;
             if (won) s.mem.push(`course_gagnee_${s.era}`);
             if (lost) s.mem.push(`course_perdue_${s.era}`);
-            ev.push({ type: 'raceStep', stage: Math.min(RACE_END, s.saison + 1), of: RACE_END, won, lost });
+            ev.push({ type: 'raceStep', stage: Math.min(RACE_END, s.saison + 1), of: RACE_END, won, lost, ...(raceShort && !won ? { short: raceShort } : {}) });
           }
         }
         if (!last) {
@@ -1669,25 +1713,45 @@ export class Engine {
    * Prêt pour la crise ? Pour chaque carte de la crise, existe-t-il dès maintenant une réponse qui tient (seuil atteint,
    * coût payable) sans sacrifier une famille ni un quartier ? Un indicateur simple pour le présage.
    */
-  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag; answer?: string; answerNeed?: Bag } {
+  crisisReadiness(s: GameState): { covered: number; total: number; level: 'pret' | 'presque' | 'non'; missing: Bag; answer?: string; answerNeed?: Bag; answerHave?: Bag } {
     let covered = 0;
     let total = 0;
     const missing: Bag = {};
     let answer: string | undefined;
     let answerNeed: Bag | undefined;
+    let answerHave: Bag | undefined;
+    // les cartes se paient l'une après l'autre : ce qu'une réponse dépense manque à la suivante (tour 5 des juges :
+    // « Prêt » quand chaque carte, prise seule, avait sa réponse, mais pas toutes ensemble)
+    const left = { ...s.res };
+    const at = (): GameState => ({ ...s, res: left });
     for (const id of this.crisisCards(s)) {
       const c = this.c.cards[id];
       if (!c || c.qui) continue;
       total++;
-      const ok = this.options(s, { card: id }).some((o) => {
-        if (!this.canPay(s, o) || !this.check(s, o.req)) return false;
-        if ((o.effect.quartiers ?? 0) < 0) return false;
-        if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -2)) return false;
-        if (o.effect.if && !this.check(s, o.effect.if) && ((o.effect.else?.quartiers ?? 0) < 0 || (o.effect.else?.else?.quartiers ?? 0) < 0)) return false;
-        return true;
-      });
-      if (ok) covered++;
-      else {
+      let pick: Bag | null = null;
+      let pickN = Infinity;
+      for (const o of this.options(s, { card: id })) {
+        const st = at();
+        if (!this.canPay(st, o) || !this.check(st, o.req)) continue;
+        if ((o.effect.quartiers ?? 0) < 0) continue;
+        if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -2)) continue;
+        if (o.effect.if && !this.check(st, o.effect.if) && ((o.effect.else?.quartiers ?? 0) < 0 || (o.effect.else?.else?.quartiers ?? 0) < 0)) continue;
+        // ce que la réponse dépense vraiment : son coût, ses pertes certaines, et ce que coûte l'issue réussie
+        const spend: Bag = {};
+        const cost = this.costOf(s, o.cost);
+        const loss = this.certainLoss(o);
+        const then = o.effect.if && this.check(st, o.effect.if) ? o.effect.then?.gain : undefined;
+        let n = 0;
+        for (const r of RES) {
+          const v = (cost[r] ?? 0) + (loss[r] ?? 0) + Math.max(0, -(then?.[r] ?? 0));
+          if (v) { spend[r] = v; n += v; }
+        }
+        if (n < pickN) { pick = spend; pickN = n; }
+      }
+      if (pick) {
+        covered++;
+        for (const r of RES) left[r] = Math.max(0, left[r] - (pick[r] ?? 0));
+      } else {
         // ce qui manque pour la réponse la plus proche (coût et seuil), sans sacrifice
         let best: Bag | null = null;
         let bestN = Infinity;
@@ -1700,7 +1764,7 @@ export class Engine {
           const short: Bag = {};
           let n = 0;
           for (const r of RES) {
-            const d = (need[r] ?? 0) - s.res[r];
+            const d = (need[r] ?? 0) - left[r];
             if (d > 0) { short[r] = d; n += d; }
           }
           if (n > 0 && n < bestN) { best = short; bestN = n; bestLabel = o.label; bestNeed = need; }
@@ -1709,11 +1773,13 @@ export class Engine {
         if (bestLabel && !answer) {
           answer = fill(bestLabel, s, this.c, this.ruinExtras(s));
           answerNeed = Object.fromEntries(RES.filter((r) => bestNeed![r]).map((r) => [r, bestNeed![r]])) as Bag;
+          // ce qu'il vous restera à cette carte, une fois payées les précédentes
+          answerHave = Object.fromEntries(RES.filter((r) => bestNeed![r]).map((r) => [r, left[r]])) as Bag;
         }
       }
     }
     const level = covered >= total ? 'pret' : covered * 2 >= total ? 'presque' : 'non';
-    return { covered, total, level, missing, answer, answerNeed };
+    return { covered, total, level, missing, answer, answerNeed, answerHave };
   }
 
   /** La plus récente des merveilles manquées des ères passées (−1 s'il n'y en a pas). */
@@ -2008,7 +2074,9 @@ export class Engine {
       // le dessein n'est accompli qu'avec son cinquième jalon ; sinon, on a seulement survécu
       // victoire : quatre merveilles ; triomphe : les cinq ; en dessous, on a seulement survécu
       const rank = jalons >= 5 ? 'triomphe' : jalons >= 4 ? 'victoire' : 'survie';
-      s.result = { type, rank, ending: s.jalons[4] ? this.dessein(s).ending : undefined, jalons };
+      // un triomphe sur des ruines ne se fête pas comme un triomphe intact (tour 5 des juges)
+      const pyrrhic = rank !== 'survie' && s.losses.length >= 3 && s.quartiers <= 2;
+      s.result = { type, rank, ending: s.jalons[4] ? this.dessein(s).ending : undefined, jalons, ...(pyrrhic ? { pyrrhic } : {}) };
     } else {
       const last = s.losses[s.losses.length - 1];
       s.result = { type, rank: 'chute', jalons, cause: last?.cause ?? 'l’usure' };

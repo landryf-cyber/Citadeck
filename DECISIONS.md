@@ -292,3 +292,13 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     toile du dessus, qui ne porte que des choses floues (flammes, lueurs, fumées, particules), est peinte à 1,25 fois
     la résolution CSS ; en crise, la cité vivante est repeinte une image sur deux. Résultat : palier 2 (tous les
     effets) dans les cinq ères, pire moyenne 30,2 i/s (contre 17,7 au palier 1 avant).
+77. **Arrêt des tours de juges, après le tour 5** (règle demandée : deux tours consécutifs sans amélioration). Somme des
+    moyennes : tour 3 48,3 ; tour 4 48,0 ; tour 5 48,0. Les corrections factuelles relevées au tour 5 sont faites, sans
+    nouveau tour (elles ne sont donc pas jugées) : « Prêt » compte les réserves carte après carte (une réponse dépensée
+    manque à la suivante) et dit ce qu'il restera ; pendant la Course, le présage chiffre la crise si la rivale gagne
+    (+25 %) et le chantier fermé faute de moyens dit ce qui manque ; une dette refusée à la dernière ère revient tout de
+    suite (refuser n'est plus gratuit) ; plus de « Ne pas trancher » sur la lettre de la banque ; « Racheter vos dettes »
+    annule bien l'emprunt ; une option qui ferait passer une réserve sous le coût de la merveille de l'ère le dit ; un
+    pari dit ce qu'il rapporte et ce qu'il coûte ; la relation avec la rivale est confirmée après le choix ; un triomphe
+    ou une victoire avec trois quartiers perdus et deux au plus encore debout s'appelle « à la Pyrrhus » ; le client texte
+    ne promet plus de Science par « merveilles bâties ».

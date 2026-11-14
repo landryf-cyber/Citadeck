@@ -73,6 +73,8 @@ export interface Effect {
   loy?: Partial<Record<FamilyId, number>>;
   mem?: string[];
   unmem?: string[];
+  /** annule les suites en attente vers ces cartes (une dette rachetée ne revient pas) */
+  unsched?: string[];
   /** cartes programmées : jouées dans `in` cartes (0 = tout de suite après) */
   sched?: { card: string; in: number; pay?: number }[];
   /** carte ajoutée au deck permanent */
@@ -365,6 +367,8 @@ export interface Result {
   type: 'victoire' | 'defaite';
   /** palier de fin : triomphe (cinq merveilles), victoire (quatre), survie (moins), chute */
   rank?: 'triomphe' | 'victoire' | 'survie' | 'chute';
+  /** gagné sur des ruines : trois quartiers perdus ou plus, deux au plus encore debout */
+  pyrrhic?: boolean;
   ending?: 'science' | 'military' | 'culture';
   jalons: number;
   /** cause de la chute */

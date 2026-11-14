@@ -695,8 +695,8 @@ export class App {
       if (x.type === 'bet') chips.push(`<span class="chip note">${ICON.dice}&nbsp;${x.win ? 'Réussi' : 'Raté'} (${Math.round(x.chance * 100)} %)</span>`);
       if (x.type === 'card+' && this.e.card(x.id).kind === 'decouverte') chips.push(`<span class="chip note">Découverte : ${esc(this.e.card(x.id).title)}</span>`);
       if (x.type === 'rot') chips.push(`<span class="chip note">La chasse : ${bagChips({ vivres: x.hunt }, '+')}${x.amount ? ` ; on ne porte pas plus de ${x.cap} : ${bagChips({ vivres: x.amount }, '−')} pourrissent` : ''}</span>`);
-      if (x.type === 'raceStep') chips.push(`<span class="chip note${x.won ? ' good' : x.lost ? ' bad' : ''}">${x.won ? `Course gagnée : ${esc(this.e.rival(s).name)} n’achèveront pas leur merveille cette ère` : x.lost ? `Course perdue : ${esc(this.e.rival(s).name)} ont fini ; la crise frappera plus fort` : `${esc(capitalize(this.e.rival(s).name))} avancent : étape ${x.stage} sur ${x.of}`}</span>`);
-      if (x.type === 'rival') chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'}</span>`);
+      if (x.type === 'raceStep') chips.push(`<span class="chip note${x.won ? ' good' : x.lost ? ' bad' : ''}">${x.won ? `Course gagnée : ${esc(this.e.rival(s).name)} n’achèveront pas leur merveille cette ère` : x.lost ? `Course perdue : ${esc(this.e.rival(s).name)} ont fini ; la crise frappera plus fort` : `${esc(capitalize(this.e.rival(s).name))} avancent : étape ${x.stage} sur ${x.of}`}${x.short && Object.keys(x.short).length ? ` · chantier fermé, il vous manque ${RES.filter((r) => x.short![r]).map((r) => `${x.short![r]} ${RES_LABEL[r]}`).join(', ')}` : ''}</span>`);
+      if (x.type === 'rival') { const lab = (v: number) => (v >= 1 ? 'amicale' : v <= -1 ? 'hostile' : 'neutre'); chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta > 0 ? '▲' : '▼'} : relation ${lab(x.value) === lab(x.value - x.delta) ? 'toujours' : 'désormais'} ${lab(x.value)}</span>`); }
       if (x.type === 'rivalJalon' && !ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) chips.push(`<span class="chip note">${esc(capitalize(this.e.rival(s).name))} ${x.delta < 0 ? 'perdent' : 'achèvent'} ${esc(x.name)} (${x.count}/5)</span>`);
     }
     // la réponse s'affiche sous la carte suivante : on rappelle à quoi elle répond
@@ -798,7 +798,8 @@ export class App {
         const words = (b: Partial<Record<Res, number>>) => RES.filter((r) => b[r]).map((r) => `<span class="w r-${r}">${RES_ICON[r]}${b[r]} ${RES_LABEL[r]}</span>`).join(', ');
         const miss = words(ready.missing);
         // pas de « presque prêt » : ce qui manque, pour quelle réponse, ce qu'elle coûte et ce que vous avez
-        const needTxt = ready.answerNeed ? RES.filter((r) => ready.answerNeed![r]).map((r) => `${ready.answerNeed![r]} ${RES_LABEL[r]} (vous : ${s.res[r]})`).join(', ') : '';
+        const have = (r: Res) => ready.answerHave?.[r] ?? s.res[r];
+        const needTxt = ready.answerNeed ? RES.filter((r) => ready.answerNeed![r]).map((r) => `${ready.answerNeed![r]} ${RES_LABEL[r]} (${have(r) < s.res[r] ? `il vous en restera ${have(r)} après les cartes précédentes` : `vous : ${s.res[r]}`})`).join(', ') : '';
         const readyTxt = ready.level === 'pret' ? 'Vous êtes prêt à l’affronter'
           : miss ? `Il vous manque ${miss}${ready.answer ? ` pour « ${esc(ready.answer)} », qui demande ${needTxt}` : ''}` : 'Pas encore prêt : certaines réponses exigent des familles qui vous aiment';
         // la merveille et la réponse à la crise puisent-elles dans la même réserve ?
@@ -848,7 +849,8 @@ export class App {
           inner.appendChild(el('div', 'panel', `<h3><span>Le dessein · ${esc(p.dessein)}</span>${stars}</h3>${jal}${rule}${nxt}`));
           const needs = Object.keys(p.needs.bag).length ? `<div class="row"><span class="note">Seuils et coûts annoncés, jusqu’à :</span>${bagChips(p.needs.bag)}</div>` : '';
           const ifBuilt = p.needsIfBuilt && RES.some((r) => (p.needsIfBuilt![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si vous bâtissez la merveille d’abord :</span>${bagChips(p.needsIfBuilt)}</div>` : '';
-          inner.appendChild(el('div', 'panel crisis', `<h3>${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${ifBuilt}
+          const ifLost = p.needsIfRaceLost && RES.some((r) => (p.needsIfRaceLost![r] ?? 0) > (p.needs.bag[r] ?? 0)) ? `<div class="row"><span class="note">Si la rivale gagne la course :</span>${bagChips(p.needsIfRaceLost)}</div>` : '';
+          inner.appendChild(el('div', 'panel crisis', `<h3>${esc(p.crisis.name)}</h3><p>${esc(p.crisis.intro)}</p><p><b>Ce qui protège :</b> ${esc(p.crisis.protects)}.</p>${needs}${ifBuilt}${ifLost}
             <p class="note">Réponses qui tiennent déjà : ${ready.covered} sur ${ready.total}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}</p>`));
           inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
             <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur dessein : ils réclament un tribut à chaque ère.` : `${esc(p.rival.leader)} bâtit ${esc(p.rival.next)}, à achever en fin d’ère si personne ne l’en empêche. À cinq merveilles, la vallée leur paie tribut.`}</p>`));
@@ -924,7 +926,7 @@ export class App {
       await this.banner('La chute', `${s.name} est tombée`, 'crisis');
     } else {
       this.audio.victory();
-      await this.banner(r.rank === 'triomphe' ? 'Triomphe' : r.rank === 'victoire' ? 'Victoire' : 'Survie', s.name, 'gold');
+      await this.banner(`${r.rank === 'triomphe' ? 'Triomphe' : r.rank === 'victoire' ? 'Victoire' : 'Survie'}${r.pyrrhic ? ' à la Pyrrhus' : ''}`, s.name, 'gold');
     }
     if (this.s !== s) return;
     await this.timelapse(s);
@@ -983,7 +985,7 @@ export class App {
     }).join('');
     this.openScreen('veil end', (inner) => {
       const shadow = r.type === 'victoire' && !r.ending && s.rivalJalons >= 5;
-      const label = r.rank === 'triomphe' ? 'Triomphe · dessein accompli' : r.rank === 'victoire' ? `Victoire · ${r.jalons} merveilles sur 5` : r.type === 'defaite' ? `Chute · ${esc(ERA_NAMES[s.era])}` : shadow ? `Survie, dans l’ombre de ${esc(this.e.rival(s).name)}` : 'Survie · dessein inachevé';
+      const label = r.pyrrhic ? `${r.rank === 'triomphe' ? 'Triomphe' : 'Victoire'} à la Pyrrhus · ${r.jalons} merveilles debout, ${s.quartiers} quartier${s.quartiers > 1 ? 's' : ''} encore debout` : r.rank === 'triomphe' ? 'Triomphe · dessein accompli' : r.rank === 'victoire' ? `Victoire · ${r.jalons} merveilles sur 5` : r.type === 'defaite' ? `Chute · ${esc(ERA_NAMES[s.era])}` : shadow ? `Survie, dans l’ombre de ${esc(this.e.rival(s).name)}` : 'Survie · dessein inachevé';
       inner.innerHTML = `<div class="over">${label}</div>
         <h2 class="big">${esc(s.name)}</h2><p class="epitaph">${esc(ep)}</p>
         <div class="panel"><div class="row" style="justify-content:space-between"><span>Ère atteinte : <b>${ROMAN[s.era]}</b></span><span>Merveilles : <b>${r.jalons}/5</b></span><span>Rivale : <b>${s.rivalJalons}/5</b></span></div></div>

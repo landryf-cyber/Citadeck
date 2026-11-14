@@ -41,8 +41,8 @@ export const forms: EraForm[] = [
   },
   {
     id: 'course', name: 'La Course', rhythm: 'quatre saisons éclair', seasons: 4, cards: 2,
-    rule: 'La rivale avance d’une étape par saison et finit sa merveille à la troisième ; le chantier ouvre à la fin des deuxième et troisième saisons.',
-    short: 'La rivale finit sa merveille à la troisième saison ; le chantier ouvre aux deuxième et troisième.',
+    rule: 'La rivale avance d’une étape par saison et finit sa merveille à la troisième ; le chantier ouvre à la fin des deuxième et troisième saisons, si vous pouvez payer.',
+    short: 'La rivale finit sa merveille à la troisième saison ; le chantier ouvre aux deuxième et troisième, si vous pouvez payer.',
     objective: 'Bâtir la merveille avant la rivale : si vous gagnez, elle n’achève pas la sienne cette ère.',
     threat: 'Une crise éclair, en deux cartes ; si la rivale finit la première, elle frappe un quart plus fort.',
     mission: 'Bâtir {j} avant {rival}.',

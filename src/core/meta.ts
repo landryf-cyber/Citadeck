@@ -261,7 +261,7 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   const rn = e.rival(s).name;
   const shadow = s.rivalJalons >= 5 && !s.result?.ending ? `, dans l’ombre ${rn.startsWith('les ') ? `des ${rn.slice(4)}` : `de ${rn}`}` : '';
   const rk = s.result?.rank;
-  const end = s.result?.type === 'victoire' ? `${rk === 'triomphe' ? 'Triomphe, dessein accompli' : rk === 'victoire' ? 'Victoire, quatre merveilles debout' : 'A survécu'}${rk === 'survie' ? shadow : ''}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
+  const end = s.result?.type === 'victoire' ? `${rk === 'triomphe' ? `Triomphe${s.result.pyrrhic ? ' à la Pyrrhus' : ''}, dessein accompli${s.result.pyrrhic ? ' sur des ruines' : ''}` : rk === 'victoire' ? `Victoire${s.result.pyrrhic ? ' à la Pyrrhus' : ''}, quatre merveilles debout${s.result.pyrrhic ? ' sur des ruines' : ''}` : 'A survécu'}${rk === 'survie' ? shadow : ''}, ${to}. ${epitaph(e, s)}` : `Tombée par ${s.result?.cause ?? 'l’usure'}, ${to}.`;
   lines.push(testament ? `${end} Derniers mots : « ${testament} »` : end);
   return lines.map((l) => polish(l.replace(/\s{2,}/g, ' ')));
 }

@@ -58,7 +58,9 @@ function presage(s: GameState): void {
   P(p.jalon ? fm.mission.replace('{j}', p.jalon.name.charAt(0).toLowerCase() + p.jalon.name.slice(1)).replace('{cn}', cn).replace('{rival}', p.rival.name) : `Tenir face ${toCrisis}.`);
   const ready = e.crisisReadiness(s);
   P(`  Objectif : ${p.jalon ? `${p.jalon.name} (${bag(p.jalon.cost)})${p.tag && p.tag.total < p.tag.need ? ` — ${p.tag.tag} ${p.tag.total}/${p.tag.need}` : ''}` : 'la merveille de l’ère est debout'}`);
-  P(`  Menace : ${p.crisis.name} — ${ready.level === 'pret' ? 'Prêt' : ready.level === 'presque' ? 'Presque prêt' : 'Pas prêt'}`);
+  // mêmes mots qu'à l'écran : prêt, ou ce qui manque (les cartes se paient l'une après l'autre)
+  const miss = bag(ready.missing);
+  P(`  Menace : ${p.crisis.name} — ${ready.level === 'pret' ? 'vous êtes prêt à l’affronter' : miss ? `il vous manque ${miss}${ready.answer ? ` pour « ${ready.answer} »` : ''}` : 'pas encore prêt : certaines réponses exigent des familles qui vous aiment'}`);
   P(`  Rivale : ${capitalize(p.rival.name)} · ${p.rival.count} merveille${p.rival.count > 1 ? 's' : ''} sur 5`);
   P('--- détails (repliés à l’écran) ---');
   P(`Vous avez : ${s.quartiers} ${s.quartiers > 1 ? 'quartiers' : 'quartier'}, ${RES.map((r) => `${s.res[r]} ${RES_LABEL[r]}`).join(', ')}.`);
@@ -69,7 +71,7 @@ function presage(s: GameState): void {
   if (missed.length) P(`Merveille${missed.length > 1 ? 's' : ''} manquée${missed.length > 1 ? 's' : ''} : ${missed.join(', ')}. ${e.form(s).seasons > 1 ? `À la dernière saison, vous pourrez rattraper ${missed[missed.length - 1]}, plus cher.` : 'Trop tard pour la rattraper.'}`);
   if (p.tag) P(`${p.tag.tag} : ${p.tag.total} sur ${p.tag.need}${p.tag.parts.length ? ` (${p.tag.parts.join(', ')})` : ''}. On en gagne avec ${p.tag.how}.`);
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
-  P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
+  P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needsIfRaceLost ? ` (si la rivale gagne la course : ${bag(p.needsIfRaceLost)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
   if (s.era >= 4) P('Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.');
   else if (s.era === 3) P(`Au bilan : la cité mangera ${p.upkeep} Vivres ; pas d’usure (la veille du Jugement, on garde tout) ; puis une découverte à choisir.`);
   else P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
@@ -128,7 +130,8 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'quartiers' && x.shielded) parts.push(`une merveille rachète le quartier (${x.cause})${x.paid ? ` contre ${bag(x.paid, '-')}` : ''}`);
     if (x.type === 'sched') parts.push('cela aura des suites');
     if (x.type === 'rot') parts.push(`la chasse rapporte +${x.hunt} Vivres${x.amount ? ` ; on ne porte pas plus de ${x.cap} : ${x.amount} pourrissent` : ''}`);
-    if (x.type === 'raceStep') parts.push(x.won ? 'COURSE GAGNÉE : la rivale n’achèvera pas sa merveille cette ère' : x.lost ? 'COURSE PERDUE : la rivale a fini, la crise frappera plus fort' : `la rivale avance : étape ${x.stage} sur ${x.of}`);
+    if (x.type === 'rival') { const lab = (v: number) => (v >= 1 ? 'amicale' : v <= -1 ? 'hostile' : 'neutre'); parts.push(`relation avec la rivale ${x.delta > 0 ? '▲' : '▼'} (elle ${lab(x.value) === lab(x.value - x.delta) ? 'reste' : 'devient'} ${lab(x.value)})`); }
+    if (x.type === 'raceStep') parts.push(x.won ? 'COURSE GAGNÉE : la rivale n’achèvera pas sa merveille cette ère' : x.lost ? 'COURSE PERDUE : la rivale a fini, la crise frappera plus fort' : `la rivale avance : étape ${x.stage} sur ${x.of}${x.short && Object.keys(x.short).length ? ` ; chantier fermé, il vous manque ${bag(x.short)}` : ''}`);
     if (x.type === 'bet') parts.push(`pari ${x.win ? 'réussi' : 'raté'} (${Math.round(x.chance * 100)} %)`);
     if (x.type === 'jalon') parts.push(`★ MERVEILLE BÂTIE : ${x.name}`);
     if (x.type === 'card+' && e.card(x.id).kind === 'decouverte') parts.push(`découverte : ${e.card(x.id).title}`);
@@ -161,7 +164,7 @@ function feedback(s: GameState, ev: Ev[]): void {
 
 function end(s: GameState): void {
   const r = s.result!;
-  P(`=== FIN : ${r.rank === 'triomphe' ? 'TRIOMPHE, dessein accompli' : r.rank === 'victoire' ? 'VICTOIRE' : r.type === 'defaite' ? `CHUTE : ${s.name} est tombée (${ERA_NAMES[s.era]})` : s.rivalJalons >= 5 ? `SURVIE, dans l’ombre de ${e.rival(s).name}` : 'SURVIE, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
+  P(`=== FIN : ${r.rank === 'triomphe' ? `TRIOMPHE${r.pyrrhic ? ' À LA PYRRHUS' : ''}, dessein accompli` : r.rank === 'victoire' ? `VICTOIRE${r.pyrrhic ? ' À LA PYRRHUS' : ''}` : r.type === 'defaite' ? `CHUTE : ${s.name} est tombée (${ERA_NAMES[s.era]})` : s.rivalJalons >= 5 ? `SURVIE, dans l’ombre de ${e.rival(s).name}` : 'SURVIE, dessein inachevé'} — merveilles ${r.jalons}/5, rivale ${s.rivalJalons}/5`);
   P(`Épitaphe : ${epitaph(e, s)}`);
   for (const l of s.losses) P(`  perte : -${l.amount} ${l.amount > 1 ? 'quartiers' : 'quartier'}, ${l.cause}`);
   P('Derniers mots (choisir avec « testament N ») :');
@@ -181,7 +184,7 @@ if (a0 === 'new') {
   P(`Nouvelle civilisation : ${s.name}. Dessein : ${e.dessein(s).name}. Origine : ${e.c.origins.find((o) => o.id === s!.origin)?.name}. Rivale : ${e.rival(s).name}.`);
   if (s.ruins.length) P(`Sur la colline : les ruines de ${s.ruins.map((x) => x.name).join(', ')}.`);
   P('Victoire : 4 merveilles à la fin de l’ère V ; triomphe : les 5 ; en dessous, simple survie.');
-  { const d = e.dessein(s); P(`Les merveilles du dessein exigent ${d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ')} de ${d.tag} (découvertes, famille amie, merveilles bâties).`); }
+  { const d = e.dessein(s); P(`Les merveilles du dessein exigent ${d.jalons.map((j) => j.req?.tags?.[d.tag] ?? 0).filter(Boolean).join(', ')} de ${d.tag} (découvertes, famille qui vous aime, et les merveilles qui le disent).`); }
   card(s);
 } else if (!s) {
   P('Aucune partie en cours. Lancez « new ».');
