@@ -264,3 +264,12 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     famille le dit (plus de part au bilan) ; l'effet d'un choix est montré à part de ce que fait le bilan ; la rivale
     n'a pas plus d'une merveille d'avance sur son époque ; les humeurs des familles tournent avec leurs cartes et un
     souvenir ne revient qu'une fois ; la colonie coûte 2 soldats et 2 Trésor.
+74. **Après le tour 3 des juges** (qui améliore le tour 2 sur cinq critères : on continue) : le Jugement a lieu au sortir
+    de la saison, avant le chantier de l'ère V (un hommage peut encore financer la dernière merveille) ; les issues
+    « merveilles » de l'ère V coûtent 4 ; la Course joue les deux dernières cartes de sa crise (le front, puis l'issue :
+    l'Armistice ne réclame plus une offensive jamais proposée) ; un repère marque le début du bilan, l'effet du choix
+    ne mélange plus ses chiffres ; le Concile ne froisse que la famille rivale de celle qui préside (la paix civile
+    redevient possible) ; au procès, la gravité compte plus que l'ancienneté et un acte moralement lourd (les enfants
+    des filatures) passe en tête ; une famille apaisée par les Peintures n'est pas déclarée délaissée au même bilan ;
+    une découverte ne repasse plus comme carte du jour au-delà de l'ère suivante ; plus d'échappatoire sur une carte
+    d'argent ; un crédit chez des Troc froissés le dit.

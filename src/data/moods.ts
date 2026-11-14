@@ -56,7 +56,7 @@ export const moods: Record<FamilyId, { hostile: string[]; cold: string[]; warm: 
       '{F:brume} a calculé la date de votre chute. {Il:brume} refuse de vous la donner, par politesse.',
     ],
     cold: [
-      '{F:brume} soupire en vous voyant. Techniquement, c’est un bonjour.',
+      '{F:brume} soupire en vous voyant. Chez lui, c’est un bonjour.',
       '{F:brume} vous explique la chose lentement, comme à un enfant pas très doué.',
       '{F:brume} lève les yeux de ses calculs, puis y retourne.',
     ],

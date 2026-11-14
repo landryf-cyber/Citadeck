@@ -118,6 +118,9 @@ export function variant(text: string, key: string, seed: number, prior: number, 
   return parts[(hashString(`${key}#${seed}`) + prior) % parts.length];
 }
 
+/** Des actes moralement lourds, que la famille lésée ressortira d'abord au procès (carte:option). */
+const GRAVE = new Set(['troc_4:0']);
+
 /** Une citation entre guillemets, jamais doublés. */
 const quoted = (t: string) => (/^«/.test(t.trim()) ? t.trim() : `« ${t.replace(/^[«\s]+|[»\s]+$/g, '')} »`);
 
@@ -150,6 +153,7 @@ export type Ev =
   | { type: 'raceStep'; stage: number; of: number; won: boolean; lost: boolean }
   | { type: 'peace' }
   | { type: 'spoil'; amount: number }
+  | { type: 'bilan' }
   | { type: 'mend'; family: FamilyId }
   | { type: 'disette'; missing: number }
   | { type: 'loy'; family: FamilyId; delta: number; value: number }
@@ -373,7 +377,7 @@ export class Engine {
   /** Les cartes de crise qui seront vraiment jouées à cette ère (la Course n'en joue que deux). */
   crisisCards(s: GameState): string[] {
     const cr = this.crisisOf(s);
-    return this.form(s).id === 'course' ? [cr.cards[0], cr.cards[cr.cards.length - 1]] : cr.cards.slice();
+    return this.form(s).id === 'course' ? cr.cards.slice(-2) : cr.cards.slice();
   }
 
   /** La forme de l'ère en cours (règle, rythme, objectif, menace). */
@@ -607,7 +611,8 @@ export class Engine {
     }
     // la pauvreté ne doit pas supprimer le choix : sur une carte de récit, s'il ne reste qu'une issue, on peut ne pas trancher
     // face à une trahison, pas d'échappatoire : on tranche
-    const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut';
+    const money = card.options.some((o) => o.effect.seize || o.effect.sched?.some((x) => /^creance/.test(x.card)));
+    const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut' && !money;
     // (seulement si cette seule issue coûte quelque chose : sinon, ne pas trancher ne servirait à rien)
     const only = playable[0];
     // (une perte de quartier qu'une merveille rachèterait ne compte pas comme un vrai risque)
@@ -703,7 +708,7 @@ export class Engine {
     if (card.kind === 'hommage') {
       // une cité en détresse peut compter sur une famille reconnaissante pour rebâtir : une occasion de se relever
       const base = card.scale ? card.options.map((o) => scaleOption(o, s.era)) : card.options;
-      if (s.quartiers > 2) return base;
+      if (s.quartiers > 2 || base.some((o) => (o.effect.quartiers ?? 0) > 0)) return base;
       return [...base, { label: 'Qu’ils bâtissent un quartier', effect: { quartiers: 1 }, reply: `{H:${card.family}} bâtissent un quartier à leurs frais. Ils y mettent leur nom partout, même sur les pavés.` }];
     }
     if (card.kind === 'crise') return card.options.map((o) => scaleOption(o, 0, this.crisisK(s)));
@@ -780,6 +785,8 @@ export class Engine {
     Object.assign(extra, this.ruinExtras(s));
     if (card.kind === 'famille' && card.family) {
       const lead = this.familyLead(s, card.family);
+      const head = `{F:${card.family}}`;
+      if (lead && lead.includes(head) && text.startsWith(head)) text = `{Il:${card.family}}${text.slice(head.length)}`;
       if (lead) text = `${lead} ${text}`;
     }
     if (p.from) header = `Suite de · ${p.from}`;
@@ -936,7 +943,8 @@ export class Engine {
       const due = (o.effect.sched ?? []).find((x) => /^creance/.test(x.card));
       const who = due?.card === 'creance_rivale' ? capitalize(this.rival(s).name) : capitalize(this.c.families.troc.house[s.era]);
       const when = !due || due.in === 0 ? 'À la carte suivante' : 'Trois cartes plus tard';
-      v.detail = [v.detail, `${who} avancent la somme. ${when}, la note : ${due?.pay ?? '?'} Trésor (ou en nature, ou par saisie de vos réserves).`].filter(Boolean).join(' · ');
+      v.detail = [v.detail, `${who} avancent la somme. ${when}, la note : ${due?.pay ?? '?'} Trésor (ou en nature : Vivres et Armée ; ou par saisie de vos réserves).`].filter(Boolean).join(' · ');
+      if (s.fam.troc.loy <= -1) v.risk = [v.risk, `${who} vous en veulent déjà : refuser la note les mettrait en révolte`].filter(Boolean).join(' · ');
     }
     if (o.effect.seize) {
       const total = RES.reduce((a, r) => a + s.res[r], 0);
@@ -1311,7 +1319,11 @@ export class Engine {
       const id = this.familyCard(s, f);
       if (id) pool.push(id);
     }
-    for (const id of s.deck) if (this.c.cards[id]?.options.length && !s.spent.includes(id)) pool.push(id);
+    for (const id of s.deck) {
+      const d = this.c.cards[id];
+      const first = Math.min(...(d?.eras ?? [s.era]));
+      if (d?.options.length && !s.spent.includes(id) && s.era - first <= 1) pool.push(id);
+    }
     const events = (this.c.events[s.era] ?? []).filter((id) => {
       const c = this.c.cards[id];
       return this.available(s, c) && !s.spent.includes(id) && this.check(s, c.cond);
@@ -1486,6 +1498,15 @@ export class Engine {
           s.prompt = { card: 'carrefour', routes: this.routesFor(s, rng) };
           return;
         }
+        // le Jugement : vos actes sont jugés au sortir de la saison, avant le chantier et la crise
+        if (fm.id === 'jugement' && !s.mem.includes(`jugement_${s.era}`)) {
+          s.mem.push(`jugement_${s.era}`);
+          const jp = this.stepPrompt(s, 'jugement', rng);
+          if (jp) {
+            s.prompt = jp;
+            return;
+          }
+        }
         // le chantier du jalon, avant la crise : bâtir, c'est affronter la crise plus pauvre
         s.phase = 'chantier';
         if (s.jalons[s.era]) continue;
@@ -1512,8 +1533,6 @@ export class Engine {
           const start = n === 0 && s.avoid?.includes(base) && order.length > 1 ? 1 : 0;
           pile.splice(1, 0, order[Math.min(order.length - 1, start + n)]);
         }
-        // le Jugement : vos actes passent en jugement avant la crise
-        if (fm.id === 'jugement') pile.unshift('@jugement');
         s.pile = pile;
         ev.push({ type: 'crisis', era: s.era, name: cr.name });
         continue;
@@ -1700,10 +1719,13 @@ export class Engine {
 
   private startEraEnd(s: GameState, rng: Rng, ev: Ev[]): void {
     s.phase = 'finere';
+    ev.push({ type: 'bilan' });
     let rivalTriumph = false;
     // les Peintures de la grotte : on pardonne à qui l'on a peint
+    const mended = new Set<FamilyId>();
     if (this.passives(s).some((p) => p.type === 'mend')) {
       for (const f of this.present(s)) if (s.fam[f].loy <= -2) {
+        mended.add(f);
         this.changeLoy(s, f, 1, ev, false);
         ev.push({ type: 'mend', family: f });
       }
@@ -1732,7 +1754,7 @@ export class Engine {
     }
     // familles délaissées
     for (const f of this.present(s)) {
-      if (s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era) {
+      if (s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era && !mended.has(f)) {
         this.changeLoy(s, f, -1, ev, false);
         ev.push({ type: 'neglect', family: f });
       }
@@ -1751,7 +1773,7 @@ export class Engine {
     // la veille du Jugement, on garde tout : pas d'usure au bilan de l'ère IV (l'ère V n'a plus de revenus)
     const eve = s.era === ERAS - 2;
     const da = final || eve ? 0 : Math.floor(s.res.armee * TUNING.armyDecay);
-    const dt = final || eve ? 0 : Math.floor(s.res.tresor * TUNING.treasureDecay);
+    const dt = final || eve ? 0 : Math.round(s.res.tresor * TUNING.treasureDecay);
     if (da || dt) {
       s.res.armee -= da;
       s.res.tresor -= dt;
@@ -1881,8 +1903,8 @@ export class Engine {
       // la gravité d'abord (une arrestation pèse plus qu'une médaille refusée), l'ancienneté ensuite ;
       // un affront personnel ou une dette reniée pèse plus qu'un blâme de crise, qui fait partie du métier
       const c = this.c.cards[h.card];
-      const grave = (c?.family === f ? 8 : 0) + (/^creance/.test(h.card) ? 12 : 0) - (c?.kind === 'crise' ? 8 : 0);
-      const score = -d * 15 + (s.era - h.era) * 5 + grave;
+      const grave = (c?.family === f ? 8 : 0) + (/^creance/.test(h.card) ? 12 : 0) - (c?.kind === 'crise' ? 8 : 0) + (GRAVE.has(`${h.card}:${h.choice}`) ? 25 : 0);
+      const score = -d * 15 + (s.era - h.era) * 1 + grave;
       if (score > top) {
         top = score;
         best = i;

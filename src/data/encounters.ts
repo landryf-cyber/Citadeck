@@ -68,7 +68,7 @@ export const encounterCards = [
   card({
     id: 'r_brume_eleve', kind: 'rencontre', scale: true, family: 'brume', art: { motif: 'scroll', hue: 205 },
     title: 'L’Élève',
-    text: 'L’élève de {F:brume} a eu une idée meilleure que celle de son maître. {F:brume} demande qu’on l’exile. « Techniquement, pour son bien. »',
+    text: 'L’élève de {F:brume} a eu une idée meilleure que celle de son maître. {F:brume} demande qu’on l’exile. « Pour son bien, évidemment. »',
     options: [
       { label: 'Garder l’élève', effect: { gain: $('S5'), loy: { brume: -1 } }, reply: 'L’élève invente une chose formidable. {F:brume} explique qu’il l’avait inventée avant, mais en mieux.' },
       { label: 'Exiler l’élève', effect: { gain: $('S1'), loy: { brume: 2 }, rival: -1 }, reply: 'L’élève part chez {rival}. Il y invente une chose formidable. Pour eux.' },

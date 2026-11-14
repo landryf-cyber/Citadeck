@@ -71,6 +71,7 @@ function presage(s: GameState): void {
   P(`Crise de l’ère : ${p.crisis.name}. ${p.crisis.intro} Ce qui protège : ${p.crisis.protects}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}`);
   P(`Seuils et coûts annoncés, jusqu’à : ${bag(p.needs.bag)}${p.needsIfBuilt ? ` (si vous bâtissez la merveille d’abord : ${bag(p.needsIfBuilt)})` : ''}${p.needs.families.length ? ` ; aide aussi : ${p.needs.families.join(', ')}` : ''}.`);
   if (s.era >= 4) P('Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.');
+  else if (s.era === 3) P(`Au bilan : la cité mangera ${p.upkeep} Vivres ; pas d’usure (la veille du Jugement, on garde tout) ; puis une découverte à choisir.`);
   else P(`Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? `, dont ${p.wonderUpkeep} pour entretenir vos merveilles` : ''} ; l’Armée perd 30 % et le Trésor 20 %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`);
   const lonely = e.present(s).filter((f) => s.era - s.visits[f] >= 2 && s.fam[f].seen < s.era).map((f) => e.c.families[f].house[s.era]);
   if (lonely.length) P(`${capitalize(lonely.join(' et '))} attendent votre visite : sans elle cette ère, ils se sentiront délaissés au bilan (−1).`);
@@ -115,7 +116,7 @@ function feedback(s: GameState, ev: Ev[]): void {
   const parts: string[] = [];
   if (res.length) for (const r of RES) { const d = res[res.length - 1].after[r] - res[0].before[r]; if (d) parts.push(`${d > 0 ? '+' : ''}${d} ${RES_LABEL[r]}`); }
   // ce que le choix a causé, séparé de ce que fait le bilan
-  const BILAN = new Set(['revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
+  const BILAN = new Set(['bilan', 'revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
   const cut = ev.findIndex((x) => BILAN.has(x.type));
   const mine = cut < 0 ? ev : ev.slice(0, cut);
   const loy = new Map<FamilyId, number>();
@@ -149,7 +150,6 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'upkeep') bil.push(`La cité mange : -${x.amount} Vivres.`);
     if (x.type === 'famine') bil.push(ev.some((y) => y.type === 'quartiers' && y.shielded && y.cause === 'la famine') ? 'FAMINE : une merveille rachète le quartier.' : 'FAMINE : un quartier se vide.');
     if (x.type === 'annex') bil.push(`${capitalize(x.name)} annexent un quartier (leur dessein est achevé ; ils épargnent leurs amis).`);
-    if (x.type === 'rivalJalon' && ev.some((y) => y.type === 'upkeep' || y.type === 'famine' || y.type === 'disette')) bil.push(`La rivale achève ${x.name} (${x.count}/5).`);
   }
   if (bil.length) P(`=== BILAN DE L’ÈRE\n  ${bil.join('\n  ')}`);
   const cr = ev.find((x) => x.type === 'crisis') as { name: string } | undefined;

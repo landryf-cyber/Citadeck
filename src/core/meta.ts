@@ -253,8 +253,8 @@ export function chronicleLines(e: Engine, s: GameState, testament?: string): str
   const enemy = present.slice().sort((a, b) => s.fam[a].loy - s.fam[b].loy)[0];
   const H = (f: FamilyId) => capitalize(e.c.families[f].house[s.era]);
   const gone = FAMILIES.filter((f) => s.fam[f].state === 'eteinte');
-  if (ally && s.fam[ally].loy >= 1 && enemy && s.fam[enemy].loy <= -1) lines.push(`${H(ally)} l’ont aimée jusqu’au bout. ${H(enemy)} lui en voulaient, à la fin.`);
-  else if (ally && s.fam[ally].loy >= 1) lines.push(`${H(ally)} l’ont aimée jusqu’au bout.`);
+  if (ally && s.fam[ally].loy >= 1 && enemy && s.fam[enemy].loy <= -1) lines.push(`${H(ally)} l’aimaient, à la fin. ${H(enemy)} lui en voulaient.`);
+  else if (ally && s.fam[ally].loy >= 1) lines.push(`${H(ally)} l’aimaient, à la fin.`);
   else if (enemy && s.fam[enemy].loy <= -1) lines.push(`${H(enemy)} lui en voulaient, à la fin.`);
   else lines.push('Aucune famille ne l’a vraiment aimée. Ni haïe. C’est pire.');
   if (gone.length) lines[lines.length - 1] += ` ${capitalize(listFr(gone.map((f) => e.c.families[f].house[s.era])))} sont partis chez ${e.rival(s).name}.`;

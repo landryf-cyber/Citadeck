@@ -61,7 +61,7 @@ export const crisisCards = [
     text: 'La fièvre arrive par les navires. {F:troc} dit que fermer le port coûtera une fortune. {F:sel} dit que l’ouvrir coûtera des âmes. Les âmes ne paient pas d’impôts.',
     options: [
       { label: 'Fermer le port', cost: $('T6'), effect: { loy: { troc: -1, sel: 1 }, mem: ['port_ferme'] }, reply: 'Les quais sont vides. Les rats, déçus, prennent la route.' },
-      { label: 'Laisser ouvert', effect: { gain: $('T3'), loy: { troc: 1, sel: -1 }, mem: ['port_ouvert'] }, reply: 'Le commerce continue. La fièvre aussi, à bord des charrettes.' },
+      { label: 'Laisser ouvert', warn: 'La fièvre entrera par le port : la carte suivante frappera deux fois plus fort', effect: { gain: $('T3'), loy: { troc: 1, sel: -1 }, mem: ['port_ouvert'] }, reply: 'Le commerce continue. La fièvre aussi, à bord des charrettes.' },
     ],
   }),
   card({
@@ -174,7 +174,7 @@ export const crisisCards = [
     title: 'Le Signal',
     text: 'Les antennes captent un signal. Il répète : « Qu’êtes-vous ? » {Rival} l’ont capté aussi. {Reine} a déjà répondu, en trois pages.',
     options: [
-      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T2'), effect: { mem: ['filtre_passe', 'signal_dessein'] }, reply: 'Vous illuminez vos merveilles, toutes, toute la nuit. Elles répondent pour vous, de toute leur hauteur. Le signal se tait, impressionné, et note votre nom.' },
+      { label: 'Laisser parler nos merveilles', req: { jalons: 4 }, cost: $('T4'), effect: { mem: ['filtre_passe', 'signal_dessein'] }, reply: 'Vous illuminez vos merveilles, toutes, toute la nuit. Elles répondent pour vous, de toute leur hauteur. Le signal se tait, impressionné, et note votre nom.' },
       { label: 'Répondre avec la science', cost: $('S10'), effect: { loy: { brume: 2 }, mem: ['signal_science'] }, reply: 'Vous envoyez les décimales de pi. Le signal répond : « Et ensuite ? »' },
       { label: 'Répondre avec une chanson', cost: $('T10'), effect: { loy: { sel: 1, troc: 1 }, mem: ['signal_culture'] }, reply: 'Vous envoyez votre hymne. Le silence qui suit est poli. Très poli.' },
       { label: 'Pointer les canons', cost: $('A10'), effect: { loy: { ourk: 2 }, mem: ['signal_guerre'] }, reply: 'Vous pointez les canons vers le ciel. Le signal se tait. Il a peut-être peur. Il a peut-être pitié.' },
@@ -192,7 +192,7 @@ export const crisisCards = [
           else: { quartiers: -1, cause: 'la Panique du Grand Filtre', reply: 'Le couvre-feu a été annoncé. Personne ne l’a respecté. Un quartier brûle de joie.' } } },
       { label: 'Laisser BRUME calmer la foule', req: { fam: { id: 'sel', min: -1 } }, reqLabel: '{H:sel} pas encore hostiles : ce sont eux qui paieront', effect: { loy: { sel: -3, troc: -1, brume: 1 } },
         reply: 'BRUME calme la foule avec des statistiques. Personne ne panique plus. Personne ne sourit plus non plus. {H:sel} trouvent ça inhumain.' },
-      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('T2'), effect: { loy: { sel: 1, troc: 1 } },
+      { label: 'Montrer nos merveilles', req: { jalons: 3 }, cost: $('T4'), effect: { loy: { sel: 1, troc: 1 } },
         reply: 'On ouvre les merveilles, on y distribue la soupe. La foule se calme : on ne détruit pas ce qui est beau. Pas tout de suite.' },
     ],
   }),

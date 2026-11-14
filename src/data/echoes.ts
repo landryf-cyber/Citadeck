@@ -82,7 +82,7 @@ export const echoEvents = [
         reply: 'Les visiteurs se pressent. Ils lisent la prophétie, puis vous regardent, puis relisent. Vous rangez votre bureau.' },
       { label: 'Faire mentir la prophétie', cost: $('V3 A3'), effect: { loy: { sel: 2, ourk: 1 }, mem: ['prophetie_dementie'] },
         reply: 'Vous ne vous laissez plus distraire. Plus de réunions inutiles. Personne ne vous reconnaît.' },
-      { label: 'Effacer le rocher', effect: { loy: { sel: -3 } },
+      { label: 'Effacer le rocher', effect: { loy: { sel: -3 }, mem: ['rocher_efface'] },
         reply: 'Le rocher est poli, lisse, muet. {F:sel} sourit : « Il y avait une copie. Il y a toujours une copie. »' },
     ],
   }),
@@ -152,6 +152,8 @@ export const echoEvents = [
 
 /** Rappels de ces nouveaux souvenirs, en tête des cartes de famille des ères suivantes. */
 export const echoRecalls = [
+  { family: 'sel' as const, mem: 'troc_enfants', line: '{F:sel} vous parle des enfants des filatures. Elle les a comptés, un par un, pendant que vous ne regardiez pas.', tone: 'neg' as const },
+  { family: 'brume' as const, mem: 'troc_enfants', line: '{F:brume} a retrouvé les registres des filatures. Il vous les tend sans un mot. Les colonnes « âge » sont très courtes.', tone: 'neg' as const },
   { family: 'ourk' as const, mem: 'ourk_rouge', line: 'Il porte encore une trace de rouge sur les joues. C’est une tradition depuis la grande peinture de guerre.', tone: 'pos' as const },
   { family: 'sel' as const, mem: 'ourk_rouge', line: 'Depuis qu’on a peint le clan avec ses baies sacrées, sa famille n’en cueille plus. Elle vous le rappelle en vous servant des fruits verts.', tone: 'neg' as const },
   { family: 'sel' as const, mem: 'prophetie_gravee', line: 'Elle passe chaque matin devant le rocher de la prophétie. Elle vous fait signe. Le signe veut dire « distrait ».' },
@@ -179,7 +181,7 @@ export const memoryOptions: Record<string, import('../core/types').Option[]> = {
     reply: 'Les enfants des vieilles noces Ourk-Sel, prêtres et soldats à la fois, montent sur les barricades et les bénissent. La foule rentre dîner.' }],
   x2_charte: [{ label: 'L’héritier philosophe la rédige', req: { mem: 'philosophe_precepteur' }, effect: { loy: { brume: 1 }, gain: $('S3'), mem: ['charte'] },
     reply: 'La charte commence par « Admettons que ». Tout le monde signe, par fatigue, et personne n’y perd rien.' }],
-  x4_panique: [{ label: 'Montrer le rocher : c’était écrit', req: { mem: 'prophetie_gravee' }, effect: { loy: { sel: 1, brume: -1 } },
+  x4_panique: [{ label: 'Montrer le rocher : c’était écrit', req: { mem: 'prophetie_gravee', notMem: 'rocher_efface' }, effect: { loy: { sel: 1, brume: -1 } },
     reply: 'La foule lit la prophétie de Mère Sel. Tout était prévu, même la panique. On se calme, rassurés d’avoir été prévus.' }],
   x4_reponse: [{ label: 'Les dernières paroles du sage', req: { mem: 'cigue' }, cost: $('S2'), effect: { loy: { brume: 1, sel: -1 }, mem: ['filtre_passe'] },
     reply: 'Vous envoyez les dernières paroles du philosophe empoisonné. Elles sont longues. Le signal répond : « Enfin quelqu’un qui doute. » Il s’en va.' }],

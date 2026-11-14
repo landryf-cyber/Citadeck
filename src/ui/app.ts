@@ -676,7 +676,7 @@ export class App {
       }
     }
     // ce que le choix a causé, séparé de ce que fait le bilan (qui a son propre écran)
-    const BILAN = new Set(['revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
+    const BILAN = new Set(['bilan', 'revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
     const cut = ev.findIndex((x) => BILAN.has(x.type));
     const mine = cut < 0 ? ev : ev.slice(0, cut);
     const loy = new Map<FamilyId, number>();
@@ -850,7 +850,7 @@ export class App {
             <p class="note">Réponses qui tiennent déjà : ${ready.covered} sur ${ready.total}.${p.envy ? ` Vos merveilles attirent les regards : crise ${p.envy} % plus dure.` : ''}</p>`));
           inner.appendChild(el('div', 'panel', `<h3><span>La rivale · ${esc(p.rival.name)}</span><span class="stars them" style="--rh:${rv.hue}">${[0, 1, 2, 3, 4].map((k) => `<i class="${k < p.rival.count ? 'on' : ''}"></i>`).join('')}</span></h3>
             <p>${p.rival.count >= 5 ? `${esc(p.rival.name)} ont achevé leur dessein : ils réclament un tribut à chaque ère.` : `${esc(p.rival.leader)} bâtit ${esc(p.rival.next)}, à achever en fin d’ère si personne ne l’en empêche. À cinq merveilles, la vallée leur paie tribut.`}</p>`));
-          inner.appendChild(el('p', 'note', s.era >= 4 ? 'Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.' : `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
+          inner.appendChild(el('p', 'note', s.era >= 4 ? 'Dernier bilan : ni repas ni usure ; seules les révoltes comptent encore.' : s.era === 3 ? `Au bilan : la cité mangera ${p.upkeep} Vivres ; pas d’usure (la veille du Jugement, on garde tout) ; puis une découverte à choisir, payée en Savoir.` : `Au bilan : la cité mangera ${p.upkeep} Vivres${p.wonderUpkeep ? ` (dont ${p.wonderUpkeep} pour les merveilles)` : ''} ; l’Armée perd ${Math.round(TUNING.armyDecay * 100)} % et le Trésor ${Math.round(TUNING.treasureDecay * 100)} %${s.era < 4 ? ' ; puis une découverte à choisir, payée en Savoir' : ''}.`));
         }
         const btns = el('div', 'btns stick');
         btns.appendChild(this.button('En route', go));

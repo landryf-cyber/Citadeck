@@ -115,7 +115,7 @@ async function main(): Promise<void> {
     await jump(page, "s.era === 3 && s.phase === 'saison'", { seed: 33, dessein: 'empire' });
     await page.waitForTimeout(1500);
     await shot(page, vp.name, '14-ere4');
-    await jump(page, "s.era === 4 && s.phase === 'saison' && s.saison === 1", { seed: 33, dessein: 'empire' });
+    await jump(page, "s.era === 4 && s.phase === 'saison' && s.pile.length > 0 && s.pile.length < 3", { seed: 33, dessein: 'empire' });
     await page.waitForTimeout(1500);
     await shot(page, vp.name, '15-ere5');
     // fin de partie : jouer jusqu'au bout

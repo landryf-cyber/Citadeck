@@ -471,3 +471,5 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
   :root { --card-w: 720px; }
   .card-art { height: 196px; }
 }
+/* les pastilles des familles sur les options : lisibles au pouce */
+@media (max-width: 520px) { .fdot { width: 22px; height: 22px; } .fdot svg { width: 15px; height: 15px; } }
