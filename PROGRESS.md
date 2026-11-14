@@ -29,7 +29,7 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 - [x] tours 1 à 3 : amélioration (E24-E26) ; tour 4 : pas d'amélioration (impact 6 → 5,3), passe sur l'impact (DECISIONS 75, E27)
 - [x] cadence rétablie : scène en calques, palier 2 partout, pire moyenne 31,5 i/s (DECISIONS 76, E28)
 - [x] tour 5 (nouveaux juges) : somme 48,0 comme au tour 4 → arrêt motivé (E29) ; corrections factuelles du tour 5 (DECISIONS 77)
-- [ ] README, page finale republiée, message final
+- [x] README à jour ; page finale republiée (https://claude.ai/artifact/PMUcDUwFQCBGfv7Qgceqom, version 13), aucune erreur console
 
 
 Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
