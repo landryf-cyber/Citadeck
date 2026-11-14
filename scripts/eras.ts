@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     ['carte-colonie', "s.prompt && s.prompt.card === 'colonie'"],
     ['carte-conseil', "s.prompt && s.prompt.card === 'conseil'"],
     ['course', "s.era === 3 && s.phase === 'saison' && s.saison === 2 && s.prompt && s.prompt.card === 'carrefour'"],
-    ['jugement', "s.era === 4 && s.phase === 'crise' && s.prompt && (s.prompt.card === 'proces' || s.prompt.card.startsWith('hommage_'))"],
+    ['jugement', "s.era === 4 && s.prompt && (s.prompt.card === 'proces' || s.prompt.card.startsWith('hommage_'))"],
   ];
   for (const [name, cond] of shots) {
     await page.goto(url);

@@ -34,12 +34,17 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
   d'un jeu :
   - I **L'Errance** : trois saisons courtes ; la tribu chasse (+2 Vivres par saison) mais ne porte pas tout ;
     la crise tombe d'un bloc.
-  - II **La Contagion** : chaque saison s'ouvre sur une colonie à fonder ; la crise se répand, une carte par saison.
+  - II **La Contagion** : chaque saison s'ouvre sur une colonie à fonder (en soldats et en Trésor ; une colonie se
+    nourrit elle-même) ; la crise se répand, une carte par saison.
   - III **Le Conseil** : un vote ouvre chaque saison ; la famille la moins fidèle trahit dès qu'elle vous en veut ;
     la paix civile vaut un quartier.
-  - IV **La Course** : quatre saisons éclair ; la rivale avance à chaque saison ; bâtir avant elle, ou subir une
-    crise plus dure.
-  - V **Le Jugement** : une seule saison, plus aucun revenu ; vos actes sont jugés avant la dernière crise.
+  - IV **La Course** : quatre saisons éclair ; la rivale avance à chaque saison et finit sa merveille à la
+    troisième ; le chantier ouvre aux deuxième et troisième saisons ; bâtir avant elle, ou subir une crise éclair
+    plus dure.
+  - V **Le Jugement** : une seule saison, plus aucun revenu ; vos actes sont jugés au sortir de la saison, avant
+    le dernier chantier et la dernière crise.
+- **Les crises mordent** : aucune sortie gratuite qui rapporte ; sacrifier une famille coûte ce qu'elle apportait ;
+  une merveille ou une découverte peut racheter un quartier perdu, un peu plus cher à chaque fois.
 - **Le grand dessein** : toucher les étoiles, soumettre la vallée ou être chantés pour toujours. Cinq
   merveilles à bâtir, pendant que la rivale bâtit les siennes. Chaque merveille attire aussi les crises.
 - **Après la partie** : on grave les derniers mots de la civilisation. Ils lèguent quelque chose à la suivante,
@@ -140,10 +145,12 @@ scripts/      captures, mesure de performance, version en un seul fichier
 
 ## Choix techniques
 
-- **Rendu** : DOM/CSS pour la carte et l'interface, Canvas 2D pour la scène en trois passes (fond en
-  demi-résolution, cité redessinée à la demande, éléments vivants à chaque image). Tous les effets sont actifs
-  au départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde. `prefers-reduced-motion` est
-  respecté (et réglable).
+- **Rendu** : DOM/CSS pour la carte et l'interface, Canvas 2D pour la scène en trois calques superposés que le
+  compositeur assemble (fond en demi-résolution, cité redessinée à la demande, éléments vivants à chaque image
+  sur une toile plus légère, car tout y est flou) ; la parallaxe déplace les calques sans les repeindre, et les
+  voiles de crise et de danger sont des calques dont seule l'opacité change. Tous les effets sont actifs au
+  départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde (mesuré : 30 à 39 i/s dans les cinq
+  ères, tous effets, CPU ralenti ×2 et sans GPU). `prefers-reduced-motion` est respecté (et réglable).
 - **Aucun fichier d'image ni de son** : chaque carte a une scène SVG dessinée par le code (portraits en
   situation, lieux, crises, événements, découvertes), décor dessiné par code, son en WebAudio.
   Seules deux polices (Cinzel, Source Sans 3, licence OFL) sont embarquées.
