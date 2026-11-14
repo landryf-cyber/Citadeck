@@ -44,6 +44,8 @@ function hsl(h: number, s: number, l: number): RGB {
 const col = (c: RGB, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
 
 interface Ctx {
+  /** scène retournée (variété d'une carte à l'autre) */
+  flip?: boolean;
   id: string;
   rng: Rng;
   era: number;
@@ -95,7 +97,27 @@ function base(c: Ctx, lx: number, ly: number): string {
 <filter id="${c.id}g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
 }
 
+/** Un ou deux accessoires tirés au sort, sur les bords : chaque carte a son décor, pas seulement son gabarit. */
+function props(c: Ctx): string {
+  let g = '';
+  const n = 1 + (c.rng.chance(0.5) ? 1 : 0);
+  for (let i = 0; i < n; i++) {
+    const x = i === 0 ? c.rng.range(8, 30) : c.rng.range(270, 292);
+    const k = c.rng.int(0, 5);
+    if (k === 0) g += P(`M${f(x - 6)} ${GROUND} V${GROUND - 7} H${f(x + 6)} V${GROUND} Z M${f(x - 8)} ${GROUND - 7} H${f(x + 8)} M${f(x - 5)} ${GROUND - 7} L${f(x - 5)} ${GROUND - 16} H${f(x + 5)} V${GROUND - 7}`, c.dark, c.st, 1.2);
+    else if (k === 1) g += P(`M${f(x - 9)} ${GROUND - 4} H${f(x + 7)} L${f(x + 9)} ${GROUND - 10} H${f(x - 9)} Z M${f(x + 7)} ${GROUND - 8} L${f(x + 14)} ${GROUND - 12}`, c.mid, c.st, 1.2) + C(x - 5, GROUND - 2, 2.4, c.dark, c.st, 1) + C(x + 4, GROUND - 2, 2.4, c.dark, c.st, 1);
+    else if (k === 2) g += c.era >= 2 ? P(`M${f(x)} ${GROUND} V${GROUND - 26} M${f(x)} ${GROUND - 26} H${f(x + 6)}`, 'none', c.st, 1.2) + C(x + 6, GROUND - 23, 2.4, 'rgba(255,214,150,.9)') : P(`M${f(x)} ${GROUND} V${GROUND - 14}`, 'none', c.st, 1.2) + flameAt(x, GROUND - 14, 0.35);
+    else if (k === 3) g += P(`M${f(x - 7)} ${GROUND} Q${f(x - 8)} ${GROUND - 9} ${f(x)} ${GROUND - 10} Q${f(x + 8)} ${GROUND - 9} ${f(x + 7)} ${GROUND} Z`, c.dark, c.st, 1.2);
+    else if (k === 4) g += P(`M${f(x - 8)} ${GROUND} Q${f(x - 6)} ${GROUND - 7} ${f(x)} ${GROUND - 6} Q${f(x + 7)} ${GROUND - 6} ${f(x + 8)} ${GROUND} Z`, c.mid, c.st, 1.2);
+    else g += P(Array.from({ length: 3 }, (_, j) => `M${f(x - 12 + j * 9)} ${f(30 + j * 4)} q3 -3 6 0 q3 -3 6 0 `).join(''), 'none', c.st, 1.3);
+  }
+  return g;
+}
+
 function frame(c: Ctx, lx: number, ly: number, body: string, defs = ''): string {
+  // une scène sur deux est retournée, avec ses accessoires : le même gabarit ne donne jamais deux fois la même image
+  const inner = `${body}${props(c)}`;
+  body = c.flip ? `<g transform="translate(300 0) scale(-1 1)">${inner}</g>` : inner;
   // la bande de la carte est plus étirée que le repère : on cadre sur la zone utile (sol et têtes compris)
   return `<svg viewBox="0 16 300 102" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${base(c, lx, ly)}${defs}</defs><rect width="300" height="130" fill="url(#${c.id}s)"/><rect width="300" height="130" fill="url(#${c.id}l)"/>${body}<rect width="300" height="130" fill="url(#${c.id}f)"/></svg>`;
 }
@@ -665,6 +687,8 @@ export const MOTIF_SCENE: Record<string, [string, string?]> = {
 
 export function illustration(sp: IllusSpec): string {
   const c = ctxFor(sp);
+  // le portrait garde son sens de lecture (le visage regarde la scène) ; le reste se retourne une fois sur deux
+  c.flip = sp.scene !== 'portrait' && sp.scene !== 'decouverte' && new Rng(hashString(`${sp.key}flip`)).chance(0.5);
   return (SCENES[sp.scene] ?? sceneVillage)(sp, c);
 }
 

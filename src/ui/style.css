@@ -466,3 +466,8 @@ body.cinema #hud, body.cinema #stage, body.cinema .after { opacity: 0; pointer-e
 .chip.note.good { color: #c8efb4; } .chip.note.bad { color: #ffb0a0; }
 .presage .rule-line { margin: -4px 0 2px; font-size: 13.5px; color: var(--dim); text-align: center; text-wrap: balance; }
 .chip.spend small { font-size: 9.5px; font-weight: 700; opacity: .75; margin-left: 2px; }
+/* très grand bureau : une carte encore plus grande, moins de vide autour */
+@media (min-width: 1400px) and (min-height: 860px) {
+  :root { --card-w: 720px; }
+  .card-art { height: 196px; }
+}
