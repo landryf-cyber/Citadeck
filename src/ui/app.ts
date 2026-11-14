@@ -606,6 +606,7 @@ export class App {
     const b = el('button', 'opt');
     const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}${s.res[r] < (o.loss![r] ?? 0) ? ' short' : ''}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
       + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '')
+      + (o.gainQ ? `<span class="chip gain q" title="Quartier gagné : une vie de plus pour la cité, et une bouche de plus à nourrir">${ICON.house}<b>+${o.gainQ}</b></span>` : '')
       + (o.spend ? RES.filter((r) => o.spend![r]).map((r) => `<span class="chip spend r-${r}" title="Dépensé seulement si le seuil est atteint ; sinon, rien n’est dépensé et la perte annoncée tombe">${RES_ICON[r]}<b>−${o.spend![r]}</b><small>si seuil</small></span>`).join('') : '');
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
@@ -674,14 +675,18 @@ export class App {
         if (d) chips.push(`<span class="chip r-${r}">${RES_ICON[r]}<b>${d > 0 ? '+' : '−'}${Math.abs(d)}</b></span>`);
       }
     }
+    // ce que le choix a causé, séparé de ce que fait le bilan (qui a son propre écran)
+    const BILAN = new Set(['revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
+    const cut = ev.findIndex((x) => BILAN.has(x.type));
+    const mine = cut < 0 ? ev : ev.slice(0, cut);
     const loy = new Map<FamilyId, number>();
-    for (const x of ev) if (x.type === 'loy') loy.set(x.family, (loy.get(x.family) ?? 0) + x.delta);
+    for (const x of mine) if (x.type === 'loy') loy.set(x.family, (loy.get(x.family) ?? 0) + x.delta);
     for (const [f, d] of loy) {
       if (!d) continue;
       const h = capitalize(this.e.c.families[f].house[s.era]).replace(/^Les /, '');
       chips.push(`<span class="chip fam ${d > 0 ? 'up' : 'down'}">${esc(h)} <b>${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}</b></span>`);
     }
-    for (const x of ev) {
+    for (const x of mine) {
       if (x.type === 'quartiers' && x.delta) chips.push(`<span class="chip q${x.delta > 0 ? ' gain' : ''}">${ICON.house}<b>${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}</b>&nbsp;${Math.abs(x.delta) > 1 ? 'quartiers' : 'quartier'}${x.delta < 0 ? ` · ${esc(x.cause)}` : ''}</span>`);
       if (x.type === 'quartiers' && x.shielded) chips.push(`<span class="chip note">${esc(x.by ?? 'Une merveille')} rachète le quartier</span>`);
       if (x.type === 'sched') chips.push(`<span class="chip note">${ICON.hourglass}&nbsp;Cela aura des suites</span>`);

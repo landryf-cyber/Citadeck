@@ -414,6 +414,8 @@ export interface GameState {
   losses: LossEntry[];
   /** une perte de quartier déjà évitée cette ère (passif « shield ») */
   shieldUsed: boolean;
+  /** combien de fois la protection a servi (son prix monte à chaque usage) */
+  shieldUses?: number;
   result: Result | null;
   /** première partie : tutoriel intégré */
   tutorial: boolean;

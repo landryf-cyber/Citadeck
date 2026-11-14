@@ -250,3 +250,17 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     variantes ; le jour décisif de la chronique est celui qui a eu des suites ou a été cité, pas seulement le plus
     remuant sur le moment ; une condition de souvenir dit votre état (« c'est fait » / « pas encore ») ; les saisons
     ont leur rang (troisième, quatrième, « la dernière ») ; les familles gardent le nom de leur ère dans le bandeau.
+71. **Après le tour 2 des juges : des crises qui mordent.** Plus aucune sortie gratuite qui rapporte (« Laisser
+    ouvert » le port froisse les Sel, « Attendre » la guerre froisse les Ourk et la rivale, « Négocier » coûte) ; les
+    familles dévouées aident une fois par partie et se font payer (4 au lieu de 2) ; la protection des merveilles
+    coûte moitié plus à chaque usage ; plus d'échappatoire « Ne pas trancher » face à une trahison ; intensité des
+    crises 1,4 et convoitise +15 % par merveille. Un bon joueur (lecteur) finit 23 % de ses parties sans perte
+    (38 % avant) et triomphe à 9 % (13 %).
+72. **L'ère V atteignable** : dernières merveilles moins chères (l'Arche S15 T6 V5, la Capitulation A13 T6 V4, le Grand
+    Récit T14 V4 S4), pas d'usure au bilan de l'ère IV (la veille du Jugement, on garde tout), pas de découverte à revenu
+    pour une ère sans revenus.
+73. **Lisibilité** : le plafond de revenus est retiré (il contredisait les textes des merveilles) ; un quartier gagné
+    s'affiche (« +1 quartier : une vie de plus, une bouche de plus ») ; une option qui ferait perdre sa ferveur à une
+    famille le dit (plus de part au bilan) ; l'effet d'un choix est montré à part de ce que fait le bilan ; la rivale
+    n'a pas plus d'une merveille d'avance sur son époque ; les humeurs des familles tournent avec leurs cartes et un
+    souvenir ne revient qu'une fois ; la colonie coûte 2 soldats et 2 Trésor.

@@ -17,7 +17,7 @@ export const ERAS = 5;
 export const RACE_END = 3;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.15, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
@@ -199,6 +199,8 @@ export interface OptionView {
   loss?: Bag;
   /** quartiers perdus à coup sûr */
   lossQ?: number;
+  /** quartiers gagnés à coup sûr (et ce qu'ils mangeront) */
+  gainQ?: number;
   warn?: string;
   /** pari : chance affichée */
   odds?: number;
@@ -393,11 +395,11 @@ export class Engine {
   shieldInfo(s: GameState): { name: string; res: Res; price: number; ready: boolean } | undefined {
     for (const id of s.deck) {
       const p = this.c.cards[id]?.passive?.find((x) => x.type === 'shield') as { type: 'shield'; amount: number; res: Res } | undefined;
-      if (p) { const price = scaleN(p.amount, s.era); return { name: this.c.cards[id].title, res: p.res, price, ready: !s.shieldUsed && s.res[p.res] >= price }; }
+      if (p) { const price = scaleN(Math.round(p.amount * (1 + 0.5 * (s.shieldUses ?? 0))), s.era); return { name: this.c.cards[id].title, res: p.res, price, ready: !s.shieldUsed && s.res[p.res] >= price }; }
     }
     for (let i = 0; i < 5; i++) {
       const j = s.jalons[i] ? this.jalonOf(s, i) : undefined;
-      if (j?.passive?.type === 'shield') { const price = scaleN(j.passive.amount, s.era); return { name: j.name, res: j.passive.res, price, ready: !s.shieldUsed && s.res[j.passive.res] >= price }; }
+      if (j?.passive?.type === 'shield') { const price = scaleN(Math.round(j.passive.amount * (1 + 0.5 * (s.shieldUses ?? 0))), s.era); return { name: j.name, res: j.passive.res, price, ready: !s.shieldUsed && s.res[j.passive.res] >= price }; }
     }
     return undefined;
   }
@@ -604,7 +606,8 @@ export class Engine {
       }
     }
     // la pauvreté ne doit pas supprimer le choix : sur une carte de récit, s'il ne reste qu'une issue, on peut ne pas trancher
-    const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue', 'trahison'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut';
+    // face à une trahison, pas d'échappatoire : on tranche
+    const story = ['famille', 'rencontre', 'evenement', 'rivale', 'intrigue'].includes(card.kind) && !/^creance/.test(card.id) && card.id !== 'disette' && card.id !== 'tribut';
     // (seulement si cette seule issue coûte quelque chose : sinon, ne pas trancher ne servirait à rien)
     const only = playable[0];
     // (une perte de quartier qu'une merveille rachèterait ne compte pas comme un vrai risque)
@@ -719,7 +722,7 @@ export class Engine {
       return [
         { ...opts[0], cost: { tresor: pay } },
         { label: 'Payer en nature', cost: { vivres: half, armee: half }, effect: opts[0].effect, reply: 'Vous payez en sacs de grain et en jours de corvée. Le créancier fait la grimace, puis compte les sacs.‖Vous réglez en blé et en bras. Les huissiers repartent chargés comme des mulets, et presque contents.‖La dette est payée en nature : trois charrettes de grain, une compagnie de corvée, et un cochon, pour le geste.' },
-        ...(!broke ? [] : [{ label: 'Laisser saisir', effect: { seize: pay, ...(rival ? { rival: -1 } : { loy: { troc: -1 } }) }, reply: rival ? 'Les soldats de {rival} font l’inventaire de vos greniers, puis de vos casernes. Ils signent un reçu, en double.‖Les soldats de {rival} se servent, poliment, dans l’ordre alphabétique. Ils remercient en partant.‖{Reine} envoie ses comptables, puis ses soldats pour porter ce que les comptables ont compté.' : 'Les huissiers de {H:troc} vident les coffres, puis les greniers. Ils laissent les murs : les murs, ça ne se revend pas.‖Les huissiers reviennent, connaissent déjà le chemin, et vont droit aux coffres.‖Saisie. Les huissiers de {H:troc} emportent tout ce qui se compte, et notent ce qui ne se compte pas, pour plus tard.' } as Option]),
+        ...(!broke ? [] : [{ label: 'Laisser saisir', effect: { seize: pay, ...(rival ? { rival: -1 } : { loy: { troc: -1 } }) }, reply: rival ? 'Les soldats de {rival} font l’inventaire de vos greniers, puis de vos casernes. Ils signent un reçu, en double.‖Les soldats de {rival} se servent, poliment, dans l’ordre alphabétique. Ils remercient en partant.‖{Reine} envoie ses comptables, puis ses soldats pour porter ce que les comptables ont compté.' : 'Les huissiers de {H:troc} vident les coffres, puis les greniers. Ils laissent les murs : les murs, ça ne se revend pas.‖Saisie. Les huissiers de {H:troc} emportent tout ce qui se compte, et notent ce qui ne se compte pas, pour plus tard.‖Les huissiers arrivent avec une charrette vide et repartent avec une charrette pleine. Ils sifflent en partant.‖Les huissiers de {H:troc} font l’inventaire à voix haute, pour que tout le monde profite. Les voisins prennent des notes.‖Les huissiers connaissent désormais le chemin, et vont droit aux coffres.' } as Option]),
         ...(cornered ? [] : [refuse]),
       ];
     }
@@ -903,6 +906,10 @@ export class Engine {
       v.risk = [v.risk, `En cas d’échec : −${txt}`].filter(Boolean).join(' · ');
     }
     if ((o.effect.quartiers ?? 0) < 0 && !o.effect.if) v.lossQ = -o.effect.quartiers!;
+    if ((o.effect.quartiers ?? 0) > 0 && !o.effect.if) v.gainQ = o.effect.quartiers!;
+    // une famille fervente qui cesserait de l'être : sa part au bilan disparaît, on le dit
+    const cooled = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && s.fam[f].loy >= 3 && (v.famDir?.[f] ?? 0) < 0);
+    if (cooled.length) v.risk = [v.risk, `${cooled.map((f) => capitalize(this.c.families[f].house[s.era])).join(' et ')} ne seraient plus fervents : plus de part au bilan (${cooled.map((f) => `+3 ${RES_LABEL[this.c.families[f].res]}`).join(', ')})`].filter(Boolean).join(' · ');
     const lq = o.effect.bet?.lose?.quartiers ?? 0;
     if (lq < 0) v.risk = [v.risk, `En cas d’échec : −${-lq} quartier${lq < -1 ? 's' : ''}`].filter(Boolean).join(' · ');
     const rj = o.effect.rivalJalon ?? 0;
@@ -964,10 +971,13 @@ export class Engine {
   familyLead(s: GameState, f: FamilyId): string {
     const loy = s.fam[f].loy;
     const m = this.c.moods[f];
-    const pickM = (a: string[]) => a[(s.era + s.seed) % a.length];
+    // les humeurs tournent avec les cartes de la famille déjà vues : pas deux fois la même phrase de suite
+    const seen = s.history.filter((h) => this.c.cards[h.card]?.family === f && this.c.cards[h.card]?.kind === 'famille').length;
+    const pickM = (a: string[]) => a[(s.seed + seen) % a.length];
     const mood = loy <= -2 ? pickM(m.hostile) : loy === -1 ? pickM(m.cold) : loy === 1 ? pickM(m.warm) : loy >= 2 ? pickM(m.devoted) : '';
     // un souvenir d'une ère passée, accordé à l'humeur (une rancune ne se montre pas chez qui vous adore)
-    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && [1, 3, 4].includes(s.era - (s.memo[r.mem]?.era ?? s.era))
+    // un souvenir ne revient qu'une fois : trois ères plus tard (ou à l'ère suivante, pour les souvenirs tardifs)
+    const rec = this.c.recalls.filter((r) => r.family === f && s.mem.includes(r.mem) && ((d) => d === 3 || (d === 1 && (s.memo[r.mem]?.era ?? 0) >= 2))(s.era - (s.memo[r.mem]?.era ?? s.era))
       && (r.tone !== 'neg' || loy <= 0) && (r.tone !== 'pos' || loy >= 0));
     const recall = rec.length ? rec[(s.era + s.seed) % rec.length].line : '';
     // une seule accroche : le souvenir une ère sur deux, l'humeur sinon (ou ce qui existe)
@@ -1278,9 +1288,10 @@ export class Engine {
     // une merveille rachète la première perte subie de l'ère, contre des réserves : à sec, elle ne protège rien
     const sh = this.passives(s).find((p) => p.type === 'shield') as { type: 'shield'; amount: number; res: Res } | undefined;
     if (d < 0 && shieldable && !s.shieldUsed && sh) {
-      const price = scaleN(sh.amount, s.era);
+      const price = scaleN(Math.round(sh.amount * (1 + 0.5 * (s.shieldUses ?? 0))), s.era);
       if (s.res[sh.res] >= price) {
         s.shieldUsed = true;
+        s.shieldUses = (s.shieldUses ?? 0) + 1;
         s.res[sh.res] -= price;
         d += 1;
         ev.push({ type: 'quartiers', delta: 0, cause, shielded: true, paid: { [sh.res]: price }, by: this.shieldInfo(s)?.name });
@@ -1396,8 +1407,6 @@ export class Engine {
     // revenu des découvertes et merveilles, à chaque saison
     const inc: Bag = {};
     for (const p of this.passives(s)) if (p.type === 'income') inc[p.res] = (inc[p.res] ?? 0) + p.amount;
-    // des revenus plafonnés : trois par ressource et par saison, pas une rente qui écrase tout
-    for (const r of Object.keys(inc) as Res[]) inc[r] = Math.min(3, inc[r]!);
     if (Object.keys(inc).length) {
       for (const k of Object.keys(inc) as Res[]) s.res[k] += inc[k]!;
       ev.push({ type: 'passive', bag: inc });
@@ -1637,7 +1646,7 @@ export class Engine {
         if (!this.canPay(s, o) || !this.check(s, o.req)) return false;
         if ((o.effect.quartiers ?? 0) < 0) return false;
         if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -3)) return false;
-        if (o.effect.if?.res && !this.check(s, o.effect.if)) return false;
+        if (o.effect.if && !this.check(s, o.effect.if) && ((o.effect.else?.quartiers ?? 0) < 0 || (o.effect.else?.else?.quartiers ?? 0) < 0)) return false;
         return true;
       });
       if (ok) covered++;
@@ -1739,8 +1748,10 @@ export class Engine {
     // après la dernière crise, l'histoire s'arrête : ni usure, ni repas
     const final = s.era >= ERAS - 1;
     // les vétérans rentrent chez eux, les comptables se servent
-    const da = final ? 0 : Math.floor(s.res.armee * TUNING.armyDecay);
-    const dt = final ? 0 : Math.floor(s.res.tresor * TUNING.treasureDecay);
+    // la veille du Jugement, on garde tout : pas d'usure au bilan de l'ère IV (l'ère V n'a plus de revenus)
+    const eve = s.era === ERAS - 2;
+    const da = final || eve ? 0 : Math.floor(s.res.armee * TUNING.armyDecay);
+    const dt = final || eve ? 0 : Math.floor(s.res.tresor * TUNING.treasureDecay);
     if (da || dt) {
       s.res.armee -= da;
       s.res.tresor -= dt;
@@ -1787,7 +1798,7 @@ export class Engine {
     // la Course gagnée : la rivale n'achève pas sa merveille cette ère
     const capitulated = s.dessein === 'empire' && s.jalons[4];
     if (!final && !capitulated && s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.fam && this.c.rivals.length) {
-      s.rivalJalons = Math.min(5, s.rivalJalons + 1);
+      s.rivalJalons = Math.min(5, s.era + 1, s.rivalJalons + 1);
       ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
     // la rivale triomphe dès qu'elle a ses cinq merveilles, qu'elle les ait bâties ou qu'on les lui ait payées
@@ -1833,7 +1844,8 @@ export class Engine {
       const pool = this.c.discoveries.filter((id) => {
         const d = this.c.cards[id];
         // une découverte se joue à l'ère suivante : on ne propose que celles de cette ère-là (pas de philosophe antique en 1810)
-        return this.available(s, d) && !s.deck.includes(id) && (d.eras?.includes(next) ?? true) && this.check(s, d.cond);
+        const onlyIncome = !!d.passive?.length && d.passive.every((p) => p.type === 'income');
+        return this.available(s, d) && !s.deck.includes(id) && (d.eras?.includes(next) ?? true) && this.check(s, d.cond) && !(onlyIncome && this.form(s, next).id === 'jugement');
       });
       if (!pool.length) return null;
       // au moins une piste du mot-clé du dessein, quand il y en a une : le fil rouge ne doit pas dépendre du tirage

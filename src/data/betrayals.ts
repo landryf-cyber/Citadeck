@@ -83,7 +83,7 @@ export const betrayalCards = [
       { label: 'Rapatrier les réserves', cost: $('A4'), effect: { loy: { troc: 1 } },
         reply: 'Vos soldats ramènent l’or en charrette. {F:troc} facture le transport, et les charrettes.' },
       { label: 'Laisser l’or là-bas', effect: { gain: $('T-6'), rivalJalon: 1, loy: { troc: 1 } },
-        reply: '{Rival} bâtissent avec votre or. Votre nom figure sur une plaque, tout en bas, en petit.' },
+        reply: '{Rival} bâtissent avec votre or. Votre nom figure sur une plaque, tout en bas, en petit.‖Votre or finance le chantier de {rival}. À l’inauguration, on vous remercie chaleureusement, depuis l’autre rive.‖{Rival} gardent l’or et vous envoient une lettre de remerciements, sur papier doré, avec votre or.' },
     ],
   }),
   card({

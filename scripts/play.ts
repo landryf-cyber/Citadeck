@@ -91,6 +91,7 @@ function card(s: GameState): void {
       Object.keys(o.cost).length ? `coût ${bag(o.cost)}` : o.loss || o.lossQ || o.spend ? '' : 'gratuit',
       o.loss ? `perte ${bag(o.loss)}` : '',
       o.lossQ ? `perte ${o.lossQ} quartier${o.lossQ > 1 ? 's' : ''}` : '',
+      o.gainQ ? `+${o.gainQ} quartier${o.gainQ > 1 ? 's' : ''} (une vie de plus, une bouche de plus)` : '',
       o.req ? `exige ${o.req}${o.reqOk ? '' : ' (manque)'}` : '',
       o.spend ? `dépense ${bag(o.spend)} seulement si le seuil est atteint (sinon rien n’est dépensé, et la perte annoncée tombe)` : '',
       o.gains && Object.keys(o.gains).length ? `rapporte ${RES.filter((r) => o.gains![r]).map((r) => `${gainText(o.gains![r]!, ' à ')} ${RES_LABEL[r]}`).join(', ')}` : '',
@@ -113,10 +114,14 @@ function feedback(s: GameState, ev: Ev[]): void {
   const res = ev.filter((x) => x.type === 'res') as { before: Record<string, number>; after: Record<string, number> }[];
   const parts: string[] = [];
   if (res.length) for (const r of RES) { const d = res[res.length - 1].after[r] - res[0].before[r]; if (d) parts.push(`${d > 0 ? '+' : ''}${d} ${RES_LABEL[r]}`); }
+  // ce que le choix a causé, séparé de ce que fait le bilan
+  const BILAN = new Set(['revolt', 'defect', 'neglect', 'mend', 'income', 'decay', 'upkeep', 'disette', 'famine', 'spoil', 'peace']);
+  const cut = ev.findIndex((x) => BILAN.has(x.type));
+  const mine = cut < 0 ? ev : ev.slice(0, cut);
   const loy = new Map<FamilyId, number>();
-  for (const x of ev) if (x.type === 'loy') loy.set(x.family, (loy.get(x.family) ?? 0) + x.delta);
+  for (const x of mine) if (x.type === 'loy') loy.set(x.family, (loy.get(x.family) ?? 0) + x.delta);
   for (const [f, d] of loy) if (d) parts.push(`${capitalize(e.c.families[f].house[s.era])} ${d > 0 ? '▲' : '▼'}${Math.abs(d) > 1 ? Math.abs(d) : ''}`);
-  for (const x of ev) {
+  for (const x of mine) {
     if (x.type === 'quartiers' && x.delta) parts.push(`${x.delta > 0 ? '+' : ''}${x.delta} quartier${Math.abs(x.delta) > 1 ? 's' : ''}${x.delta < 0 ? ` (${x.cause})` : ''}`);
     if (x.type === 'quartiers' && x.shielded) parts.push(`une merveille rachète le quartier (${x.cause})${x.paid ? ` contre ${bag(x.paid, '-')}` : ''}`);
     if (x.type === 'sched') parts.push('cela aura des suites');
@@ -136,6 +141,7 @@ function feedback(s: GameState, ev: Ev[]): void {
     if (x.type === 'neglect') bil.push(`${capitalize(e.c.families[x.family].house[s.era])} se sentent délaissés (pas visités depuis deux ères).`);
     if (x.type === 'income') bil.push(`Une famille fervente apporte ${bag(x.bag, '+')}.`);
     if (x.type === 'mend') bil.push(`Les Peintures apaisent ${e.c.families[x.family].house[s.era]} : ils remontent d’un cran.`);
+    if (x.type === 'rivalJalon' && cut >= 0 && ev.indexOf(x) > cut) bil.push(`La rivale ${x.delta < 0 ? 'perd' : 'achève'} ${x.name} (${x.count}/5).`);
     if (x.type === 'spoil') bil.push(`Les greniers débordent : ${x.amount} Vivres se gâtent (au-delà de trois repas d’avance).`);
     if (x.type === 'peace') bil.push('LA PAIX CIVILE : aucune famille fâchée, un quartier de plus.');
     if (x.type === 'disette') bil.push(`DISETTE : il manquait ${x.missing} Vivres ; pas de quartier perdu, mais toutes les familles grognent (−1).`);

@@ -21,7 +21,7 @@ export const forms: EraForm[] = [
   },
   {
     id: 'contagion', name: 'La Contagion', rhythm: 'deux saisons', seasons: 2, cards: 3,
-    rule: 'Chaque saison s’ouvre sur une colonie à fonder : un quartier de plus, qui se nourrit lui-même, contre des soldats et du Trésor.',
+    rule: 'Chaque saison s’ouvre sur une colonie à fonder : un quartier de plus, qui se nourrit lui-même, contre un peu de soldats et de Trésor.',
     short: 'Une colonie à fonder à chaque saison ; la crise se répand d’une saison à l’autre.',
     objective: 'Bâtir la merveille, et grandir plus vite que le mal.',
     threat: 'La crise se répand : une carte à la fin de chaque saison, la dernière avant le bilan.',
@@ -66,9 +66,9 @@ export const formCards = [
     id: 'colonie', kind: 'regle', scale: true, eras: [], art: { motif: 'house', hue: 40 }, title: 'Une colonie',
     text: 'Au-delà de la colline : une source, des oliviers, et personne. {F:ourk} y voit un fort, {F:troc} un comptoir, {F:sel} un sanctuaire. Les colons, eux, voient surtout la source.‖Une vallée voisine attend, vide, fertile, un peu trop belle pour être honnête. Des familles sont prêtes à partir, avec des provisions et des gardes.‖Sur l’autre rive, une île, un port naturel et des chèvres sauvages. Les chèvres n’ont rien demandé ; les colons, si.‖Des bergers reviennent des hauts plateaux : de l’herbe à perte de vue, pas un voisin, et un vent qui rend fou. Ils veulent y retourner, avec leurs cousins.‖Un marais asséché, au sud, sent encore un peu le marais. {F:brume} jure qu’on peut y bâtir ; {F:sel} jure qu’on n’y bâtira rien de bon. Des familles attendent votre avis, bagages faits.‖La rivière forme une boucle, là-bas, avec un gué et une colline au milieu. Un endroit parfait pour une ville ; on se demande pourquoi personne n’y est. On ira voir.',
     options: [
-      { label: 'Fonder la colonie (+1 quartier)', cost: $('A3 T3'), effect: { quartiers: 1 },
+      { label: 'Fonder la colonie (+1 quartier)', cost: $('A2 T2'), effect: { quartiers: 1 },
         reply: 'Les colons partent avec des sacs, des chèvres et un plan approximatif. Une semaine plus tard, un message : tout va bien, sauf les chèvres.‖Une colonie naît sur l’autre rive. Elle copie vos lois, vos fêtes et vos querelles, et en invente quelques-unes à elle.‖La colonie a ses murs, son puits et son premier procès, pour une histoire de chèvre. Elle est déjà des vôtres.‖Les colons plantent un drapeau, puis des choux. Les choux poussent mieux que le drapeau ne flotte.‖La nouvelle colonie vous envoie ses premières nouvelles : un nom, une récolte, et une plainte contre la colonie voisine, qui n’existe pas encore.' },
-      { label: 'Un comptoir (+1 quartier)', cost: $('T7'), req: { fam: { id: 'troc', min: -1 } }, reqLabel: '{H:troc} pas encore hostiles', effect: { quartiers: 1, loy: { troc: 1, sel: -1 } },
+      { label: 'Un comptoir (+1 quartier)', cost: $('T5'), req: { fam: { id: 'troc', min: -1 } }, reqLabel: '{H:troc} pas encore hostiles', effect: { quartiers: 1, loy: { troc: 1, sel: -1 } },
         reply: '{F:troc} finance l’expédition, contre le monopole des sandales. La colonie prospère ; les sandales aussi.‖Le comptoir ouvre avant les maisons. Les colons dorment dans les entrepôts, entre deux ballots, et paient un loyer.‖{F:troc} baptise la colonie de son propre nom. {F:sel} refuse d’y bénir quoi que ce soit.' },
       { label: 'Pas cette saison', effect: {},
         reply: 'Les colons défont leurs sacs. La source attendra ; elle a l’habitude.‖On reste chez soi. La vallée voisine reste vide, et belle, et à prendre.‖Les chèvres de l’île gardent leur île. Elles ont l’air soulagées.‖Les colons attendront la saison prochaine. Ils en profitent pour refaire leurs bagages, en mieux.‖Pas de colonie cette fois. La terre promise reste promise, ce qui, après tout, est son état naturel.' },
