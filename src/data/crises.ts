@@ -60,7 +60,7 @@ export const crisisCards = [
     title: 'Le Port',
     text: 'La fièvre arrive par les navires. {F:troc} dit que fermer le port coûtera une fortune. {F:sel} dit que l’ouvrir coûtera des âmes. Les âmes ne paient pas d’impôts.',
     options: [
-      { label: 'Fermer le port', cost: $('T6'), effect: { loy: { troc: -1, sel: 1 }, mem: ['port_ferme'] }, reply: 'Les quais sont vides. Les rats, déçus, prennent la route.' },
+      { label: 'Fermer le port', cost: $('T4'), effect: { loy: { troc: -1, sel: 1 }, mem: ['port_ferme'] }, reply: 'Les quais sont vides. Les rats, déçus, prennent la route.' },
       { label: 'Laisser ouvert', warn: 'La fièvre entrera par le port : la carte suivante frappera deux fois plus fort', effect: { gain: $('T3'), loy: { troc: 1, sel: -1 }, mem: ['port_ouvert'] }, reply: 'Le commerce continue. La fièvre aussi, à bord des charrettes.' },
     ],
   }),

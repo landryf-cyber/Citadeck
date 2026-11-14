@@ -40,6 +40,21 @@ const damp = (e: import('../core/types').Effect | undefined): void => {
 };
 for (const c of all) if (['rencontre', 'evenement', 'rivale'].includes(c.kind) && !c.echo) for (const o of c.options) damp(o.effect);
 
+// en crise, sacrifier une famille n'est pas gratuit : on perd aussi ce qu'elle apportait (3 de sa ressource), sans rien gagner
+{
+  const RES_OF = { ourk: 'armee', sel: 'vivres', brume: 'savoir', troc: 'tresor' } as const;
+  for (const c of all) {
+    if (c.kind !== 'crise') continue;
+    for (const o of c.options) {
+      const loy = o.effect.loy ?? {};
+      const hit = (Object.keys(loy) as (keyof typeof RES_OF)[]).filter((f) => (loy[f] ?? 0) <= -3);
+      if (hit.length !== 1 || o.cost || o.effect.if || o.effect.bet) continue;
+      o.cost = { [RES_OF[hit[0]]]: 3 };
+      if (o.effect.gain) o.effect = { ...o.effect, gain: Object.fromEntries(Object.entries(o.effect.gain).filter(([, v]) => (v ?? 0) < 0)) };
+    }
+  }
+}
+
 // une option payante (sans suite cachée) ne rapporte jamais moins que la meilleure option gratuite de la carte :
 // payer doit être un investissement, pas un piège (tour 3 des juges)
 {

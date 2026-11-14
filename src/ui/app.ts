@@ -606,13 +606,15 @@ export class App {
     const b = el('button', 'opt');
     const lossChips = (o.loss ? RES.filter((r) => o.loss![r]).map((r) => `<span class="chip loss r-${r}${s.res[r] < (o.loss![r] ?? 0) ? ' short' : ''}" title="Perte certaine">${RES_ICON[r]}<b>−${o.loss![r]}</b></span>`).join('') : '')
       + (o.lossQ ? `<span class="chip loss q" title="Quartier perdu à coup sûr">${ICON.house}<b>−${o.lossQ}</b></span>` : '')
-      + (o.gainQ ? `<span class="chip gain q" title="Quartier gagné : une vie de plus pour la cité, et une bouche de plus à nourrir">${ICON.house}<b>+${o.gainQ}</b></span>` : '')
+      + (o.gainQ ? `<span class="chip gain q" title="Quartier gagné : une vie de plus pour la cité">${ICON.house}<b>+${o.gainQ}</b></span>` : '')
       + (o.spend ? RES.filter((r) => o.spend![r]).map((r) => `<span class="chip spend r-${r}" title="Dépensé seulement si le seuil est atteint ; sinon, rien n’est dépensé et la perte annoncée tombe">${RES_ICON[r]}<b>−${o.spend![r]}</b><small>si seuil</small></span>`).join('') : '');
     const costs = Object.keys(o.cost).length || lossChips
       ? RES.filter((r) => o.cost[r]).map((r) => `<span class="chip r-${r}${s.res[r] < (o.cost[r] ?? 0) ? ' short' : ''}">${RES_ICON[r]}<b>${o.cost[r]}</b></span>`).join('') + lossChips
       : v.kind === 'carrefour' || v.kind === 'presage' ? '' : '<span class="chip free">gratuit</span>';
     // ce qui rentre : le genre et l'ampleur (+ un peu, ++ bien, +++ beaucoup), pas le montant (le texte le dit)
     const gains = RES.filter((r) => o.gains?.[r]).map((r) => { const g = o.gains![r]!; return `<span class="chip gain r-${r}${g[0] === g[1] ? ' exact' : ''}" title="Rapporte ${gainText(g, ' à ')} ${RES_LABEL[r]}">+${gainText(g)}${RES_ICON[r]}</span>`; }).join('');
+    // la relation avec la rivale, comme une famille de plus
+    const rivalDot = o.rivalDir ? `<span class="fdot rv" style="--h:${this.e.rival(s).hue}" title="${esc(capitalize(this.e.rival(s).name))} : relation ${o.rivalDir > 0 ? 'meilleure' : 'pire'}"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M4 17 L6 8 L10 12 L12 6 L14 12 L18 8 L20 17 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><i class="dir ${o.rivalDir > 0 ? 'up' : 'down'}">${o.rivalDir > 0 ? '▲' : '▼'}</i></span>` : '';
     const fams = o.families.map((f) => {
       const d = this.e.c.families[f];
       const dir = o.famDir?.[f] ?? 0;
@@ -620,7 +622,7 @@ export class App {
       const what = dir > 0 ? `y gagnent (+${dir})` : dir < 0 ? `y perdent (${dir})` : 'sont concernés, selon l’issue';
       return `<span class="fdot" style="--h:${d.hue}" title="${esc(capitalize(d.house[s.era]))} ${what}">${this.miniMotif(d.motif, d.hue)}${arrow}</span>`;
     }).join('');
-    const meta = `${fams}${o.later ? `<span class="meta-ico" title="Cela aura des suites">${ICON.hourglass}</span>` : ''}${o.odds !== undefined ? `<span class="odds" title="Chance de réussite">${ICON.dice}${Math.round(o.odds * 100)} %</span>` : ''}`;
+    const meta = `${fams}${rivalDot}${o.later ? `<span class="meta-ico" title="Cela aura des suites">${ICON.hourglass}</span>` : ''}${o.odds !== undefined ? `<span class="odds" title="Chance de réussite">${ICON.dice}${Math.round(o.odds * 100)} %</span>` : ''}`;
     b.innerHTML = `<span class="opt-n">${i + 1}</span><span class="opt-main"><span class="opt-label">${esc(o.label)}</span>
       ${o.detail ? `<span class="opt-detail">${esc(o.detail)}</span>` : ''}
       ${o.risk ? `<span class="opt-warn">${ICON.warn}<span>${esc(o.risk)}</span></span>` : ''}

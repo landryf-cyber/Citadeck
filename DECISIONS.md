@@ -273,3 +273,22 @@ l'historique git (commit `c2d51ea` et avant) ; la V1 a été retirée de l'arbre
     des filatures) passe en tête ; une famille apaisée par les Peintures n'est pas déclarée délaissée au même bilan ;
     une découverte ne repasse plus comme carte du jour au-delà de l'ère suivante ; plus d'échappatoire sur une carte
     d'argent ; un crédit chez des Troc froissés le dit.
+75. **Après le tour 4 des juges** (impact des choix 6 → 5,3 : premier tour sans amélioration) : une passe sur l'impact.
+    En crise, sacrifier une famille n'est plus gratuit : l'option coûte 3 de la ressource que cette famille apporte, et
+    ne rapporte plus rien ; une option qui ferait tomber la merveille à venir sous son exigence de mot-clé le dit
+    (« l'Arche exige 3 Science : vous passeriez à 2 ») ; la relation avec la rivale a sa pastille (couronne ▲/▼) ; une
+    colonie dit qu'elle ne mange rien ; une découverte revenue comme carte du jour se range sans frais ; le procès et
+    l'hommage ne citent plus un choix imposé (moins de deux options) ; la rivale n'est annoncée au bilan que si elle a
+    vraiment avancé ; la Course dit qu'elle finit à la troisième saison ; l'Errance dit quand la chasse est plafonnée ;
+    « Taxer l'usure » ne froisse plus les Troc, « Fermer le port » coûte 4 ; intensité des crises 1,25 et convoitise
+    +10 % par merveille (les seuils de l'ère V redeviennent atteignables : le lecteur perd 1,95 quartier par partie,
+    11 % de parties sans perte, 96 % de survie ; pressé 93 %, distrait 71 %).
+76. **Cadence : la scène en calques.** Mesure sur cette machine : la version 12 elle-même ne tient que 20 i/s (CPU
+    ralenti ×2, sans GPU) ; les illustrations SVG n'y sont pour rien (masquées, même résultat). La trace Chromium
+    montre le fil principal saturé par la peinture logicielle de la toile. Trois changements, sans retirer d'effet :
+    le fond et la cité deviennent des calques sous la toile principale (le compositeur les assemble et les décale pour
+    la parallaxe, au lieu d'une recopie plein écran à chaque image) ; le voile rouge de crise et le vacillement de
+    danger deviennent deux voiles composités dont seule l'opacité change (même dégradé, mesuré au pixel près) ; la
+    toile du dessus, qui ne porte que des choses floues (flammes, lueurs, fumées, particules), est peinte à 1,25 fois
+    la résolution CSS ; en crise, la cité vivante est repeinte une image sur deux. Résultat : palier 2 (tous les
+    effets) dans les cinq ères, pire moyenne 30,2 i/s (contre 17,7 au palier 1 avant).

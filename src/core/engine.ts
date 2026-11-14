@@ -17,7 +17,7 @@ export const ERAS = 5;
 export const RACE_END = 3;
 export const SAISON_CARDS = 4; // valeur par défaut, voir TUNING.cards
 /** Réglages d'équilibrage (balayés par src/sim/sweep.ts) */
-export const TUNING = { crisisK: 1.4, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.15, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
+export const TUNING = { crisisK: 1.25, armyDecay: 0.3, treasureDecay: 0.2, growthBase: 3, envy: 0.1, iron: 1.2, upkeep: 1.65, gain: 1.0, cards: 3, wonderUpkeep: 1 };
 export { ERA_SCALE };
 /** fourchettes des gains affichés */
 export const GAIN_RANGES = ['', '1 à 2', '3 à 5', '6 à 9', '10 à 15', '16 et plus'];
@@ -205,6 +205,8 @@ export interface OptionView {
   lossQ?: number;
   /** quartiers gagnés à coup sûr (et ce qu'ils mangeront) */
   gainQ?: number;
+  /** sens de l'effet sur la relation avec la rivale (+1 / −1) */
+  rivalDir?: number;
   warn?: string;
   /** pari : chance affichée */
   odds?: number;
@@ -619,6 +621,10 @@ export class Engine {
     const sh = this.passives(s).find((x) => x.type === 'shield') as { type: 'shield'; amount: number; res: Res } | undefined;
     const covered = !!sh && !s.shieldUsed && s.res[sh.res] >= scaleN(sh.amount, s.era);
     const hurts = (e: Effect | undefined, risky = false): boolean => !!e && (RES.some((r) => (e.gain?.[r] ?? 0) < 0 && s.res[r] > 0) || (Object.keys(e.loy ?? {}) as FamilyId[]).some((f) => (e.loy![f] ?? 0) < 0 && s.fam[f]?.state === 'presente' && s.fam[f].loy > -3) || ((e.quartiers ?? 0) < 0 && !(risky && covered)) || ((e.rival ?? 0) < 0 && s.rivalRel > -3) || (e.rivalJalon ?? 0) > 0 || hurts(e.bet?.lose, true));
+    // une découverte qui revient comme carte du jour : on peut toujours ranger les plans
+    if (card.kind === 'decouverte' && card.id !== 'decouverte' && playable.length <= 1 && (!only || only.cost || hurts(only.effect))) {
+      return [...opts, { label: 'Ranger les plans', effect: {}, reply: 'Les plans retournent au tiroir. Ils y seront encore demain ; vous aussi, normalement.‖On range les plans. Les savants soupirent, puis rangent leurs soupirs avec.' }];
+    }
     if (playable.length === 1 && story && s.res.tresor >= 1 && (only.cost || hurts(only.effect))) {
       return [...opts, { label: 'Ne pas trancher', effect: { gain: { tresor: -1 } }, reply: 'Vous ne tranchez pas. L’affaire traîne ; les avocats, eux, se font payer.‖Vous laissez l’affaire en suspens. Elle se règle toute seule, de travers, et quelqu’un vous envoie la note.‖Vous remettez la décision à plus tard. Plus tard arrive avec des frais de dossier.‖Vous réfléchissez. Longtemps. Pendant ce temps, un conseiller facture ses heures.' }];
     }
@@ -914,6 +920,18 @@ export class Engine {
     }
     if ((o.effect.quartiers ?? 0) < 0 && !o.effect.if) v.lossQ = -o.effect.quartiers!;
     if ((o.effect.quartiers ?? 0) > 0 && !o.effect.if) v.gainQ = o.effect.quartiers!;
+    if (card.id === 'colonie' && v.gainQ) v.detail = [v.detail, 'Une colonie se nourrit elle-même : elle ne mange rien au bilan'].filter(Boolean).join(' · ');
+    if (o.effect.rival) v.rivalDir = Math.sign(o.effect.rival);
+    // la merveille du dessein compromise : une famille qui cesserait de compter pour le mot-clé
+    const jal = !s.jalons[s.era] ? this.dessein(s).jalons[s.era] : s.era < 4 && !s.jalons[s.era + 1] ? this.dessein(s).jalons[s.era + 1] : undefined;
+    const tag = this.dessein(s).tag;
+    const need = jal?.req?.tags?.[tag];
+    if (need && v.famDir && Object.values(v.famDir).some((d) => (d ?? 0) < 0)) {
+      const now = this.tagCount(s, tag);
+      const fam = Object.fromEntries(FAMILIES.map((f) => [f, { ...s.fam[f], loy: Math.max(-3, Math.min(3, s.fam[f].loy + (v.famDir?.[f] ?? 0))) }])) as GameState['fam'];
+      const after = this.tagCount({ ...s, fam }, tag);
+      if (now >= need && after < need) v.risk = [v.risk, `${jal!.name} exige ${need} ${tag} : vous passeriez à ${after}`].filter(Boolean).join(' · ');
+    }
     // une famille fervente qui cesserait de l'être : sa part au bilan disparaît, on le dit
     const cooled = FAMILIES.filter((f) => s.fam[f]?.state === 'presente' && s.fam[f].loy >= 3 && (v.famDir?.[f] ?? 0) < 0);
     if (cooled.length) v.risk = [v.risk, `${cooled.map((f) => capitalize(this.c.families[f].house[s.era])).join(' et ')} ne seraient plus fervents : plus de part au bilan (${cooled.map((f) => `+3 ${RES_LABEL[this.c.families[f].res]}`).join(', ')})`].filter(Boolean).join(' · ');
@@ -1144,7 +1162,7 @@ export class Engine {
     for (const f of FAMILIES) if (s.fam[f].loy !== loyBefore[f]) loy[f] = s.fam[f].loy - loyBefore[f];
     const v = this.view(s);
     // une réplique qui revient dans la partie (sur cette carte ou une autre) passe à sa variante suivante
-    const rk = reply && reply.includes('‖') ? hashString(reply) : undefined;
+    const rk = reply && reply.includes('‖') ? hashString(reply.replace(/\{[A-Za-z]+:\w+\}/g, '{}')) : undefined;
     if (reply && rk !== undefined) reply = variant(reply, String(rk), s.seed, s.history.filter((h) => h.rk === rk).length, s.run);
     s.history.push({
       turn: s.turn,
@@ -1664,7 +1682,7 @@ export class Engine {
       const ok = this.options(s, { card: id }).some((o) => {
         if (!this.canPay(s, o) || !this.check(s, o.req)) return false;
         if ((o.effect.quartiers ?? 0) < 0) return false;
-        if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -3)) return false;
+        if (Object.values(o.effect.loy ?? {}).some((x) => (x ?? 0) <= -2)) return false;
         if (o.effect.if && !this.check(s, o.effect.if) && ((o.effect.else?.quartiers ?? 0) < 0 || (o.effect.else?.else?.quartiers ?? 0) < 0)) return false;
         return true;
       });
@@ -1738,7 +1756,7 @@ export class Engine {
           s.fam[f].state = 'rivale';
           s.rivalRel = Math.max(-3, s.rivalRel - 1);
           ev.push({ type: 'defect', family: f });
-          if (!s.losses.some((l) => l.era === s.era && l.card.startsWith(`trahison_${f}`))) this.changeQuartiers(s, -1, `${name} sont passés chez ${this.rival(s).name}`, `defection_${f}`, ev);
+          if (!s.losses.some((l) => l.era === s.era && l.card.startsWith(`trahison_${f}`))) this.changeQuartiers(s, -1, `la défection des ${this.c.families[f].house[s.era].replace(/^les /, '')}, passés chez ${this.rival(s).name}`, `defection_${f}`, ev);
         } else {
           s.mem.push(`revolte_${f}`);
           s.fam[f].loy = -1;
@@ -1820,8 +1838,9 @@ export class Engine {
     // la Course gagnée : la rivale n'achève pas sa merveille cette ère
     const capitulated = s.dessein === 'empire' && s.jalons[4];
     if (!final && !capitulated && s.rivalJalons < 5 && !s.mem.includes(`rival_freine_${s.era}`) && !s.mem.includes(`course_gagnee_${s.era}`) && s.fam && this.c.rivals.length) {
+      const before = s.rivalJalons;
       s.rivalJalons = Math.min(5, s.era + 1, s.rivalJalons + 1);
-      ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
+      if (s.rivalJalons > before) ev.push({ type: 'rivalJalon', count: s.rivalJalons, delta: 1, name: this.rival(s).jalons[s.rivalJalons - 1] });
     }
     // la rivale triomphe dès qu'elle a ses cinq merveilles, qu'elle les ait bâties ou qu'on les lui ait payées
     if (s.rivalJalons >= 5 && !s.spent.includes('triomphe')) rivalTriumph = true;
@@ -1899,7 +1918,7 @@ export class Engine {
     let top = 0;
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
-      if (d >= 0 || !this.citable(s, i)) return;
+      if (d >= 0 || !this.citable(s, i) || (h.alts !== undefined && h.alts < 2)) return;
       // la gravité d'abord (une arrestation pèse plus qu'une médaille refusée), l'ancienneté ensuite ;
       // un affront personnel ou une dette reniée pèse plus qu'un blâme de crise, qui fait partie du métier
       const c = this.c.cards[h.card];
@@ -1918,7 +1937,7 @@ export class Engine {
     let top = 0;
     s.history.forEach((h, i) => {
       const d = h.loy?.[f] ?? 0;
-      if (d <= 0 || !this.citable(s, i)) return;
+      if (d <= 0 || !this.citable(s, i) || (h.alts !== undefined && h.alts < 2)) return;
       const score = d * 10 + (s.era - h.era) * 7;
       if (score >= top) {
         top = score;

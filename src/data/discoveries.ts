@@ -137,7 +137,7 @@ export const discoveryCards = [
     id: 'd_vaccin', kind: 'decouverte', scale: true, eras: [4], tags: ['Science'], art: { motif: 'spiral', hue: 160 }, price: 7,
     passive: [{ type: 'shield', amount: 4, res: 'vivres' }], gift: 'Chaque ère, la première perte de quartier subie se rachète {s:4} Vivres (un peu plus à chaque fois), si vous les avez. Compte pour la Science.',
     title: 'Le Vaccin',
-    text: 'Le docteur Brumel veut injecter du pus de vache à tout le monde. Il jure que ça marche. La vache n’a pas été consultée.',
+    text: '{F:brume} veut injecter du pus de vache à tout le monde. {Il:brume} jure que ça marche. La vache n’a pas été consultée.',
     options: [
       { label: 'Tout le monde', cost: $('V2'), effect: { gain: $('S3'), loy: { brume: 1, sel: -1 } }, reply: 'Ça marche. Les gens ne le lui pardonneront jamais.' },
       { label: 'Les volontaires', effect: { gain: $('V2') }, reply: 'Trois volontaires, deux vaches. La science avance à la vitesse d’une vache.' },

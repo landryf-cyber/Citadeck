@@ -49,9 +49,9 @@ export interface Mood {
 
 // palier 2 = tous les effets (cible : 30 images par seconde) ; on ne descend que sous 30 i/s
 const TIER_CFG = [
-  { dpr: 1, backEvery: 6, cityEvery: 8, particles: 22, rays: false, glow: false },
-  { dpr: 1.5, backEvery: 3, cityEvery: 5, particles: 48, rays: true, glow: true },
-  { dpr: 2, backEvery: 2, cityEvery: 4, particles: 90, rays: true, glow: true },
+  { dpr: 1, liveDpr: 1, backEvery: 6, cityEvery: 8, liveEvery: 4, particles: 22, rays: false, glow: false },
+  { dpr: 1.5, liveDpr: 1.25, backEvery: 3, cityEvery: 5, liveEvery: 2, particles: 48, rays: true, glow: true },
+  { dpr: 2, liveDpr: 1.25, backEvery: 2, cityEvery: 4, liveEvery: 2, particles: 90, rays: true, glow: true },
 ];
 
 function hueRGB(h: number): RGB {
@@ -71,6 +71,8 @@ export class Scene {
   private W = 1;
   private H = 1;
   private dpr = 1;
+  /** résolution de la toile du dessus (flammes, lueurs, fumées, particules : tout y est flou, elle peut être plus légère) */
+  private ldpr = 1;
   private u = 10;
   private horizon = 0;
   private margin = 18;
@@ -111,6 +113,8 @@ export class Scene {
   private raf = 0;
   private running = false;
   private cityDirtyUntil = 0;
+  /** en crise, en danger ou pendant la chute, la cité vit (flammes, fenêtres qui vacillent) : redessinée une image sur liveEvery */
+  private cityLive = false;
   private timeScale = 1;
 
   private setting: QualitySetting = 'auto';
@@ -126,10 +130,18 @@ export class Scene {
   fps = 60;
 
   private sprites = new Map<string, HTMLCanvasElement>();
+  /** voiles plein écran (crise, danger) confiés au compositeur : seule leur opacité change d'une image à l'autre */
+  private veils: { crisis: HTMLElement; danger: HTMLElement } | null = null;
+  private layered = false;
+  private layerX = { back: NaN, city: NaN };
+  private veilA = { crisis: -1, danger: -1 };
   private timelapse: { snaps: CivSnapshot[]; t0: number; dur: number; i: number; done?: () => void } | null = null;
 
   constructor(private canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d', { alpha: false })!;
+    // le fond et la cité sont des calques sous la toile principale : le compositeur les assemble et les décale
+    // (parallaxe) sans que la toile principale les recopie à chaque image ; elle ne porte plus que ce qui bouge
+    this.layered = typeof document !== 'undefined' && !!canvas.parentNode;
+    this.ctx = canvas.getContext('2d', { alpha: this.layered })!;
     this.back = document.createElement('canvas');
     this.bctx = this.back.getContext('2d', { alpha: false })!;
     this.city = document.createElement('canvas');
@@ -140,7 +152,40 @@ export class Scene {
     const rng = new Rng(0xc17adec);
     for (let i = 0; i < 150; i++) this.stars.push({ x: rng.next(), y: Math.pow(rng.next(), 1.4), s: rng.range(0.5, 1.6), p: rng.range(0, 6.28) });
     this.makeHills(1);
+    if (typeof document !== 'undefined' && canvas.parentNode) {
+      const veil = (id: string, bg: string): HTMLElement => {
+        const d = document.createElement('div');
+        d.id = id;
+        d.setAttribute('aria-hidden', 'true');
+        d.style.cssText = `position:fixed;inset:0;pointer-events:none;opacity:0;will-change:opacity;background:${bg}`;
+        canvas.insertAdjacentElement('afterend', d);
+        return d;
+      };
+      this.veils = { danger: veil('veil-danger', '#000'), crisis: veil('veil-crisis', 'transparent') };
+      for (const c of [this.back, this.city]) {
+        c.setAttribute('aria-hidden', 'true');
+        c.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;will-change:transform';
+        canvas.insertAdjacentElement('beforebegin', c);
+      }
+    }
     this.resize();
+  }
+
+  /** Décale un calque (fond ou cité) : la transformation n'est réécrite que si elle a bougé. */
+  private placeLayer(k: 'back' | 'city', x: number): void {
+    const v = Math.round(x * 20) / 20;
+    if (v === this.layerX[k]) return;
+    this.layerX[k] = v;
+    this[k].style.transform = `translate3d(${v}px,0,0)`;
+  }
+
+  /** L'opacité d'un voile, écrite seulement quand elle change assez pour se voir. */
+  private setVeil(k: 'crisis' | 'danger', a: number): void {
+    if (!this.veils) return;
+    const v = a < 0.004 ? 0 : Math.round(a * 400) / 400;
+    if (v === this.veilA[k]) return;
+    this.veilA[k] = v;
+    this.veils[k].style.opacity = String(v);
   }
 
   // ------------------------------------------------------------------ réglages
@@ -171,18 +216,32 @@ export class Scene {
     this.H = Math.max(1, Math.round(rect.height || window.innerHeight));
     const cfg = TIER_CFG[this.tier];
     this.dpr = Math.min(window.devicePixelRatio || 1, cfg.dpr);
-    this.canvas.width = Math.round(this.W * this.dpr);
-    this.canvas.height = Math.round(this.H * this.dpr);
+    this.ldpr = this.layered ? Math.min(this.dpr, cfg.liveDpr) : this.dpr;
+    this.canvas.width = Math.round(this.W * this.ldpr);
+    this.canvas.height = Math.round(this.H * this.ldpr);
     this.back.width = Math.max(2, Math.round((this.W * this.dpr) / 2));
     this.back.height = Math.max(2, Math.round((this.H * this.dpr) / 2));
     this.city.width = Math.round((this.W + this.margin * 2) * this.dpr);
     this.city.height = Math.round(this.H * this.dpr);
+    if (this.layered) {
+      this.back.style.width = `${this.W + 8}px`;
+      this.back.style.height = `${this.H}px`;
+      this.city.style.width = `${this.W + this.margin * 2}px`;
+      this.city.style.height = `${this.H}px`;
+      this.layerX = { back: NaN, city: NaN };
+    }
     const portrait = this.H > this.W * 1.05;
     // la cité occupe le bas de l'écran (environ 40 %) : la carte se tient au-dessus
     this.horizon = this.H * (portrait ? 0.83 : 0.8);
     this.u = Math.max(7.5, Math.min(22, portrait ? Math.min(this.W / 33, this.H / 44) : Math.min(this.W / 44, this.H / 40)));
     this.cityDirtyUntil = this.t + 0.1;
     this.frame = 0;
+    // le voile de crise : transparent au centre, rouge sur les bords (même dégradé que l'ancien, peint une fois)
+    if (this.veils) {
+      const r0 = Math.min(this.W, this.H) * 0.25;
+      const r1 = Math.max(this.W, this.H) * 0.8;
+      this.veils.crisis.style.background = `radial-gradient(circle ${r1}px at 50% 45%, rgba(200,40,20,0) ${r0}px, rgb(190,34,16) ${r1}px)`;
+    }
     this.onTier(this.tier);
   }
 
@@ -400,7 +459,7 @@ export class Scene {
     const targetLight = this.mood.dead ? 0.14 : 1;
     this.lightLevel += (targetLight - this.lightLevel) * (1 - Math.pow(this.mood.dead ? 0.55 : 0.25, dt));
     // en danger, en crise et pendant la chute, la cité vit à chaque image (flammes, lumières qui vacillent)
-    if (this.mood.dead || this.dangerSmooth > 0.02 || this.crisisSmooth > 0.02) this.cityDirtyUntil = Math.max(this.cityDirtyUntil, this.t + 0.2);
+    this.cityLive = this.mood.dead || this.dangerSmooth > 0.02 || this.crisisSmooth > 0.02;
 
     this.updateParticles(dt);
   }
@@ -456,16 +515,22 @@ export class Scene {
     const backDue = this.frame % cfg.backEvery === 1 || transitioning || this.frame < 3 || dying;
     if (backDue) this.renderBack();
     const cityDirty = this.t < this.cityDirtyUntil;
-    if (this.frame < 3 || transitioning || cityDirty || this.frame % cfg.cityEvery === 2) this.renderCity();
+    if (this.frame < 3 || transitioning || cityDirty || this.frame % cfg.cityEvery === 2 || (this.cityLive && this.frame % cfg.liveEvery === 0)) this.renderCity();
 
     const ctx = this.ctx;
-    const { W, H, dpr } = this;
+    const { W, H, ldpr: dpr } = this;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     const px = this.parallax;
-    ctx.drawImage(this.back, -px * 3 * dpr - 4 * dpr, 0, this.canvas.width + 8 * dpr, this.canvas.height);
-    ctx.drawImage(this.city, (-this.margin - px * 9) * dpr, 0);
+    if (this.layered) {
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.placeLayer('back', -px * 3 - 4);
+      this.placeLayer('city', -this.margin - px * 9);
+    } else {
+      ctx.drawImage(this.back, -px * 3 * dpr - 4 * dpr, 0, this.canvas.width + 8 * dpr, this.canvas.height);
+      ctx.drawImage(this.city, (-this.margin - px * 9) * dpr, 0);
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.translate(-px * 9, 0);
     this.renderLive(ctx);
@@ -513,22 +578,9 @@ export class Scene {
       ctx.globalCompositeOperation = 'source-over';
     }
 
-    // crise : la lumière se tend, les bords rougissent
-    if (this.crisisSmooth > 0.01) {
-      const beat = 0.75 + 0.25 * Math.sin(this.t * 2.2);
-      const g = ctx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.25, W / 2, H * 0.45, Math.max(W, H) * 0.8);
-      g.addColorStop(0, 'rgba(200,40,20,0)');
-      g.addColorStop(1, `rgba(190,34,16,${(0.3 * this.crisisSmooth * beat).toFixed(3)})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-    }
-
-    // danger : la lumière vacille
-    if (this.dangerSmooth > 0.01 && !this.reducedMotion) {
-      const a = this.dangerSmooth * 0.16 * this.flickerNoise();
-      ctx.fillStyle = `rgba(0,0,0,${a.toFixed(3)})`;
-      ctx.fillRect(0, 0, W, H);
-    }
+    // crise : la lumière se tend, les bords rougissent ; danger : la lumière vacille (deux voiles composités)
+    this.setVeil('crisis', this.crisisSmooth > 0.01 ? 0.3 * this.crisisSmooth * (0.75 + 0.25 * Math.sin(this.t * 2.2)) : 0);
+    this.setVeil('danger', this.dangerSmooth > 0.01 && !this.reducedMotion ? this.dangerSmooth * 0.16 * this.flickerNoise() : 0);
 
     // défaite : la nuit tombe
     if (this.mood.dead) {

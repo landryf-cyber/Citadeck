@@ -13,7 +13,7 @@ export const forms: EraForm[] = [
   {
     id: 'errance', name: 'L’Errance', rhythm: 'trois saisons courtes', seasons: 3, cards: 2,
     rule: 'La tribu chasse et cueille : +2 Vivres à chaque saison, mais on ne porte pas plus que la cité ne mange, plus deux ; le reste pourrit.',
-    short: 'Chasse et cueillette : +2 Vivres par saison, mais jamais plus de {cap} portés.',
+    short: 'Chasse et cueillette : +2 Vivres par saison ; au départ de chaque saison, on n’en porte pas plus de {cap}.',
     objective: 'Bâtir la merveille, et arriver au bilan le ventre plein.',
     threat: 'La crise tombe d’un bloc, à la fin de l’ère.',
     mission: 'Bâtir {j} avant que tombe {cn}.',
@@ -41,13 +41,13 @@ export const forms: EraForm[] = [
   },
   {
     id: 'course', name: 'La Course', rhythm: 'quatre saisons éclair', seasons: 4, cards: 2,
-    rule: 'Le chantier ouvre à la fin de chaque saison ; la rivale avance d’une étape par saison, sous vos yeux.',
-    short: 'La rivale avance d’une étape par saison ; le chantier ouvre à chaque saison.',
+    rule: 'La rivale avance d’une étape par saison et finit sa merveille à la troisième ; le chantier ouvre à la fin des deuxième et troisième saisons.',
+    short: 'La rivale finit sa merveille à la troisième saison ; le chantier ouvre aux deuxième et troisième.',
     objective: 'Bâtir la merveille avant la rivale : si vous gagnez, elle n’achève pas la sienne cette ère.',
     threat: 'Une crise éclair, en deux cartes ; si la rivale finit la première, elle frappe un quart plus fort.',
     mission: 'Bâtir {j} avant {rival}.',
     when: 'éclair, deux cartes en fin d’ère, un quart plus forte si la rivale gagne la course',
-    goal: 'avant la fin de la quatrième saison',
+    goal: 'avant la fin de la troisième saison',
   },
   {
     id: 'jugement', name: 'Le Jugement', rhythm: 'une seule saison, plus longue', seasons: 1, cards: 4,
@@ -82,7 +82,7 @@ export const formCards = [
       { label: 'Soutenir {H:ourk}', effect: { gain: $('A3'), loy: { ourk: 1, brume: -1 } }, reply: '{F:ourk} obtient ses murailles. {Il:ourk} remercie le Conseil d’un coup de poing sur la table ; la table ne s’en remet pas.‖Le Conseil vote les crédits militaires. {F:ourk} applaudit avec ses gantelets ; on n’entend plus rien pendant une heure.' },
       { label: 'Soutenir {H:sel}', effect: { gain: $('V3'), loy: { sel: 1, troc: -1 } }, reply: '{F:sel} obtient sa nouvelle cathédrale. {Il:sel} bénit le Conseil, puis la salle, puis, par excès de zèle, la buvette.‖Le Conseil vote la dîme. {F:sel} promet de prier pour chacun des votants, nommément, et longuement.' },
       { label: 'Soutenir {H:brume}', effect: { gain: $('S3'), loy: { brume: 1, ourk: -1 } }, reply: '{F:brume} obtient son université. {Il:brume} remercie le Conseil par un discours de trois heures, avec des schémas.‖Le Conseil finance les savants. {F:brume} distribue des lunettes aux conseillers, « pour qu’ils voient enfin clair ».' },
-      { label: 'Soutenir {H:troc}', effect: { gain: $('T3'), loy: { troc: 1, sel: -1 } }, reply: '{F:troc} obtient son port franc. {Il:troc} remercie le Conseil et lui adresse la facture du banquet.‖Le Conseil baisse les taxes. {F:troc} pleure de joie, puis calcule, puis pleure encore, pour d’autres raisons.' },
+      { label: 'Soutenir {H:troc}', effect: { gain: $('T3'), loy: { troc: 1, sel: -1 } }, reply: '{F:troc} obtient son port franc. {Il:troc} remercie le Conseil et lui adresse la facture du banquet.‖Le Conseil baisse les taxes. {F:troc} compte ce que cela lui rapporte, puis recompte, pour le plaisir.' },
     ],
   }),
 ];

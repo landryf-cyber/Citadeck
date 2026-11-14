@@ -38,7 +38,7 @@ export const selCards = [
     options: [
       { label: 'Interdire l’usure', effect: { loy: { sel: 2, troc: -2 }, gain: $('V3'), mem: ['sel_usure'] },
         reply: 'L’usure est interdite. {F:troc} prête désormais « à amitié ». Le taux est le même.' },
-      { label: 'Taxer l’usure', effect: { gain: $('T4'), loy: { sel: -1, troc: -1 } },
+      { label: 'Taxer l’usure', effect: { gain: $('T4'), loy: { sel: -1 } },
         reply: 'Le péché rapporte. L’abbesse dit que c’est encore pire. Elle prend sa part quand même.' },
       { label: 'Racheter vos dettes', cost: $('T5'), effect: { loy: { troc: 1, sel: 1 } },
         reply: 'Vous ne devez plus rien à personne. Personne ne sait quoi faire de vous.' },

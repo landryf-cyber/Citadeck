@@ -26,6 +26,10 @@ Ordre demandé : points 2, 3, 4, 5, 7 (puis déploiement pour test), ensuite 1 e
 ### H. Illustrations (point 6)
 - [x] essai de style sur 3 cartes (personnage, événement, lieu) jugé (4/3/4 → 7/7/6), puis généralisation à toutes les cartes (20 scènes ; DECISIONS 67-68, E23)
 ### I. Juges sévères jusqu'à l'arrêt ; README ; déploiement final
+- [x] tours 1 à 3 : amélioration (E24-E26) ; tour 4 : pas d'amélioration (impact 6 → 5,3), passe sur l'impact (DECISIONS 75, E27)
+- [x] cadence rétablie : scène en calques, palier 2 partout, pire moyenne 30,2 i/s (DECISIONS 76, E28)
+- [ ] tour 5 (nouveaux juges) ; s'il n'améliore rien, arrêt motivé
+- [ ] README, page finale republiée, message final
 
 
 Le brief V2 (refonte complète, objectif « publiable ») est dans l'historique de la session.
