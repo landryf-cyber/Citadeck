@@ -51,7 +51,7 @@ export interface Mood {
 const TIER_CFG = [
   { dpr: 1, liveDpr: 1, backEvery: 6, cityEvery: 8, liveEvery: 4, particles: 22, rays: false, glow: false },
   { dpr: 1.5, liveDpr: 1.25, backEvery: 3, cityEvery: 5, liveEvery: 2, particles: 48, rays: true, glow: true },
-  { dpr: 2, liveDpr: 1.25, backEvery: 2, cityEvery: 4, liveEvery: 2, particles: 90, rays: true, glow: true },
+  { dpr: 2, liveDpr: 1.25, backEvery: 2, cityEvery: 4, liveEvery: 3, particles: 90, rays: true, glow: true },
 ];
 
 function hueRGB(h: number): RGB {

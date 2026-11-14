@@ -47,6 +47,8 @@ Puis ouvrir l'adresse affichée (par défaut http://localhost:5173).
   une merveille ou une découverte peut racheter un quartier perdu, un peu plus cher à chaque fois.
 - **Le grand dessein** : toucher les étoiles, soumettre la vallée ou être chantés pour toujours. Cinq
   merveilles à bâtir, pendant que la rivale bâtit les siennes. Chaque merveille attire aussi les crises.
+  Quatre merveilles à la fin : victoire ; cinq : triomphe ; mais une victoire qui a coûté trois quartiers et
+  n'en laisse que deux debout se dit « à la Pyrrhus ».
 - **Après la partie** : on grave les derniers mots de la civilisation. Ils lèguent quelque chose à la suivante,
   qui trouvera ses ruines sur la colline. La chronique garde toutes les civilisations ; certaines parties
   débloquent des origines (Gens du Fleuve, Héritiers, avec leurs règles et leurs cartes), des merveilles, des
@@ -149,7 +151,7 @@ scripts/      captures, mesure de performance, version en un seul fichier
   compositeur assemble (fond en demi-résolution, cité redessinée à la demande, éléments vivants à chaque image
   sur une toile plus légère, car tout y est flou) ; la parallaxe déplace les calques sans les repeindre, et les
   voiles de crise et de danger sont des calques dont seule l'opacité change. Tous les effets sont actifs au
-  départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde (mesuré : 30 à 39 i/s dans les cinq
+  départ ; la qualité ne baisse d'elle-même que sous 30 images par seconde (mesuré : 31 à 41 i/s dans les cinq
   ères, tous effets, CPU ralenti ×2 et sans GPU). `prefers-reduced-motion` est respecté (et réglable).
 - **Aucun fichier d'image ni de son** : chaque carte a une scène SVG dessinée par le code (portraits en
   situation, lieux, crises, événements, découvertes), décor dessiné par code, son en WebAudio.
